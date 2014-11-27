@@ -12,13 +12,13 @@ public class Memtable {
     data = new ConcurrentSkipListMap<>();
   }
   
-  public void put(String rowkey, String column, String value, long stamp) {
+  public void put(String rowkey, String column, String value, long stamp, long ttl) {
     ConcurrentSkipListMap<String,Val> newMap = new ConcurrentSkipListMap<>();
     ConcurrentSkipListMap<String,Val> foundRow = data.putIfAbsent(rowkey, newMap);
     if (foundRow == null) {
-      newMap.put(column, new Val(value, stamp));
+      newMap.put(column, new Val(value, stamp, System.currentTimeMillis(), ttl));
     } else {
-      Val v = new Val(value, stamp);
+      Val v = new Val(value, stamp, System.currentTimeMillis(), ttl);
       while (true){
         Val foundColumn = foundRow.putIfAbsent(column, v);
         if (foundColumn == null){
@@ -77,13 +77,13 @@ public class Memtable {
   }
   
   public void delete(String row, long time){
-    put(row, "", null, time);
+    put(row, "", null, time, 0L);
   }
   
   public void delete (String rowkey, String column, long time){
     if ("".equals(column)){
       throw new RuntimeException ("'' is not a valid column");
     }
-    put(rowkey, column, null, time);
+    put(rowkey, column, null, time, 0L);
   }
 }

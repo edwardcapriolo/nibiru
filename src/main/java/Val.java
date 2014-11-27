@@ -3,8 +3,10 @@
 public class Val {
   private String value;
   private long time;
+  private long createTime;
+  private long ttl;
   
-  public Val(String value, long time){
+  public Val(String value, long time, long createTime, long ttl){
     this.value = value;
     this.time = time;
   }
@@ -23,6 +25,23 @@ public class Val {
 
   public void setTime(long time) {
     this.time = time;
+  }
+
+  
+  public long getCreateTime() {
+    return createTime;
+  }
+
+  public void setCreateTime(long createTime) {
+    this.createTime = createTime;
+  }
+
+  public long getTtl() {
+    return ttl;
+  }
+
+  public void setTtl(long ttl) {
+    this.ttl = ttl;
   }
 
   @Override
