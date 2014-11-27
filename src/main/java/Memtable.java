@@ -46,6 +46,9 @@ public class Memtable {
         return r.get(column);
       } else {
         Val g = r.get(column);
+        if (g == null){
+          return null;
+        }
         if (tomb.getTime() >= g.getTime()){
           return null;
         } else {
@@ -78,6 +81,12 @@ public class Memtable {
   
   public void delete(String row, long time){
     put(row, "", null, time, 0L);
+    ConcurrentSkipListMap<String, Val> cols = data.get(row);
+    for (Map.Entry<String, Val> col : cols.entrySet()){
+      if (col.getValue().getTime() < time){
+        cols.remove(col.getKey());
+      }
+    }
   }
   
   public void delete (String rowkey, String column, long time){
