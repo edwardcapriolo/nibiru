@@ -4,12 +4,12 @@ import java.util.concurrent.ConcurrentMap;
 
 public class KeyspaceMetadata {
   private String name;
-  private String partitioner;
+  private Partitioner partitioner;
   private ConcurrentMap<String,ColumnFamilyMetadata> columnFamilyMetaData; 
   
   public KeyspaceMetadata(String name){
     this.name = name;
-    this.partitioner = "md5";
+    this.partitioner = new NaturalPartitioner();
     columnFamilyMetaData = new ConcurrentHashMap<>();
   }
 
@@ -29,12 +29,12 @@ public class KeyspaceMetadata {
     this.columnFamilyMetaData = columnFamilyMetaData;
   }
 
-  public String getPartitioner() {
+  public Partitioner getPartitioner() {
     return partitioner;
   }
 
-  public void setPartitioner(String partitioner) {
+  public void setPartitioner(Partitioner partitioner) {
     this.partitioner = partitioner;
   }
-  
+
 }
