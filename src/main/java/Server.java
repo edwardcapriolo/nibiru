@@ -4,32 +4,29 @@ import java.util.concurrent.ConcurrentMap;
 
 public class Server {
   
-  private ConcurrentMap<String,KeyspaceMetadata> keyspaces;
-  private ConcurrentMap<String,ConcurrentMap<String,Memtable>> memtables;
+  private ConcurrentMap<String,Keyspace> keyspaces;
   
   public Server(){
     keyspaces = new ConcurrentHashMap<>();
-    memtables = new ConcurrentHashMap<>();
   }
   
-  public void createKeyspace(String keyspace){
-    KeyspaceMetadata kmd = new KeyspaceMetadata(keyspace);
-    keyspaces.put(keyspace, kmd);
-    memtables.put(keyspace, new ConcurrentHashMap<String,Memtable>());
+  public void createKeyspace(String keyspaceName){
+    KeyspaceMetadata kmd = new KeyspaceMetadata(keyspaceName);
+    Keyspace keyspace = new Keyspace();
+    keyspace.setKeyspaceMetadata(kmd);
+    keyspaces.put(keyspaceName, keyspace);
   }
   
   public void createColumnFamily(String keyspace, String columnFamily){
-    ColumnFamilyMetadata m = new ColumnFamilyMetadata();
-    m.setName(columnFamily);
-    keyspaces.get(keyspace).getColumnFamilyMetaData().put(columnFamily, m);
-    memtables.get(keyspace).put(columnFamily, new Memtable());
+    keyspaces.get(keyspace).createColumnFamily(columnFamily);
   }
   
   public void set(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
-    memtables.get(keyspace).get(columnFamily).put(rowkey, column, value, time, 0);
+    keyspaces.get(keyspace).getColumnFamilies().get(columnFamily).getMemtable()
+    .put(rowkey, column, value, time, 0);
   }
   
   public Val get(String keyspace, String columnFamily, String rowkey, String column){
-    return memtables.get(keyspace).get(columnFamily).get(rowkey, column);
+    return keyspaces.get(keyspace).getColumnFamilies().get(columnFamily).getMemtable().get(rowkey, column);
   }
 }

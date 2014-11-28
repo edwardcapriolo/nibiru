@@ -1,15 +1,15 @@
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-
 public class KeyspaceMetadata {
   private String name;
+  private String partitioner;
   private ConcurrentMap<String,ColumnFamilyMetadata> columnFamilyMetaData; 
   
   public KeyspaceMetadata(String name){
     this.name = name;
+    this.partitioner = "md5";
     columnFamilyMetaData = new ConcurrentHashMap<>();
   }
 
@@ -29,6 +29,12 @@ public class KeyspaceMetadata {
     this.columnFamilyMetaData = columnFamilyMetaData;
   }
 
+  public String getPartitioner() {
+    return partitioner;
+  }
 
+  public void setPartitioner(String partitioner) {
+    this.partitioner = partitioner;
+  }
   
 }
