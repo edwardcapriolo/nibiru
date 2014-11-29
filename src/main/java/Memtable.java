@@ -6,13 +6,13 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 public class Memtable {
 
-  private ConcurrentSkipListMap<String, ConcurrentSkipListMap<String,Val>> data;
+  private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String,Val>> data;
   
   public Memtable(){
     data = new ConcurrentSkipListMap<>();
   }
   
-  public void put(String rowkey, String column, String value, long stamp, long ttl) {
+  public void put(Token rowkey, String column, String value, long stamp, long ttl) {
     ConcurrentSkipListMap<String,Val> newMap = new ConcurrentSkipListMap<>();
     ConcurrentSkipListMap<String,Val> foundRow = data.putIfAbsent(rowkey, newMap);
     if (foundRow == null) {
@@ -36,7 +36,7 @@ public class Memtable {
     }
   }
   
-  public Val get (String row, String column){
+  public Val get (Token row, String column){
     Map<String, Val> r = data.get(row);
     Val tomb = r.get("");
     if (r == null){
@@ -58,7 +58,7 @@ public class Memtable {
     }
   }
   
-  public ConcurrentNavigableMap slice(String rowkey, String start, String end){
+  public ConcurrentNavigableMap slice(Token rowkey, String start, String end){
     ConcurrentSkipListMap<String, Val> row = data.get(rowkey);
     if (row == null){
       return null;
@@ -79,7 +79,7 @@ public class Memtable {
     }
   }
   
-  public void delete(String row, long time){
+  public void delete(Token row, long time){
     put(row, "", null, time, 0L);
     ConcurrentSkipListMap<String, Val> cols = data.get(row);
     for (Map.Entry<String, Val> col : cols.entrySet()){
@@ -89,7 +89,7 @@ public class Memtable {
     }
   }
   
-  public void delete (String rowkey, String column, long time){
+  public void delete (Token rowkey, String column, long time){
     if ("".equals(column)){
       throw new RuntimeException ("'' is not a valid column");
     }

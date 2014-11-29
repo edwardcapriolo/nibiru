@@ -1,6 +1,9 @@
 
 public class NaturalPartitioner implements Partitioner {
-  public String partition(String in){
-    return in;
+  public Token partition(String in){
+    Token t = new Token();
+    t.setRowkey(in);
+    t.setToken(in);
+    return t; 
   }
 }

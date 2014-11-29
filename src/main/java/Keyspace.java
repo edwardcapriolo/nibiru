@@ -35,4 +35,7 @@ public class Keyspace {
     this.columnFamilies = columnFamilies;
   }
   
+  public Token createToken(String rowkey){
+    return keyspaceMetadata.getPartitioner().partition(rowkey);
+  }
 }

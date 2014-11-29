@@ -22,11 +22,14 @@ public class Server {
   }
   
   public void set(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
-    keyspaces.get(keyspace).getColumnFamilies().get(columnFamily).getMemtable()
-    .put(rowkey, column, value, time, 0);
+    Keyspace ks = keyspaces.get(keyspace);
+    ks.getColumnFamilies().get(columnFamily).getMemtable()
+      .put(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, 0);
   }
   
   public Val get(String keyspace, String columnFamily, String rowkey, String column){
-    return keyspaces.get(keyspace).getColumnFamilies().get(columnFamily).getMemtable().get(rowkey, column);
+    Keyspace ks = keyspaces.get(keyspace);
+    return ks.getColumnFamilies().get(columnFamily).getMemtable()
+            .get(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
   }
 }
