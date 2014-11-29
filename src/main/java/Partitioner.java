@@ -1,4 +1,4 @@
 
 public interface Partitioner {
-  public String partition(String in);
+  public Token partition(String in);
 }
