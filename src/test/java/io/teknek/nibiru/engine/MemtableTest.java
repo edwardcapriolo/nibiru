@@ -3,6 +3,7 @@ import io.teknek.nibiru.engine.Keyspace;
 import io.teknek.nibiru.engine.Memtable;
 import io.teknek.nibiru.engine.Val;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
+import io.teknek.nibiru.partitioner.Md5Partitioner;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
 
 import java.util.HashMap;
@@ -19,6 +20,13 @@ public class MemtableTest {
     Keyspace ks1 = new Keyspace();
     ks1.setKeyspaceMetadata(new KeyspaceMetadata("testks"));
     ks1.getKeyspaceMetadata().setPartitioner(new NaturalPartitioner());
+    return ks1;
+  }
+  
+  private Keyspace keyspaceWithMd5Partitioner(){
+    Keyspace ks1 = new Keyspace();
+    ks1.setKeyspaceMetadata(new KeyspaceMetadata("testks"));
+    ks1.getKeyspaceMetadata().setPartitioner(new Md5Partitioner());
     return ks1;
   }
   
@@ -48,6 +56,18 @@ public class MemtableTest {
     Assert.assertEquals(new Val(null,3, System.currentTimeMillis(), 0), 
             m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2"));
   }
+  
+  @Test
+  public void testDeletingM5d(){
+    Memtable m = new Memtable();
+    Keyspace ks1 = this.keyspaceWithMd5Partitioner();
+    m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
+    m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "c", "d", 1, 0L);
+    m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", 3);
+    Assert.assertEquals(new Val(null,3, System.currentTimeMillis(), 0), 
+            m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2"));
+  }
+  
   
   @Test
   public void testRowDelete(){
