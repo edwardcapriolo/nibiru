@@ -6,13 +6,22 @@ import io.teknek.nibiru.metadata.KeyspaceMetadata;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 
 public class Server {
   
   private ConcurrentMap<String,Keyspace> keyspaces;
+  private TombstoneReaper tombstoneReaper;
+  private Thread tombstoneRunnable;
   
   public Server(){
     keyspaces = new ConcurrentHashMap<>();
+    tombstoneReaper = new TombstoneReaper(this);
+  }
+  
+  public void init(){
+    tombstoneRunnable = new Thread(tombstoneReaper);
+    tombstoneRunnable.start();
   }
   
   public void createKeyspace(String keyspaceName){
@@ -37,4 +46,25 @@ public class Server {
     return ks.getColumnFamilies().get(columnFamily).getMemtable()
             .get(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
   }
+  
+  public void delete(String keyspace, String columnFamily, String rowkey, String column, long time){
+    Keyspace ks = keyspaces.get(keyspace);
+    ks.getColumnFamilies().get(columnFamily).getMemtable()
+            .delete(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, time);
+  }
+
+  public ConcurrentNavigableMap<String, Val> slice(String keyspace, String columnFamily, String rowkey, String startColumn, String endColumn){
+    Keyspace ks = keyspaces.get(keyspace);
+    return ks.getColumnFamilies().get(columnFamily).getMemtable()
+            .slice(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), startColumn, endColumn);
+  }
+  
+  public ConcurrentMap<String, Keyspace> getKeyspaces() {
+    return keyspaces;
+  }
+
+  public TombstoneReaper getTombstoneReaper() {
+    return tombstoneReaper;
+  }
+  
 }

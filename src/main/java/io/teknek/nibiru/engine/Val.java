@@ -10,6 +10,8 @@ public class Val {
   public Val(String value, long time, long createTime, long ttl){
     this.value = value;
     this.time = time;
+    this.createTime = createTime;
+    this.ttl = ttl;
   }
 
   public String getValue() {
@@ -45,9 +47,11 @@ public class Val {
     this.ttl = ttl;
   }
 
+  
   @Override
   public String toString() {
-    return "Val [value=" + value + ", time=" + time + "]";
+    return "Val [value=" + value + ", time=" + time + ", createTime=" + createTime + ", ttl=" + ttl
+            + "]";
   }
 
   @Override

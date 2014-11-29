@@ -16,7 +16,7 @@ import org.junit.Test;
 
 public class MemtableTest {
   
-  private Keyspace keyspaceWithNaturalPartitioner(){
+  public Keyspace keyspaceWithNaturalPartitioner(){
     Keyspace ks1 = new Keyspace();
     ks1.setKeyspaceMetadata(new KeyspaceMetadata("testks"));
     ks1.getKeyspaceMetadata().setPartitioner(new NaturalPartitioner());

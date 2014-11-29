@@ -2,7 +2,7 @@ package io.teknek.nibiru.metadata;
 
 public class ColumnFamilyMetadata {
   private String name;
-  private long tombstoneGraceTime;
+  private long tombstoneGraceMillis;
   
   public ColumnFamilyMetadata(){
     
@@ -16,12 +16,12 @@ public class ColumnFamilyMetadata {
     this.name = name;
   }
 
-  public long getTombstoneGraceTime() {
-    return tombstoneGraceTime;
+  public long getTombstoneGraceMillis() {
+    return tombstoneGraceMillis;
   }
 
-  public void setTombstoneGraceTime(long tombstoneGraceTime) {
-    this.tombstoneGraceTime = tombstoneGraceTime;
+  public void setTombstoneGraceMillis(long tombstoneGraceTime) {
+    this.tombstoneGraceMillis = tombstoneGraceTime;
   }
   
 }

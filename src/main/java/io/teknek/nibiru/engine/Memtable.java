@@ -1,6 +1,9 @@
 package io.teknek.nibiru.engine;
 
 
+import io.teknek.nibiru.TimeSource;
+import io.teknek.nibiru.TimeSourceImpl;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -8,18 +11,20 @@ import java.util.concurrent.ConcurrentSkipListMap;
 public class Memtable {
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String,Val>> data;
+  private TimeSource timeSource;
   
   public Memtable(){
     data = new ConcurrentSkipListMap<>();
+    timeSource = new TimeSourceImpl();
   }
   
   public void put(Token rowkey, String column, String value, long stamp, long ttl) {
     ConcurrentSkipListMap<String,Val> newMap = new ConcurrentSkipListMap<>();
     ConcurrentSkipListMap<String,Val> foundRow = data.putIfAbsent(rowkey, newMap);
     if (foundRow == null) {
-      newMap.put(column, new Val(value, stamp, System.currentTimeMillis(), ttl));
+      newMap.put(column, new Val(value, stamp, timeSource.getTimeInMillis(), ttl));
     } else {
-      Val v = new Val(value, stamp, System.currentTimeMillis(), ttl);
+      Val v = new Val(value, stamp, timeSource.getTimeInMillis(), ttl);
       while (true){
         Val foundColumn = foundRow.putIfAbsent(column, v);
         if (foundColumn == null){
@@ -96,4 +101,19 @@ public class Memtable {
     }
     put(rowkey, column, null, time, 0L);
   }
+
+  public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String, Val>> getData() {
+    return data;
+  }
+
+  //VisibileForTesting
+  public TimeSource getTimeSource() {
+    return timeSource;
+  }
+  
+  //VisibileForTesting
+  public void setTimeSource(TimeSource timeSource) {
+    this.timeSource = timeSource;
+  }
+  
 }
