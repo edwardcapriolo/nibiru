@@ -1,7 +1,5 @@
 package io.teknek.nibiru;
 
-import io.teknek.nibiru.engine.Keyspace;
-import io.teknek.nibiru.engine.Memtable;
 import io.teknek.nibiru.engine.Val;
 
 import java.util.HashMap;
