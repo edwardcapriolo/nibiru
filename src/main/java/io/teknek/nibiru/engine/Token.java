@@ -1,3 +1,4 @@
+package io.teknek.nibiru.engine;
 
 public class Token implements Comparable<Token>{
   private String token;

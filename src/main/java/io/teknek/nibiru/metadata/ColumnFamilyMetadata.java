@@ -1,3 +1,4 @@
+package io.teknek.nibiru.metadata;
 
 public class ColumnFamilyMetadata {
   private String name;

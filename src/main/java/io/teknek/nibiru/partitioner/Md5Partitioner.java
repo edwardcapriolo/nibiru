@@ -1,3 +1,7 @@
+package io.teknek.nibiru.partitioner;
+
+import io.teknek.nibiru.engine.Token;
+
 import java.security.NoSuchAlgorithmException;
 
 
@@ -23,7 +27,7 @@ public class Md5Partitioner implements Partitioner {
   }
   
   @Override
-  public Token partition(String in) {
+  public Token partition(String in) { 
     Token t = new Token();
     t.setRowkey(in);
     t.setToken(MD5(in));

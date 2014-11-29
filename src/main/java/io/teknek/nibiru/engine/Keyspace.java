@@ -1,3 +1,7 @@
+package io.teknek.nibiru.engine;
+
+import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
+import io.teknek.nibiru.metadata.KeyspaceMetadata;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

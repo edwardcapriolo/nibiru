@@ -1,3 +1,4 @@
+import io.teknek.nibiru.partitioner.Md5Partitioner;
 import junit.framework.Assert;
 
 import org.junit.Test;

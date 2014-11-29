@@ -1,7 +1,7 @@
+import io.teknek.nibiru.Server;
 import junit.framework.Assert;
 
 import org.junit.Test;
-
 
 public class ServerTest {
 

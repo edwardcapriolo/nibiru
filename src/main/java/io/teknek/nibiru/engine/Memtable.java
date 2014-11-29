@@ -1,3 +1,4 @@
+package io.teknek.nibiru.engine;
 
 
 import java.util.Map;
@@ -36,29 +37,29 @@ public class Memtable {
     }
   }
   
-  public Val get (Token row, String column){
+  public Val get(Token row, String column) {
     Map<String, Val> r = data.get(row);
-    Val tomb = r.get("");
-    if (r == null){
+    if (r == null) {
       return null;
+    }
+    Val tomb = r.get("");
+    if (tomb == null) {
+      return r.get(column);
     } else {
-      if (tomb == null) { 
-        return r.get(column);
+      Val g = r.get(column);
+      if (g == null) {
+        return null;
+      }
+      if (tomb.getTime() >= g.getTime()) {
+        return null;
       } else {
-        Val g = r.get(column);
-        if (g == null){
-          return null;
-        }
-        if (tomb.getTime() >= g.getTime()){
-          return null;
-        } else {
-          return g;
-        }
+        return g;
       }
     }
+
   }
   
-  public ConcurrentNavigableMap slice(Token rowkey, String start, String end){
+  public ConcurrentNavigableMap<String,Val> slice(Token rowkey, String start, String end){
     ConcurrentSkipListMap<String, Val> row = data.get(rowkey);
     if (row == null){
       return null;

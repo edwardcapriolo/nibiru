@@ -1,3 +1,6 @@
+package io.teknek.nibiru.engine;
+
+import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 
 public class ColumnFamily {
 
