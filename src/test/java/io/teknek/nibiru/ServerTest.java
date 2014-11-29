@@ -1,3 +1,4 @@
+package io.teknek.nibiru;
 import io.teknek.nibiru.Server;
 import junit.framework.Assert;
 

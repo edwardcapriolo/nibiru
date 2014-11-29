@@ -1,3 +1,4 @@
+package io.teknek.nibiru.engine;
 import io.teknek.nibiru.engine.Keyspace;
 import io.teknek.nibiru.engine.Memtable;
 import io.teknek.nibiru.engine.Val;
