@@ -19,6 +19,6 @@ public class SSTableTest {
     s.flushToDisk(m);
     
     s.open(null, null);
-    s.get("a", "b");
+    s.get("row1", "column2");
   }
 }
