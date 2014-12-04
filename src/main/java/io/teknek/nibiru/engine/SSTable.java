@@ -111,8 +111,11 @@ public class SSTable {
       StringBuilder token = readToken(bg);
       StringBuilder rowkey = readRowkey(bg);
       SortedMap<String,Val> columns = readColumns(bg);
-      return columns.get(column);
+      if (rowkey.toString().equals(row)){
+        return columns.get(column);
+      }
     } while (bg.startOffset + bg.currentIndex +1 < channel.size());
+    return null;
   }
   
   public void flushToDisk(Memtable m) throws IOException{
