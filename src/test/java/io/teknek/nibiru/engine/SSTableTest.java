@@ -17,8 +17,7 @@ public class SSTableTest {
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
     SSTable s = new SSTable();
     s.flushToDisk(m);
-    
     s.open(null, null);
-    s.get("row1", "column2");
+    Assert.assertEquals("d", s.get("row1", "column2").getValue());
   }
 }

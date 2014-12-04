@@ -13,6 +13,8 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 public class SSTable {
@@ -82,9 +84,10 @@ public class SSTable {
     return create;
   }
 
-  private List<Val> readColumns(BufferGroup bg) throws IOException {
-    List<Val> result = new ArrayList<Val>();
+  private SortedMap<String,Val> readColumns(BufferGroup bg) throws IOException {
+    SortedMap<String,Val> result = new TreeMap<>();
     do {
+      StringBuilder name = readColumn(bg);
       StringBuilder create = readColumn(bg);
       StringBuilder time = readColumn(bg);
       StringBuilder ttl = readColumn(bg);
@@ -93,7 +96,7 @@ public class SSTable {
               Long.parseLong(time.toString()),
               Long.parseLong(create.toString()),
               Long.parseLong(ttl.toString()));
-      result.add(v);
+      result.put(name.toString(), v);
     } while (bg.dst[bg.currentIndex] != '\n');
     return result;
   }
@@ -107,10 +110,9 @@ public class SSTable {
       readHeader(bg);
       StringBuilder token = readToken(bg);
       StringBuilder rowkey = readRowkey(bg);
-      List<Val> columns = readColumns(bg);
-      System.out.println(columns);
-    } while (bg.startOffset + bg.currentIndex+1 < channel.size());
-    return null;
+      SortedMap<String,Val> columns = readColumns(bg);
+      return columns.get(column);
+    } while (bg.startOffset + bg.currentIndex +1 < channel.size());
   }
   
   public void flushToDisk(Memtable m) throws IOException{
@@ -130,6 +132,8 @@ public class SSTable {
             output.write(END_COLUMN);
             first = false;
           }
+          output.write(j.getKey().getBytes());
+          output.write(END_COLUMN_PART);
           output.write(String.valueOf(j.getValue().getCreateTime()).getBytes());
           output.write(END_COLUMN_PART);
           output.write(String.valueOf(j.getValue().getTime()).getBytes());
