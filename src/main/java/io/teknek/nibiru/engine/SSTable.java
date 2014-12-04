@@ -87,6 +87,9 @@ public class SSTable {
   private SortedMap<String,Val> readColumns(BufferGroup bg) throws IOException {
     SortedMap<String,Val> result = new TreeMap<>();
     do {
+      if (bg.dst[bg.currentIndex] == END_COLUMN){
+        bg.advanceIndex();
+      }
       StringBuilder name = readColumn(bg);
       StringBuilder create = readColumn(bg);
       StringBuilder time = readColumn(bg);
@@ -129,11 +132,12 @@ public class SSTable {
         output.write(END_TOKEN);
         output.write(i.getKey().getRowkey().getBytes());
         output.write(END_ROWKEY);
-        boolean first = true;
+        boolean writeJoin = false;
         for (Entry<String, Val> j : i.getValue().entrySet()){
-          if (!first){
+          if (!writeJoin){
+            writeJoin = true;
+          } else {
             output.write(END_COLUMN);
-            first = false;
           }
           output.write(j.getKey().getBytes());
           output.write(END_COLUMN_PART);
