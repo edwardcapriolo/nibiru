@@ -11,10 +11,12 @@ import java.util.concurrent.ConcurrentNavigableMap;
 public class Server {
   
   private ConcurrentMap<String,Keyspace> keyspaces;
+  private Configuration configuration;
   private TombstoneReaper tombstoneReaper;
   private Thread tombstoneRunnable;
   
   public Server(){
+    configuration = new Configuration();
     keyspaces = new ConcurrentHashMap<>();
     tombstoneReaper = new TombstoneReaper(this);
   }
@@ -71,6 +73,14 @@ public class Server {
 
   public TombstoneReaper getTombstoneReaper() {
     return tombstoneReaper;
+  }
+
+  public Configuration getConfiguration() {
+    return configuration;
+  }
+
+  public void setConfiguration(Configuration configuration) {
+    this.configuration = configuration;
   }
   
 }
