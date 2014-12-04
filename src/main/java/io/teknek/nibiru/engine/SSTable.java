@@ -32,8 +32,8 @@ public class SSTable {
   }
   
   public void open(String id, Configuration conf) throws IOException {
-    //File sstable = new File(conf.getSstableDirectory(), id + ".ss");
-    File sstable = new File("/home/edward/something" + ".ss");
+    File sstable = new File(conf.getSstableDirectory(), id + ".ss");
+    //File sstable = new File("/home/edward/something" + ".ss");
     raf = new RandomAccessFile(sstable, "r");
     channel = raf.getChannel();
   }
@@ -118,8 +118,8 @@ public class SSTable {
     return null;
   }
   
-  public void flushToDisk(Memtable m) throws IOException{
-    File f = new File("/home/edward/something" + ".ss");
+  public void flushToDisk(String id, Configuration conf, Memtable m) throws IOException{
+    File f = new File(conf.getSstableDirectory(), id + ".ss");
     OutputStream output = null;
     try {
       output = new BufferedOutputStream(new FileOutputStream(f));

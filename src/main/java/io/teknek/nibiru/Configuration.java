@@ -1,15 +1,17 @@
 package io.teknek.nibiru;
 
+import java.io.File;
+
 public class Configuration {
-  private String sstableDirectory;
+  private File sstableDirectory;
   public Configuration(){
     
   }
-  public String getSstableDirectory() {
+  public File getSstableDirectory() {
     return sstableDirectory;
   }
-  public void setSstableDirectory(String sstableDirectory) {
+  public void setSstableDirectory(File sstableDirectory) {
     this.sstableDirectory = sstableDirectory;
   }
-  
+
 }
