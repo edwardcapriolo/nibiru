@@ -125,15 +125,26 @@ public class SSTable {
   
   public void flushToDisk(String id, Configuration conf, Memtable m) throws IOException{
     File f = new File(conf.getSstableDirectory(), id + ".ss");
-    OutputStream output = null;
+    BufferedOutputStream output = null;
+    File indexFile = new File(conf.getSstableDirectory(), id + ".index");
+    CountingBufferedOutputStream indexStream = null;
+    int rowKeyCount = 0;
     try {
       output = new BufferedOutputStream(new FileOutputStream(f));
+      indexStream = new CountingBufferedOutputStream(new FileOutputStream(indexFile));
       for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
+        rowKeyCount++;
         output.write(START_RECORD);
         output.write(i.getKey().getToken().getBytes());
         output.write(END_TOKEN);
         output.write(i.getKey().getRowkey().getBytes());
         output.write(END_ROWKEY);
+        if (rowKeyCount % conf.getIndexInterval() == 0){
+          indexStream.write(i.getKey().getToken().getBytes());
+          indexStream.write(END_TOKEN);
+          indexStream.write(String.valueOf(indexStream.getWrittenOffset()).getBytes());
+          indexStream.write(END_ROW);
+        }
         boolean writeJoin = false;
         for (Entry<String, Val> j : i.getValue().entrySet()){
           if (!writeJoin){
@@ -152,10 +163,12 @@ public class SSTable {
           output.write(String.valueOf(j.getValue().getValue()).getBytes());
         }
         output.write('\n');
+        
       }
     }
     finally {
       output.close();
+      indexStream.close();
     }
   }
   
