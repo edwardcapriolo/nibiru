@@ -17,14 +17,17 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 public class SSTable {
 
-  char START_RECORD = '\0';
-  char END_TOKEN = '\1';
-  char END_ROWKEY = '\2';
-  char END_COLUMN_PART = '\3';
-  char END_COLUMN = '\4';
-  char END_ROW = '\n';
-  private RandomAccessFile raf;
-  private FileChannel channel;
+  public static final char START_RECORD = '\0';
+  public static final char END_TOKEN = '\1';
+  public static final char END_ROWKEY = '\2';
+  public static final char END_COLUMN_PART = '\3';
+  public static final char END_COLUMN = '\4';
+  public static final char END_ROW = '\n';
+  
+  private RandomAccessFile ssRaf;
+  private FileChannel ssChannel;
+  private RandomAccessFile indexRaf;
+  private FileChannel indexChannel;
   
   public SSTable(){
    
@@ -32,9 +35,11 @@ public class SSTable {
   
   public void open(String id, Configuration conf) throws IOException {
     File sstable = new File(conf.getSstableDirectory(), id + ".ss");
-    //File sstable = new File("/home/edward/something" + ".ss");
-    raf = new RandomAccessFile(sstable, "r");
-    channel = raf.getChannel();
+    ssRaf = new RandomAccessFile(sstable, "r");
+    ssChannel = ssRaf.getChannel();
+    File index = new File(conf.getSstableDirectory(), id + ".index");
+    indexRaf = new RandomAccessFile(index, "r");
+    indexChannel = indexRaf.getChannel();
   }
   
   private void readHeader(BufferGroup bg) throws IOException {
@@ -52,6 +57,15 @@ public class SSTable {
     }
     bg.advanceIndex();
     return token;
+  }
+  
+  private long readIndexSize(BufferGroup bg) throws IOException{
+    StringBuilder create = new StringBuilder();
+    while (bg.dst[bg.currentIndex] != END_ROW){
+      create.append((char) bg.dst[bg.currentIndex]);
+      bg.advanceIndex();
+    }
+    return Long.valueOf(create.toString());
   }
   
   private StringBuilder readRowkey(BufferGroup bg) throws IOException {
@@ -104,10 +118,17 @@ public class SSTable {
   }
   
   public Val get (String row, String column) throws IOException{
+    BufferGroup bgIndex = new BufferGroup();
+    bgIndex.channel = indexChannel;
+    bgIndex.mbb = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());
+    bgIndex.read();
+    Index index = new Index(bgIndex);
+    
     BufferGroup bg = new BufferGroup();
-    bg.channel = this.channel;
-    bg.mbb = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+    bg.channel = ssChannel;
+    bg.mbb = ssChannel.map(FileChannel.MapMode.READ_ONLY, index.findStartOffset(), ssChannel.size());
     bg.read();
+    
     do {
       if (bg.dst[bg.currentIndex] == END_ROW){
         bg.advanceIndex();
@@ -119,7 +140,7 @@ public class SSTable {
       if (rowkey.toString().equals(row)){
         return columns.get(column);
       }
-    } while (bg.startOffset + bg.currentIndex +1 < channel.size());
+    } while (bg.startOffset + bg.currentIndex +1 < ssChannel.size());
     return null;
   }
   
@@ -133,13 +154,13 @@ public class SSTable {
       output = new BufferedOutputStream(new FileOutputStream(f));
       indexStream = new CountingBufferedOutputStream(new FileOutputStream(indexFile));
       for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
-        rowKeyCount++;
         output.write(START_RECORD);
         output.write(i.getKey().getToken().getBytes());
         output.write(END_TOKEN);
         output.write(i.getKey().getRowkey().getBytes());
         output.write(END_ROWKEY);
-        if (rowKeyCount % conf.getIndexInterval() == 0){
+        if (rowKeyCount++ % conf.getIndexInterval() == 0){
+          indexStream.write(START_RECORD);
           indexStream.write(i.getKey().getToken().getBytes());
           indexStream.write(END_TOKEN);
           indexStream.write(String.valueOf(indexStream.getWrittenOffset()).getBytes());
@@ -171,5 +192,5 @@ public class SSTable {
       indexStream.close();
     }
   }
-  
+ 
 }
