@@ -24,6 +24,7 @@ public class SSTable {
   char END_ROWKEY = '\2';
   char END_COLUMN_PART = '\3';
   char END_COLUMN = '\4';
+  char END_ROW = '\n';
   private RandomAccessFile raf;
   private FileChannel channel;
   
@@ -77,7 +78,7 @@ public class SSTable {
   
   private StringBuilder endColumn(BufferGroup bg) throws IOException{
     StringBuilder create = new StringBuilder();
-    while (!(bg.dst[bg.currentIndex] == END_COLUMN ||bg.dst[bg.currentIndex] == '\n') ){
+    while (!(bg.dst[bg.currentIndex] == END_COLUMN ||bg.dst[bg.currentIndex] == END_ROW) ){
       create.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
@@ -100,7 +101,7 @@ public class SSTable {
               Long.parseLong(create.toString()),
               Long.parseLong(ttl.toString()));
       result.put(name.toString(), v);
-    } while (bg.dst[bg.currentIndex] != '\n');
+    } while (bg.dst[bg.currentIndex] != END_ROW);
     return result;
   }
   
@@ -110,7 +111,7 @@ public class SSTable {
     bg.mbb = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
     bg.read();
     do {
-      if (bg.dst[bg.currentIndex] == '\n'){
+      if (bg.dst[bg.currentIndex] == END_ROW){
         bg.advanceIndex();
       }
       readHeader(bg);
@@ -154,12 +155,10 @@ public class SSTable {
         }
         output.write('\n');
       }
-
     }
     finally {
       output.close();
     }
-    
   }
   
 }
