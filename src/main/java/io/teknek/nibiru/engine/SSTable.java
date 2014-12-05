@@ -110,6 +110,9 @@ public class SSTable {
     bg.mbb = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
     bg.read();
     do {
+      if (bg.dst[bg.currentIndex] == '\n'){
+        bg.advanceIndex();
+      }
       readHeader(bg);
       StringBuilder token = readToken(bg);
       StringBuilder rowkey = readRowkey(bg);
