@@ -143,21 +143,21 @@ public class SSTable {
   }
   
   public void flushToDisk(String id, Configuration conf, Memtable m) throws IOException{
-    File f = new File(conf.getSstableDirectory(), id + ".ss");
-    BufferedOutputStream output = null;
+    File sstableFile = new File(conf.getSstableDirectory(), id + ".ss");
+    BufferedOutputStream ssOutputStream = null;
     File indexFile = new File(conf.getSstableDirectory(), id + ".index");
     CountingBufferedOutputStream indexStream = null;
     int rowKeyCount = 0;
     try {
-      output = new BufferedOutputStream(new FileOutputStream(f));
+      ssOutputStream = new BufferedOutputStream(new FileOutputStream(sstableFile));
       indexStream = new CountingBufferedOutputStream(new FileOutputStream(indexFile));
       for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
         long startOfRecord = indexStream.getWrittenOffset();
-        output.write(START_RECORD);
-        output.write(i.getKey().getToken().getBytes());
-        output.write(END_TOKEN);
-        output.write(i.getKey().getRowkey().getBytes());
-        output.write(END_ROWKEY);
+        ssOutputStream.write(START_RECORD);
+        ssOutputStream.write(i.getKey().getToken().getBytes());
+        ssOutputStream.write(END_TOKEN);
+        ssOutputStream.write(i.getKey().getRowkey().getBytes());
+        ssOutputStream.write(END_ROWKEY);
         if (rowKeyCount++ % conf.getIndexInterval() == 0){
           indexStream.write(START_RECORD);
           indexStream.write(i.getKey().getToken().getBytes());
@@ -170,24 +170,24 @@ public class SSTable {
           if (!writeJoin){
             writeJoin = true;
           } else {
-            output.write(END_COLUMN);
+            ssOutputStream.write(END_COLUMN);
           }
-          output.write(j.getKey().getBytes());
-          output.write(END_COLUMN_PART);
-          output.write(String.valueOf(j.getValue().getCreateTime()).getBytes());
-          output.write(END_COLUMN_PART);
-          output.write(String.valueOf(j.getValue().getTime()).getBytes());
-          output.write(END_COLUMN_PART);
-          output.write(String.valueOf(j.getValue().getTtl()).getBytes());
-          output.write(END_COLUMN_PART);
-          output.write(String.valueOf(j.getValue().getValue()).getBytes());
+          ssOutputStream.write(j.getKey().getBytes());
+          ssOutputStream.write(END_COLUMN_PART);
+          ssOutputStream.write(String.valueOf(j.getValue().getCreateTime()).getBytes());
+          ssOutputStream.write(END_COLUMN_PART);
+          ssOutputStream.write(String.valueOf(j.getValue().getTime()).getBytes());
+          ssOutputStream.write(END_COLUMN_PART);
+          ssOutputStream.write(String.valueOf(j.getValue().getTtl()).getBytes());
+          ssOutputStream.write(END_COLUMN_PART);
+          ssOutputStream.write(String.valueOf(j.getValue().getValue()).getBytes());
         }
-        output.write('\n');
+        ssOutputStream.write('\n');
         
       }
     }
     finally {
-      output.close();
+      ssOutputStream.close();
       indexStream.close();
     }
   }
