@@ -1,13 +1,10 @@
 package io.teknek.nibiru.engine;
 
-
 import io.teknek.nibiru.Configuration;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -145,12 +142,10 @@ public class SSTable {
   public void flushToDisk(String id, Configuration conf, Memtable m) throws IOException{
     File sstableFile = new File(conf.getSstableDirectory(), id + ".ss");
     CountingBufferedOutputStream ssOutputStream = null;
-    File indexFile = new File(conf.getSstableDirectory(), id + ".index");
-    CountingBufferedOutputStream indexStream = null;
-    int rowKeyCount = 0;
+    IndexWriter indexWriter = new IndexWriter(id, conf);
     try {
       ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
-      indexStream = new CountingBufferedOutputStream(new FileOutputStream(indexFile));
+      indexWriter.open();
       for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
         long startOfRecord = ssOutputStream.getWrittenOffset();
         ssOutputStream.write(START_RECORD);
@@ -158,13 +153,7 @@ public class SSTable {
         ssOutputStream.write(END_TOKEN);
         ssOutputStream.write(i.getKey().getRowkey().getBytes());
         ssOutputStream.write(END_ROWKEY);
-        if (rowKeyCount++ % conf.getIndexInterval() == 0){
-          indexStream.write(START_RECORD);
-          indexStream.write(i.getKey().getToken().getBytes());
-          indexStream.write(END_TOKEN);
-          indexStream.write(String.valueOf(startOfRecord).getBytes());
-          indexStream.write(END_ROW);
-        }
+        indexWriter.handleRow(startOfRecord, i.getKey().getToken());
         boolean writeJoin = false;
         for (Entry<String, Val> j : i.getValue().entrySet()){
           if (!writeJoin){
@@ -183,12 +172,11 @@ public class SSTable {
           ssOutputStream.write(String.valueOf(j.getValue().getValue()).getBytes());
         }
         ssOutputStream.write('\n');
-        
       }
     }
     finally {
       ssOutputStream.close();
-      indexStream.close();
+      indexWriter.close();
     }
   }
  
