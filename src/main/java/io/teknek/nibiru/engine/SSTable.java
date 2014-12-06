@@ -144,15 +144,15 @@ public class SSTable {
   
   public void flushToDisk(String id, Configuration conf, Memtable m) throws IOException{
     File sstableFile = new File(conf.getSstableDirectory(), id + ".ss");
-    BufferedOutputStream ssOutputStream = null;
+    CountingBufferedOutputStream ssOutputStream = null;
     File indexFile = new File(conf.getSstableDirectory(), id + ".index");
     CountingBufferedOutputStream indexStream = null;
     int rowKeyCount = 0;
     try {
-      ssOutputStream = new BufferedOutputStream(new FileOutputStream(sstableFile));
+      ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
       indexStream = new CountingBufferedOutputStream(new FileOutputStream(indexFile));
       for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
-        long startOfRecord = indexStream.getWrittenOffset();
+        long startOfRecord = ssOutputStream.getWrittenOffset();
         ssOutputStream.write(START_RECORD);
         ssOutputStream.write(i.getKey().getToken().getBytes());
         ssOutputStream.write(END_TOKEN);
