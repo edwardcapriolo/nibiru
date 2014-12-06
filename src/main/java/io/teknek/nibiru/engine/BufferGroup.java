@@ -25,10 +25,6 @@ public class BufferGroup {
       dst = new byte[blockSize];
     }
     mbb.duplicate().get(dst, startOffset, blockSize);
-    /*
-    mbb.get(dst, startOffset, blockSize);
-    mbb.clear();
-    */
     currentIndex = 0;
   }
   

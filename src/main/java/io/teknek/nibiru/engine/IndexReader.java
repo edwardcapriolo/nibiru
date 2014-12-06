@@ -21,7 +21,7 @@ public class IndexReader {
       long thisOffset = readIndexSize(bgIndex);
       if(readToken.toString().equals(token)){
         return thisOffset;
-      } else if (readToken.toString().compareTo(token)>1){
+      } else if (readToken.toString().compareTo(token) > 0) {
         return offset;
       } else {
         offset = thisOffset;
