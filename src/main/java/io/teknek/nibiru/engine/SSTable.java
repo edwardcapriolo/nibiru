@@ -120,11 +120,11 @@ public class SSTable {
     bgIndex.channel = indexChannel;
     bgIndex.mbb = indexBuffer;
     Index index = new Index(bgIndex);
- 
+    
     BufferGroup bg = new BufferGroup();
-    bg.channel = ssChannel;
+    bg.channel = ssChannel; 
     bg.mbb = ssBuffer;
-    bg.setStartOffset((int)index.findStartOffset());
+    bg.setStartOffset((int)index.findStartOffset(row));
     
     do {
       if (bg.dst[bg.currentIndex] == END_ROW){
@@ -152,6 +152,7 @@ public class SSTable {
       output = new BufferedOutputStream(new FileOutputStream(f));
       indexStream = new CountingBufferedOutputStream(new FileOutputStream(indexFile));
       for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
+        long startOfRecord = indexStream.getWrittenOffset();
         output.write(START_RECORD);
         output.write(i.getKey().getToken().getBytes());
         output.write(END_TOKEN);
@@ -161,7 +162,7 @@ public class SSTable {
           indexStream.write(START_RECORD);
           indexStream.write(i.getKey().getToken().getBytes());
           indexStream.write(END_TOKEN);
-          indexStream.write(String.valueOf(indexStream.getWrittenOffset()).getBytes());
+          indexStream.write(String.valueOf(startOfRecord).getBytes());
           indexStream.write(END_ROW);
         }
         boolean writeJoin = false;

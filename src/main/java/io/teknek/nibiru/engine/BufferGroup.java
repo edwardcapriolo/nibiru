@@ -14,8 +14,9 @@ public class BufferGroup {
   
   public BufferGroup(){} 
   
-  void setStartOffset(int offset){
+  void setStartOffset(int offset) throws IOException{
     this.startOffset = offset;
+    read();
   }
   
   void read() throws IOException{
