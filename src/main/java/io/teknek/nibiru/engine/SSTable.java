@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Map.Entry;
 import java.util.SortedMap;
@@ -28,6 +29,7 @@ public class SSTable {
   private FileChannel ssChannel;
   private RandomAccessFile indexRaf;
   private FileChannel indexChannel;
+  private MappedByteBuffer indexBuffer;
   
   public SSTable(){
    
@@ -40,6 +42,8 @@ public class SSTable {
     File index = new File(conf.getSstableDirectory(), id + ".index");
     indexRaf = new RandomAccessFile(index, "r");
     indexChannel = indexRaf.getChannel();
+    indexBuffer = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());
+    
   }
   
   private void readHeader(BufferGroup bg) throws IOException {
@@ -57,15 +61,6 @@ public class SSTable {
     }
     bg.advanceIndex();
     return token;
-  }
-  
-  private long readIndexSize(BufferGroup bg) throws IOException{
-    StringBuilder create = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != END_ROW){
-      create.append((char) bg.dst[bg.currentIndex]);
-      bg.advanceIndex();
-    }
-    return Long.valueOf(create.toString());
   }
   
   private StringBuilder readRowkey(BufferGroup bg) throws IOException {
@@ -120,10 +115,11 @@ public class SSTable {
   public Val get (String row, String column) throws IOException{
     BufferGroup bgIndex = new BufferGroup();
     bgIndex.channel = indexChannel;
-    bgIndex.mbb = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());
+    bgIndex.mbb = indexBuffer;
     bgIndex.read();
     Index index = new Index(bgIndex);
     
+ 
     BufferGroup bg = new BufferGroup();
     bg.channel = ssChannel;
     bg.mbb = ssChannel.map(FileChannel.MapMode.READ_ONLY, index.findStartOffset(), ssChannel.size());
@@ -141,6 +137,7 @@ public class SSTable {
         return columns.get(column);
       }
     } while (bg.startOffset + bg.currentIndex +1 < ssChannel.size());
+    
     return null;
   }
   

@@ -33,7 +33,7 @@ public class SSTableTest {
     s.flushToDisk("1", configuration, m);
     s.open("1", configuration);
     long x = System.currentTimeMillis();
-    for (int i = 0 ; i < 50000 ; i++) {
+    for (int i = 0 ; i < 10000 ; i++) {
       Assert.assertEquals("d", s.get("row1", "column2").getValue());
       Assert.assertEquals("e", s.get("row1", "column3").getValue());
       Assert.assertEquals("e", s.get("row2", "column1").getValue());
