@@ -14,13 +14,20 @@ public class BufferGroup {
   
   public BufferGroup(){} 
   
+  void setStartOffset(int offset){
+    this.startOffset = offset;
+  }
+  
   void read() throws IOException{
     if (channel.size() - startOffset < blockSize){
       blockSize = (int) (channel.size() - startOffset);
       dst = new byte[blockSize];
     }
+    mbb.duplicate().get(dst, startOffset, blockSize);
+    /*
     mbb.get(dst, startOffset, blockSize);
     mbb.clear();
+    */
     currentIndex = 0;
   }
   

@@ -27,6 +27,7 @@ public class SSTable {
   
   private RandomAccessFile ssRaf;
   private FileChannel ssChannel;
+  private MappedByteBuffer ssBuffer;
   private RandomAccessFile indexRaf;
   private FileChannel indexChannel;
   private MappedByteBuffer indexBuffer;
@@ -39,6 +40,8 @@ public class SSTable {
     File sstable = new File(conf.getSstableDirectory(), id + ".ss");
     ssRaf = new RandomAccessFile(sstable, "r");
     ssChannel = ssRaf.getChannel();
+    ssBuffer = ssChannel.map(FileChannel.MapMode.READ_ONLY, 0, ssChannel.size());
+    
     File index = new File(conf.getSstableDirectory(), id + ".index");
     indexRaf = new RandomAccessFile(index, "r");
     indexChannel = indexRaf.getChannel();
@@ -116,14 +119,12 @@ public class SSTable {
     BufferGroup bgIndex = new BufferGroup();
     bgIndex.channel = indexChannel;
     bgIndex.mbb = indexBuffer;
-    bgIndex.read();
     Index index = new Index(bgIndex);
-    
  
     BufferGroup bg = new BufferGroup();
     bg.channel = ssChannel;
-    bg.mbb = ssChannel.map(FileChannel.MapMode.READ_ONLY, index.findStartOffset(), ssChannel.size());
-    bg.read();
+    bg.mbb = ssBuffer;
+    bg.setStartOffset((int)index.findStartOffset());
     
     do {
       if (bg.dst[bg.currentIndex] == END_ROW){
