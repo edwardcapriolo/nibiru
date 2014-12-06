@@ -119,7 +119,7 @@ public class SSTable {
     BufferGroup bgIndex = new BufferGroup();
     bgIndex.channel = indexChannel;
     bgIndex.mbb = indexBuffer;
-    Index index = new Index(bgIndex);
+    IndexReader index = new IndexReader(bgIndex);
     
     BufferGroup bg = new BufferGroup();
     bg.channel = ssChannel; 

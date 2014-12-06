@@ -2,11 +2,11 @@ package io.teknek.nibiru.engine;
 
 import java.io.IOException;
 
-public class Index {
+public class IndexReader {
 
   private final BufferGroup bgIndex;
 
-  public Index(BufferGroup bgIndex) {
+  public IndexReader(BufferGroup bgIndex) {
     this.bgIndex = bgIndex;
   }
 
