@@ -122,7 +122,6 @@ public class SSTable {
     bg.channel = ssChannel; 
     bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
     bg.setStartOffset((int)index.findStartOffset(row));
-    //bg.setStartOffset(0);
     do {
       if (bg.dst[bg.currentIndex] == END_ROW){
         bg.advanceIndex();
@@ -134,7 +133,6 @@ public class SSTable {
       if (rowkey.toString().equals(row)){
         return columns.get(column);
       }
-    //} while (bg.mbb.position() + bg.currentIndex +1 < ssChannel.size());
     } while ( bg.currentIndex < bg.dst.length - 1 || bg.mbb.position()  < ssChannel.size() );
     
     return null;
