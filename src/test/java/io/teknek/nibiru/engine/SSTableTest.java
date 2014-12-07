@@ -63,15 +63,16 @@ public class SSTableTest {
     
     {
       long x = System.currentTimeMillis();
-      for (int i = 0 ; i < 50000 ; i++) {
+      for (int i = 0 ; i < 2 ; i++) {
         Assert.assertEquals("c", s.get("00001", "column2").getValue());
       }
       System.out.println((System.currentTimeMillis() - x));
     }
     {
       long x = System.currentTimeMillis();
-      for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get("09999", "column2").getValue());
+      for (int i = 0 ; i < 2 ; i++) {
+        Assert.assertEquals("c", s.get("01002", "column2").getValue());
+        Assert.assertEquals("c", s.get("01998", "column2").getValue());
       }
       System.out.println((System.currentTimeMillis() - x));
     }

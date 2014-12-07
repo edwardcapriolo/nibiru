@@ -11,20 +11,13 @@ public class CountingBufferedOutputStream extends BufferedOutputStream {
     super(out);
   }
 
-  @Override
-  public synchronized void write(int b) throws IOException {
+  public synchronized void writeAndCount(int b) throws IOException {
     super.write(b);
-    writtenOffset += 1;
+    writtenOffset++;
   }
 
-  @Override
-  public synchronized void write(byte[] b, int off, int len) throws IOException {
-    super.write(b, off, len);
-    writtenOffset += len;
-  }
 
-  @Override
-  public void write(byte[] b) throws IOException {
+  public void writeAndCount(byte[] b) throws IOException {
     super.write(b);
     writtenOffset += b.length;
   }

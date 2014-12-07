@@ -26,7 +26,7 @@ public class IndexReader {
       } else {
         offset = thisOffset;
       }
-    } while (bgIndex.startOffset + bgIndex.currentIndex + 1 < bgIndex.channel.size());
+    } while (bgIndex.mbb.position() + bgIndex.currentIndex + 1 < bgIndex.channel.size());
     return offset;
   }
   
