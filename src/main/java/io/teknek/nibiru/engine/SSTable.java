@@ -112,6 +112,12 @@ public class SSTable {
     return result;
   }
   
+  private void ignoreColumns(BufferGroup bg) throws IOException {
+    do {
+        bg.advanceIndex();
+    } while (bg.dst[bg.currentIndex] != END_ROW);
+  }
+  
   public Val get (String row, String column) throws IOException{
     BufferGroup bgIndex = new BufferGroup();
     bgIndex.channel = indexChannel;
@@ -129,9 +135,11 @@ public class SSTable {
       readHeader(bg);
       StringBuilder token = readToken(bg);
       StringBuilder rowkey = readRowkey(bg);
-      SortedMap<String,Val> columns = readColumns(bg);
       if (rowkey.toString().equals(row)){
+        SortedMap<String,Val> columns = readColumns(bg);
         return columns.get(column);
+      } else {
+        ignoreColumns(bg);
       }
     } while ( bg.currentIndex < bg.dst.length - 1 || bg.mbb.position()  < ssChannel.size() );
     
