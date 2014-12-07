@@ -134,7 +134,8 @@ public class SSTable {
       if (rowkey.toString().equals(row)){
         return columns.get(column);
       }
-    } while (bg.mbb.position() + bg.currentIndex +1 < ssChannel.size());
+    //} while (bg.mbb.position() + bg.currentIndex +1 < ssChannel.size());
+    } while ( bg.currentIndex < bg.dst.length - 1 || bg.mbb.position()  < ssChannel.size() );
     
     return null;
   }
