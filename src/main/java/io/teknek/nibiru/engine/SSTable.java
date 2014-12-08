@@ -73,6 +73,12 @@ public class SSTable {
     return token;
   }
   
+  private void skipRowkey(BufferGroup bg) throws IOException{
+    do {
+      bg.advanceIndex();
+    } while (bg.dst[bg.currentIndex] != END_ROWKEY);
+  }
+  
   private StringBuilder readColumn(BufferGroup bg) throws IOException{
     StringBuilder create = new StringBuilder();
     while (bg.dst[bg.currentIndex] != END_COLUMN_PART){
@@ -114,7 +120,7 @@ public class SSTable {
   
   private void ignoreColumns(BufferGroup bg) throws IOException {
     do {
-        bg.advanceIndex();
+      bg.advanceIndex();
     } while (bg.dst[bg.currentIndex] != END_ROW);
   }
   
@@ -128,20 +134,26 @@ public class SSTable {
     bg.channel = ssChannel; 
     bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
     bg.setStartOffset((int)index.findStartOffset(row));
+    String searchToken = row;//this is not correct
     do {
       if (bg.dst[bg.currentIndex] == END_ROW){
         bg.advanceIndex();
       }
       readHeader(bg);
       StringBuilder token = readToken(bg);
-      StringBuilder rowkey = readRowkey(bg);
-      if (rowkey.toString().equals(row)){
-        SortedMap<String,Val> columns = readColumns(bg);
-        return columns.get(column);
+      if (token.toString().equals(searchToken)){
+        StringBuilder rowkey = readRowkey(bg);
+        if (rowkey.toString().equals(row)){
+          SortedMap<String,Val> columns = readColumns(bg);
+          return columns.get(column);
+        } else {
+          ignoreColumns(bg);
+        }
       } else {
+        skipRowkey(bg);
         ignoreColumns(bg);
       }
-    } while ( bg.currentIndex < bg.dst.length - 1 || bg.mbb.position()  < ssChannel.size() );
+    } while (bg.currentIndex < bg.dst.length - 1 || bg.mbb.position()  < ssChannel.size());
     
     return null;
   }
