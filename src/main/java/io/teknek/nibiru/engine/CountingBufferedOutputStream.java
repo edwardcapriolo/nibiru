@@ -16,7 +16,6 @@ public class CountingBufferedOutputStream extends BufferedOutputStream {
     writtenOffset++;
   }
 
-
   public void writeAndCount(byte[] b) throws IOException {
     super.write(b);
     writtenOffset += b.length;

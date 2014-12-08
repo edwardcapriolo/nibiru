@@ -55,11 +55,11 @@ public class SSTableTest {
     NumberFormat nf = new DecimalFormat("00000");
     for (int i = 0; i < 10000; i++) {
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column2", "c", 1, 0L);
+      m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column3", "c", 1, 0L);
     }
     SSTable s = new SSTable();
     s.flushToDisk("1", configuration, m);
     s.open("1", configuration);
-    
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
@@ -77,7 +77,5 @@ public class SSTableTest {
     
     
   }
-  
-  
-  
+    
 }
