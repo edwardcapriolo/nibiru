@@ -3,15 +3,12 @@ package io.teknek.nibiru.engine;
 import io.teknek.nibiru.Configuration;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 public class SSTable {
 
@@ -166,45 +163,4 @@ public class SSTable {
     return null;
   }
   
-  public void flushToDisk(String id, Configuration conf, Memtable m) throws IOException{
-    File sstableFile = new File(conf.getSstableDirectory(), id + ".ss");
-    CountingBufferedOutputStream ssOutputStream = null;
-    IndexWriter indexWriter = new IndexWriter(id, conf);
-    try {
-      ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
-      indexWriter.open();
-      for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
-        long startOfRecord = ssOutputStream.getWrittenOffset();
-        ssOutputStream.writeAndCount(START_RECORD);
-        ssOutputStream.writeAndCount(i.getKey().getToken().getBytes());
-        ssOutputStream.writeAndCount(END_TOKEN);
-        ssOutputStream.writeAndCount(i.getKey().getRowkey().getBytes());
-        ssOutputStream.writeAndCount(END_ROWKEY);
-        indexWriter.handleRow(startOfRecord, i.getKey().getToken());
-        boolean writeJoin = false;
-        for (Entry<String, Val> j : i.getValue().entrySet()){
-          if (!writeJoin){
-            writeJoin = true;
-          } else {
-            ssOutputStream.writeAndCount(END_COLUMN);
-          }
-          ssOutputStream.writeAndCount(j.getKey().getBytes());
-          ssOutputStream.writeAndCount(END_COLUMN_PART);
-          ssOutputStream.writeAndCount(String.valueOf(j.getValue().getCreateTime()).getBytes());
-          ssOutputStream.writeAndCount(END_COLUMN_PART);
-          ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTime()).getBytes());
-          ssOutputStream.writeAndCount(END_COLUMN_PART);
-          ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTtl()).getBytes());
-          ssOutputStream.writeAndCount(END_COLUMN_PART);
-          ssOutputStream.writeAndCount(String.valueOf(j.getValue().getValue()).getBytes());
-        }
-        ssOutputStream.writeAndCount('\n');
-      }
-    }
-    finally {
-      ssOutputStream.close();
-      indexWriter.close();
-    }
-  }
- 
 }
