@@ -74,6 +74,20 @@ public class SSTableTest {
       }
       System.out.println("far from index " +(System.currentTimeMillis() - x));
     }
+    {
+      long x = System.currentTimeMillis();
+      for (int i = 0 ; i < 50000 ; i++) {
+        Assert.assertEquals("c", s.get("00001", "column2").getValue());
+      }
+      System.out.println("index match " + (System.currentTimeMillis() - x));
+    }
+    {
+      long x = System.currentTimeMillis();
+      for (int i = 0 ; i < 50000 ; i++) {
+        Assert.assertEquals("c", s.get("08999", "column2").getValue());
+      }
+      System.out.println("far from index " +(System.currentTimeMillis() - x));
+    }
     
     
   }
