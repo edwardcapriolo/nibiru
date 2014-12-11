@@ -22,7 +22,7 @@ public class IndexWriter {
   
   public void open() throws FileNotFoundException {
     File indexFile = new File(conf.getSstableDirectory(), id + ".index");
-    indexStream = new CountingBufferedOutputStream(new FileOutputStream(indexFile));
+    indexStream = new BufferedOutputStream(new FileOutputStream(indexFile));
   }
   
   public void handleRow(long startOfRecord, String token) throws IOException {
