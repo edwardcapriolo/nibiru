@@ -28,6 +28,7 @@ public class SSTable {
   private RandomAccessFile indexRaf;
   private FileChannel indexChannel;
   private MappedByteBuffer indexBuffer;
+  private KeyCache keyCache;
   
   public SSTable(){
    
@@ -44,6 +45,7 @@ public class SSTable {
     indexChannel = indexRaf.getChannel();
     indexBuffer = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());
     
+    keyCache = new KeyCache(1000);
   }
   
   private void readHeader(BufferGroup bg) throws IOException {
@@ -133,17 +135,23 @@ public class SSTable {
     BufferGroup bg = new BufferGroup();
     bg.channel = ssChannel; 
     bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
-    bg.setStartOffset((int)index.findStartOffset(row));
+    long startOffset = keyCache.get(row);
+    if (startOffset == -1){
+      startOffset = index.findStartOffset(row);
+    }
+    bg.setStartOffset((int)startOffset);
     String searchToken = row;//this is not correct
     do {
       if (bg.dst[bg.currentIndex] == END_ROW){
         bg.advanceIndex();
       }
+      long startOfRow = bg.mbb.position() - bg.getBlockSize()  + bg.currentIndex;
       readHeader(bg);
       StringBuilder token = readToken(bg);
       if (token.toString().equals(searchToken)){
         StringBuilder rowkey = readRowkey(bg);
         if (rowkey.toString().equals(row)){
+          keyCache.put(row, startOfRow);
           SortedMap<String,Val> columns = readColumns(bg);
           return columns.get(column);
         } else {

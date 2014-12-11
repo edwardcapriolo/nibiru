@@ -34,4 +34,8 @@ public class BufferGroup {
       read();
     }
   }
+  
+  public int getBlockSize(){
+    return this.blockSize;
+  }
 }
