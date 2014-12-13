@@ -43,10 +43,9 @@ public class Server {
       .put(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, 0);
   }
   
-  public void set(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl){
+  public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl){
     Keyspace ks = keyspaces.get(keyspace);
-    ks.getColumnFamilies().get(columnFamily).getMemtable()
-      .put(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+    ks.getColumnFamilies().get(columnFamily).put(rowkey, column, value, time);
   }
   
   public Val get(String keyspace, String columnFamily, String rowkey, String column){

@@ -26,7 +26,7 @@ public class Keyspace {
   public void createColumnFamily(String name){
     ColumnFamilyMetadata cfmd = new ColumnFamilyMetadata();
     cfmd.setName(name);
-    ColumnFamily cf= new ColumnFamily();
+    ColumnFamily cf= new ColumnFamily(this);
     cf.setColumnFamilyMetadata(cfmd);
     columnFamilies.put(name, cf);
   }

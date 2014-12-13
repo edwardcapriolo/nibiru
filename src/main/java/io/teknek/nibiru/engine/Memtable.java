@@ -12,10 +12,16 @@ public class Memtable {
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String,Val>> data;
   private TimeSource timeSource;
+  private ColumnFamily columnFamily;
   
-  public Memtable(){
+  public Memtable(ColumnFamily columnFamily){
     data = new ConcurrentSkipListMap<>();
     timeSource = new TimeSourceImpl();
+    this.columnFamily = columnFamily;
+  }
+  
+  public int size(){
+    return data.size();
   }
   
   public void put(Token rowkey, String column, String value, long stamp, long ttl) {
