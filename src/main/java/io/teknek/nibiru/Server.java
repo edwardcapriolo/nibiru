@@ -37,10 +37,10 @@ public class Server {
     keyspaces.get(keyspace).createColumnFamily(columnFamily);
   }
   
-  public void set(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
+  public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
     Keyspace ks = keyspaces.get(keyspace);
-    ks.getColumnFamilies().get(columnFamily).getMemtable()
-      .put(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, 0);
+    ks.getColumnFamilies().get(columnFamily)
+      .put(rowkey, column, value, time, 0L);
   }
   
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl){
@@ -50,20 +50,18 @@ public class Server {
   
   public Val get(String keyspace, String columnFamily, String rowkey, String column){
     Keyspace ks = keyspaces.get(keyspace);
-    return ks.getColumnFamilies().get(columnFamily).getMemtable()
-            .get(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+    return ks.getColumnFamilies().get(columnFamily)
+            .get(rowkey, column);
   }
   
   public void delete(String keyspace, String columnFamily, String rowkey, String column, long time){
     Keyspace ks = keyspaces.get(keyspace);
-    ks.getColumnFamilies().get(columnFamily).getMemtable()
-            .delete(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, time);
+    ks.getColumnFamilies().get(columnFamily).delete(rowkey, column, time);
   }
 
   public ConcurrentNavigableMap<String, Val> slice(String keyspace, String columnFamily, String rowkey, String startColumn, String endColumn){
     Keyspace ks = keyspaces.get(keyspace);
-    return ks.getColumnFamilies().get(columnFamily).getMemtable()
-            .slice(ks.getKeyspaceMetadata().getPartitioner().partition(rowkey), startColumn, endColumn);
+    return ks.getColumnFamilies().get(columnFamily).slice(rowkey, startColumn, endColumn);
   }
   
   public ConcurrentMap<String, Keyspace> getKeyspaces() {

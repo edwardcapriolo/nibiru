@@ -10,7 +10,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 public class TombstoneReaperTest {
-  @Test
+  @Test 
   public void testTombstoneGrace(){
     String keyspace = "testks";
     String columnFamily = "testcf";
@@ -24,8 +24,8 @@ public class TombstoneReaperTest {
                 return 2;
               }}
             );
-    s.set(keyspace, columnFamily, "mykey", "mycolumn", "abc", 1);
-    s.set(keyspace, columnFamily, "mykey", "mycolumn2", "abc", 1);
+    s.put(keyspace, columnFamily, "mykey", "mycolumn", "abc", 1L);
+    s.put(keyspace, columnFamily, "mykey", "mycolumn2", "abc", 1L);
     s.delete(keyspace, columnFamily, "mykey", "mycolumn", 3);
     s.getTombstoneReaper().processColumnFamily(s.getKeyspaces().get(keyspace).getColumnFamilies().get(columnFamily), 3);
     {
