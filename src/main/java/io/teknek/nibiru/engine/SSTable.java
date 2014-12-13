@@ -9,8 +9,9 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class SSTable {
+public class SSTable implements Comparable<SSTable>{
 
   public static final char START_RECORD = '\0';
   public static final char END_TOKEN = '\1';
@@ -26,9 +27,11 @@ public class SSTable {
   private FileChannel indexChannel;
   private MappedByteBuffer indexBuffer;
   private KeyCache keyCache;
+  private static AtomicLong ID = new AtomicLong();
+  private long myId; 
   
   public SSTable(){
-   
+   myId = ID.getAndIncrement();
   }
   
   public void open(String id, Configuration conf) throws IOException {
@@ -162,5 +165,21 @@ public class SSTable {
     
     return null;
   }
+
+  @Override
+  public int compareTo(SSTable o) {
+    if (o == this){
+      return 0;
+    }
+    if (this.myId == o.myId){
+      return 0;
+    } else if (this.myId < o.myId){
+      return -1;
+    } else {
+      return 1;
+    }
+  }
+  
+  
   
 }

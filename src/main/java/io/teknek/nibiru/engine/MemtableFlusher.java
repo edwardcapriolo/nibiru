@@ -2,13 +2,17 @@ package io.teknek.nibiru.engine;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class MemtableFlusher implements Runnable {
   private ConcurrentSkipListSet<Memtable> memtables = new ConcurrentSkipListSet<>();
   private ColumnFamily columnFamily;
+  private Thread myThread;
+  private AtomicLong flushes;
   
   public MemtableFlusher(ColumnFamily columnFamily){
     this.columnFamily = columnFamily;
+    flushes = new AtomicLong(0);
   }
   
   public boolean add(Memtable memtable){
@@ -19,15 +23,26 @@ public class MemtableFlusher implements Runnable {
     return memtables;
   }
 
+  public void start(){
+    myThread = new Thread(this);
+    myThread.start();
+  }
+  
   @Override
   public void run() {
     while (true){
-      for (Memtable m : memtables){
-        SSTableWriter s = new SSTableWriter();
+      for (Memtable memtable : memtables){
+        SSTableWriter ssTableWriter = new SSTableWriter();
         try {
           //TODO: a timeuuid would be better here
-          s.flushToDisk(String.valueOf(System.nanoTime()), columnFamily.getKeyspace().getConfiguration(), m);
-          memtables.remove(m);
+          String tableId = String.valueOf(System.nanoTime());
+          ssTableWriter.flushToDisk(tableId, columnFamily.getKeyspace().getConfiguration(), memtable);
+          SSTable table = new SSTable();
+          table.open(tableId, columnFamily.getKeyspace().getConfiguration());
+          columnFamily.getSstable().add(table);
+          memtables.remove(memtable);
+          flushes.incrementAndGet();
+          System.out.println("flush");
         } catch (IOException e) {
           //TODO: catch this and terminate server?
           throw new RuntimeException(e);
@@ -43,4 +58,7 @@ public class MemtableFlusher implements Runnable {
     
   }
   
+  public long getFlushCount(){
+    return flushes.get();
+  }
 }

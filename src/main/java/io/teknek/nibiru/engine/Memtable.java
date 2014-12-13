@@ -7,17 +7,21 @@ import io.teknek.nibiru.TimeSourceImpl;
 import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class Memtable {
+public class Memtable implements Comparable<Memtable>{
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String,Val>> data;
   private TimeSource timeSource;
   private ColumnFamily columnFamily;
+  private final long myId;
+  private static AtomicLong MEMTABLE_ID = new AtomicLong();
   
   public Memtable(ColumnFamily columnFamily){
     data = new ConcurrentSkipListMap<>();
     timeSource = new TimeSourceImpl();
     this.columnFamily = columnFamily;
+    myId = MEMTABLE_ID.getAndIncrement();
   }
   
   public int size(){
@@ -121,5 +125,21 @@ public class Memtable {
   public void setTimeSource(TimeSource timeSource) {
     this.timeSource = timeSource;
   }
+
+  @Override
+  public int compareTo(Memtable o) {
+    if (o == this){
+      return 0;
+    }
+    if (this.myId == o.myId){
+      return 0;
+    } else if (this.myId < o.myId){
+      return -1;
+    } else {
+      return 1;
+    }
+  }
+
+
   
 }

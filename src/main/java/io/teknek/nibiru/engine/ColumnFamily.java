@@ -1,6 +1,9 @@
 package io.teknek.nibiru.engine;
 
+import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
@@ -11,11 +14,13 @@ public class ColumnFamily {
   private AtomicReference<Memtable> memtable;
   private final Keyspace keyspace;
   private MemtableFlusher memtableFlusher;
+  private Set<SSTable> sstable = new ConcurrentSkipListSet<>();
   
   public ColumnFamily(Keyspace keyspace){
     this.keyspace = keyspace;
     memtable = new AtomicReference<Memtable>(new Memtable(this));
     memtableFlusher = new MemtableFlusher(this);
+    memtableFlusher.start();
   }
 
   public ColumnFamilyMetadata getColumnFamilyMetadata() {
@@ -63,7 +68,35 @@ public class ColumnFamily {
         }
       }
     }
-    //also search sstables
+    for (SSTable sstable: this.getSstable()){
+      Val x = null;
+      try {
+        x = sstable.get(rowkey, column);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      if (x == null){
+        continue;
+      }
+      if (v == null){
+        v = x;
+        continue;
+      }
+      if (x.getTime() > v.getTime()){
+        v = x;
+      } else if (x.getTime() == v.getTime() && "".equals(x.getValue())){
+        v = null;
+      } else if (x.getTime() == v.getTime()){
+        int compare = x.getValue().compareTo(v.getValue());
+        if (compare == 0){
+          //v is unchanged          
+        } else if (compare > 0){
+          v = x;
+        } else if (compare < 0){
+          //v is unchanged
+        }
+      }
+    }
     return v;
   }
   
@@ -105,6 +138,14 @@ public class ColumnFamily {
 
   public Keyspace getKeyspace() {
     return keyspace;
+  }
+
+  public Set<SSTable> getSstable() {
+    return sstable;
+  }
+
+  public MemtableFlusher getMemtableFlusher() {
+    return memtableFlusher;
   }
   
   
