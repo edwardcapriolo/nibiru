@@ -28,8 +28,9 @@ public class Server {
   
   public void createKeyspace(String keyspaceName){
     KeyspaceMetadata kmd = new KeyspaceMetadata(keyspaceName);
-    Keyspace keyspace = new Keyspace();
+    Keyspace keyspace = new Keyspace(configuration);
     keyspace.setKeyspaceMetadata(kmd);
+    
     keyspaces.put(keyspaceName, keyspace);
   }
   

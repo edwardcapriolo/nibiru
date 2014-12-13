@@ -24,7 +24,7 @@ public class SSTableTest {
     System.out.println("Test folder: " + testFolder.getRoot());
     Configuration configuration = new Configuration();
     configuration.setSstableDirectory(tempFolder);
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace()));
+    Memtable m = new Memtable(new ColumnFamily(new Keyspace(configuration)));
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner();
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
@@ -52,7 +52,7 @@ public class SSTableTest {
     System.out.println("Test folder: " + testFolder.getRoot());
     Configuration configuration = new Configuration();
     configuration.setSstableDirectory(tempFolder);
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace()));
+    Memtable m = new Memtable(new ColumnFamily(new Keyspace(configuration)));
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner();
     NumberFormat nf = new DecimalFormat("00000");
     for (int i = 0; i < 10000; i++) {

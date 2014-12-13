@@ -15,7 +15,7 @@ public class ColumnFamily {
   public ColumnFamily(Keyspace keyspace){
     this.keyspace = keyspace;
     memtable = new AtomicReference<Memtable>(new Memtable(this));
-    memtableFlusher = new MemtableFlusher();
+    memtableFlusher = new MemtableFlusher(this);
   }
 
   public ColumnFamilyMetadata getColumnFamilyMetadata() {
@@ -38,9 +38,33 @@ public class ColumnFamily {
   }
   
   public Val get(String rowkey, String column){
-    return memtable.get().get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
-    //also search flushed memtables
+    Val v = memtable.get().get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+    for (Memtable m: memtableFlusher.getMemtables()){
+      Val x = m.get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+      if (x == null){
+        continue;
+      }
+      if (v == null){
+        v = x;
+        continue;
+      }
+      if (x.getTime() > v.getTime()){
+        v = x;
+      } else if (x.getTime() == v.getTime() && "".equals(x.getValue())){
+        v = null;
+      } else if (x.getTime() == v.getTime()){
+        int compare = x.getValue().compareTo(v.getValue());
+        if (compare == 0){
+          //v is unchanged          
+        } else if (compare > 0){
+          v = x;
+        } else if (compare < 0){
+          //v is unchanged
+        }
+      }
+    }
     //also search sstables
+    return v;
   }
   
   public void delete(String rowkey, String column, long time){
@@ -78,4 +102,10 @@ public class ColumnFamily {
       }
     }
   }
+
+  public Keyspace getKeyspace() {
+    return keyspace;
+  }
+  
+  
 }

@@ -1,4 +1,5 @@
 package io.teknek.nibiru.engine;
+import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.engine.Keyspace;
 import io.teknek.nibiru.engine.Memtable;
 import io.teknek.nibiru.engine.Val;
@@ -17,14 +18,14 @@ import org.junit.Test;
 public class MemtableTest {
   
   public static Keyspace keyspaceWithNaturalPartitioner(){
-    Keyspace ks1 = new Keyspace();
+    Keyspace ks1 = new Keyspace(new Configuration());
     ks1.setKeyspaceMetadata(new KeyspaceMetadata("testks"));
     ks1.getKeyspaceMetadata().setPartitioner(new NaturalPartitioner());
     return ks1;
   }
   
   private Keyspace keyspaceWithMd5Partitioner(){
-    Keyspace ks1 = new Keyspace();
+    Keyspace ks1 = new Keyspace(new Configuration());
     ks1.setKeyspaceMetadata(new KeyspaceMetadata("testks"));
     ks1.getKeyspaceMetadata().setPartitioner(new Md5Partitioner());
     return ks1;
@@ -32,7 +33,7 @@ public class MemtableTest {
   
   @Test
   public void test(){
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace()));
+    Memtable m = new Memtable(new ColumnFamily(new Keyspace(new Configuration())));
     Keyspace ks1 = keyspaceWithNaturalPartitioner();
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
@@ -48,7 +49,7 @@ public class MemtableTest {
   
   @Test
   public void testDeleting(){
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace()));
+    Memtable m = new Memtable(new ColumnFamily(new Keyspace(new Configuration())));
     Keyspace ks1 = keyspaceWithNaturalPartitioner();
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "c", "d", 1, 0L);
@@ -59,7 +60,7 @@ public class MemtableTest {
   
   @Test
   public void testDeletingM5d(){
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace()));
+    Memtable m = new Memtable(new ColumnFamily(new Keyspace(new Configuration())));
     Keyspace ks1 = this.keyspaceWithMd5Partitioner();
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "c", "d", 1, 0L);
@@ -71,7 +72,7 @@ public class MemtableTest {
   
   @Test
   public void testRowDelete(){
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace()));
+    Memtable m = new Memtable(new ColumnFamily(new Keyspace(new Configuration())));
     Keyspace ks1 = keyspaceWithNaturalPartitioner();
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0l);
     m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), 2);
@@ -83,7 +84,7 @@ public class MemtableTest {
   
   @Test
   public void aSliceWithTomb(){
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace()));
+    Memtable m = new Memtable(new ColumnFamily(new Keyspace(new Configuration())));
     Keyspace ks1 = keyspaceWithNaturalPartitioner();
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1L , 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3", "d", 4L, 0L);

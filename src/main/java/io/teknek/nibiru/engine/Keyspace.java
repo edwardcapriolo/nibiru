@@ -1,5 +1,6 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 
@@ -9,10 +10,12 @@ import java.util.concurrent.ConcurrentMap;
 public class Keyspace {
 
   private KeyspaceMetadata keyspaceMetadata;
+  private Configuration configuration;
   private ConcurrentMap<String,ColumnFamily> columnFamilies;
   
-  public Keyspace(){
+  public Keyspace(Configuration configuration){
     columnFamilies = new ConcurrentHashMap<>();
+    this.configuration = configuration;
   }
 
   public KeyspaceMetadata getKeyspaceMetadata() {
@@ -42,4 +45,9 @@ public class Keyspace {
   public Token createToken(String rowkey){
     return keyspaceMetadata.getPartitioner().partition(rowkey);
   }
+
+  public Configuration getConfiguration() {
+    return configuration;
+  }
+  
 }
