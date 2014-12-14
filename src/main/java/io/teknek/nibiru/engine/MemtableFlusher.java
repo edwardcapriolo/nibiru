@@ -42,7 +42,6 @@ public class MemtableFlusher implements Runnable {
           columnFamily.getSstable().add(table);
           memtables.remove(memtable);
           flushes.incrementAndGet();
-          System.out.println("flush");
         } catch (IOException e) {
           //TODO: catch this and terminate server?
           throw new RuntimeException(e);
@@ -51,11 +50,9 @@ public class MemtableFlusher implements Runnable {
       try {
         Thread.sleep(1);
       } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
     }
-    
   }
   
   public long getFlushCount(){
