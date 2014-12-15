@@ -37,7 +37,7 @@ public class MemtableFlusher implements Runnable {
           //TODO: a timeuuid would be better here
           String tableId = String.valueOf(System.nanoTime());
           ssTableWriter.flushToDisk(tableId, columnFamily.getKeyspace().getConfiguration(), memtable);
-          SSTable table = new SSTable();
+          SSTable table = new SSTable(columnFamily);
           table.open(tableId, columnFamily.getKeyspace().getConfiguration());
           columnFamily.getSstable().add(table);
           memtables.remove(memtable);

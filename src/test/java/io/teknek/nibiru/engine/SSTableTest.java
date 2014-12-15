@@ -1,6 +1,7 @@
 package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,14 +25,16 @@ public class SSTableTest {
     System.out.println("Test folder: " + testFolder.getRoot());
     Configuration configuration = new Configuration();
     configuration.setSstableDirectory(tempFolder);
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace(configuration)));
+    ColumnFamily cf = new ColumnFamily(new Keyspace(configuration));
+    cf.setColumnFamilyMetadata(new ColumnFamilyMetadata());
+    Memtable m = new Memtable(cf);
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner();
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3", "e", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1", "e", 2, 0L);
-    SSTable s = new SSTable();
+    SSTable s = new SSTable(cf);
     //s.flushToDisk("1", configuration, m);
     SSTableWriter w = new SSTableWriter();
     w.flushToDisk("1", configuration, m);
@@ -59,7 +62,9 @@ public class SSTableTest {
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column2", "c", 1, 0L);
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column3", "c", 1, 0L);
     }
-    SSTable s = new SSTable();
+    ColumnFamily cf = new ColumnFamily(new Keyspace(configuration));
+    cf.setColumnFamilyMetadata(new ColumnFamilyMetadata());
+    SSTable s = new SSTable(cf);
     SSTableWriter w = new SSTableWriter();
     w.flushToDisk("1", configuration, m);
     s.open("1", configuration);

@@ -4,6 +4,7 @@ public class ColumnFamilyMetadata {
   private String name;
   private long tombstoneGraceMillis;
   private int flushNumberOfRowKeys = 10000;
+  private int keyCachePerSsTable = 1000;
   
   public ColumnFamilyMetadata(){
     
@@ -31,6 +32,14 @@ public class ColumnFamilyMetadata {
 
   public void setFlushNumberOfRowKeys(int flushNumberOfRowKeys) {
     this.flushNumberOfRowKeys = flushNumberOfRowKeys;
+  }
+
+  public int getKeyCachePerSsTable() {
+    return keyCachePerSsTable;
+  }
+
+  public void setKeyCachePerSsTable(int keyCachePerSsTable) {
+    this.keyCachePerSsTable = keyCachePerSsTable;
   }
   
 }

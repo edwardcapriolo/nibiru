@@ -29,9 +29,11 @@ public class SSTable implements Comparable<SSTable>{
   private KeyCache keyCache;
   private static AtomicLong ID = new AtomicLong();
   private long myId; 
+  private ColumnFamily columnFamily;
   
-  public SSTable(){
-   myId = ID.getAndIncrement();
+  public SSTable(ColumnFamily columnFamily){
+    myId = ID.getAndIncrement();
+    this.columnFamily = columnFamily;
   }
   
   public void open(String id, Configuration conf) throws IOException {
@@ -45,7 +47,7 @@ public class SSTable implements Comparable<SSTable>{
     indexChannel = indexRaf.getChannel();
     indexBuffer = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());
     
-    keyCache = new KeyCache(1000);
+    keyCache = new KeyCache(columnFamily.getColumnFamilyMetadata().getKeyCachePerSsTable());
   }
   
   private void readHeader(BufferGroup bg) throws IOException {
