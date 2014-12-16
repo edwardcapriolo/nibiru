@@ -43,6 +43,14 @@ public class SsTableReader {
     indexBuffer = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());
   }
   
+  public SsTableStreamReader getStreamReader() throws IOException {
+    BufferGroup bg = new BufferGroup();
+    bg.channel = ssChannel; 
+    bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
+    bg.setStartOffset((int) 0);
+    return new SsTableStreamReader(bg);
+  }
+  
   static void readHeader(BufferGroup bg) throws IOException {
     if (bg.dst[bg.currentIndex] != '\0'){
       throw new RuntimeException("corrupt expected \\0 got " + bg.dst[bg.currentIndex]  );

@@ -25,13 +25,7 @@ public class SSTable implements Comparable<SSTable>{
   }
     
   public SsTableStreamReader get() throws IOException {
-    /*
-    BufferGroup bg = new BufferGroup();
-    bg.channel = ssChannel; 
-    bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
-    bg.setStartOffset((int) 0);
-    return new SsTableStreamReader(bg);*/
-    throw new UnsupportedOperationException();
+    return ssTableReader.getStreamReader();
   }
   
   public Val get (String row, String column) throws IOException{
