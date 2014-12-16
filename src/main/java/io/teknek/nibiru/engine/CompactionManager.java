@@ -14,7 +14,7 @@ public class CompactionManager {
     SsTableStreamReader [] r = new SsTableStreamReader[ssTables.length];
     Token [] t = new Token[ssTables.length];
     for (int i=0; i<ssTables.length; i++){
-      r[i] = ssTables[i].get();
+      r[i] = ssTables[i].getStreamReader();
     }
     
     //for (SSTable s : ssTables){

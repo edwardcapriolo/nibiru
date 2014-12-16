@@ -24,7 +24,7 @@ public class SsTable implements Comparable<SsTable>{
     ssTableReader.open(id);
   }
     
-  public SsTableStreamReader get() throws IOException {
+  public SsTableStreamReader getStreamReader() throws IOException {
     return ssTableReader.getStreamReader();
   }
   
