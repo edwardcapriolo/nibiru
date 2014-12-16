@@ -19,27 +19,27 @@ public class SSTableWriter {
       indexWriter.open();
       for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
         long startOfRecord = ssOutputStream.getWrittenOffset();
-        ssOutputStream.writeAndCount(SSTable.START_RECORD);
+        ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
         ssOutputStream.writeAndCount(i.getKey().getToken().getBytes());
-        ssOutputStream.writeAndCount(SSTable.END_TOKEN);
+        ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
         ssOutputStream.writeAndCount(i.getKey().getRowkey().getBytes());
-        ssOutputStream.writeAndCount(SSTable.END_ROWKEY);
+        ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
         indexWriter.handleRow(startOfRecord, i.getKey().getToken());
         boolean writeJoin = false;
         for (Entry<String, Val> j : i.getValue().entrySet()){
           if (!writeJoin){
             writeJoin = true;
           } else {
-            ssOutputStream.writeAndCount(SSTable.END_COLUMN);
+            ssOutputStream.writeAndCount(SsTableReader.END_COLUMN);
           }
           ssOutputStream.writeAndCount(j.getKey().getBytes());
-          ssOutputStream.writeAndCount(SSTable.END_COLUMN_PART);
+          ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
           ssOutputStream.writeAndCount(String.valueOf(j.getValue().getCreateTime()).getBytes());
-          ssOutputStream.writeAndCount(SSTable.END_COLUMN_PART);
+          ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
           ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTime()).getBytes());
-          ssOutputStream.writeAndCount(SSTable.END_COLUMN_PART);
+          ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
           ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTtl()).getBytes());
-          ssOutputStream.writeAndCount(SSTable.END_COLUMN_PART);
+          ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
           ssOutputStream.writeAndCount(String.valueOf(j.getValue().getValue()).getBytes());
         }
         ssOutputStream.writeAndCount('\n');

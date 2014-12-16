@@ -27,11 +27,11 @@ public class IndexWriter {
   
   public void handleRow(long startOfRecord, String token) throws IOException {
     if (rowkeyCount++ % conf.getIndexInterval() == 0){
-      indexStream.write(SSTable.START_RECORD);
+      indexStream.write(SsTableReader.START_RECORD);
       indexStream.write(token.getBytes());
-      indexStream.write(SSTable.END_TOKEN);
+      indexStream.write(SsTableReader.END_TOKEN);
       indexStream.write(String.valueOf(startOfRecord).getBytes());
-      indexStream.write(SSTable.END_ROW);
+      indexStream.write(SsTableReader.END_ROW);
     }
   }
   

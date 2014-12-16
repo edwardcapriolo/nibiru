@@ -13,7 +13,7 @@ public class IndexReader {
   public long findStartOffset(String token) throws IOException {
     long offset = 0;
     do {
-      if (bgIndex.dst[bgIndex.currentIndex] == SSTable.END_ROW) {
+      if (bgIndex.dst[bgIndex.currentIndex] == SsTableReader.END_ROW) {
         bgIndex.advanceIndex();
       }
       readHeader(bgIndex);
@@ -39,7 +39,7 @@ public class IndexReader {
   
   private StringBuilder readToken(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != SSTable.END_TOKEN){
+    while (bg.dst[bg.currentIndex] != SsTableReader.END_TOKEN){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
@@ -49,7 +49,7 @@ public class IndexReader {
   
   private Long readIndexSize(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != SSTable.END_ROW){
+    while (bg.dst[bg.currentIndex] != SsTableReader.END_ROW){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
