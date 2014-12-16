@@ -11,7 +11,7 @@ public class CountingBufferedOutputStream extends BufferedOutputStream {
     super(out);
   }
 
-  public synchronized void writeAndCount(int b) throws IOException {
+  public void writeAndCount(int b) throws IOException {
     super.write(b);
     writtenOffset++;
   }

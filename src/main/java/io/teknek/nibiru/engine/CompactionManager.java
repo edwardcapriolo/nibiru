@@ -13,7 +13,7 @@ public class CompactionManager {
     String lowestKey = null;
     SsTableStreamReader [] r = new SsTableStreamReader[ssTables.length];
     Token [] t = new Token[ssTables.length];
-    for (int i=0;i<ssTables.length;i++){
+    for (int i=0; i<ssTables.length; i++){
       r[i] = ssTables[i].get();
     }
     
