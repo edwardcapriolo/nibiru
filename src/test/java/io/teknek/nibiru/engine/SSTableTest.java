@@ -34,7 +34,7 @@ public class SSTableTest {
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3", "e", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1", "e", 2, 0L);
-    SSTable s = new SSTable(cf);
+    SsTable s = new SsTable(cf);
     //s.flushToDisk("1", configuration, m);
     SSTableWriter w = new SSTableWriter();
     w.flushToDisk("1", configuration, m);
@@ -64,7 +64,7 @@ public class SSTableTest {
     }
     ColumnFamily cf = new ColumnFamily(new Keyspace(configuration));
     cf.setColumnFamilyMetadata(new ColumnFamilyMetadata());
-    SSTable s = new SSTable(cf);
+    SsTable s = new SsTable(cf);
     SSTableWriter w = new SSTableWriter();
     w.flushToDisk("1", configuration, m);
     s.open("1", configuration);

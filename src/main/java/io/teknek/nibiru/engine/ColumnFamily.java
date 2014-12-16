@@ -14,7 +14,7 @@ public class ColumnFamily {
   private AtomicReference<Memtable> memtable;
   private final Keyspace keyspace;
   private MemtableFlusher memtableFlusher;
-  private Set<SSTable> sstable = new ConcurrentSkipListSet<>();
+  private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   
   public ColumnFamily(Keyspace keyspace){
     this.keyspace = keyspace;
@@ -68,7 +68,7 @@ public class ColumnFamily {
         }
       }
     }
-    for (SSTable sstable: this.getSstable()){
+    for (SsTable sstable: this.getSstable()){
       Val x = null;
       try {
         x = sstable.get(rowkey, column);
@@ -140,7 +140,7 @@ public class ColumnFamily {
     return keyspace;
   }
 
-  public Set<SSTable> getSstable() {
+  public Set<SsTable> getSstable() {
     return sstable;
   }
 

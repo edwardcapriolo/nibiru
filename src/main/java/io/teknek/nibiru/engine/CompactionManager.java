@@ -9,7 +9,7 @@ public class CompactionManager {
     this.columnFamily = columnFamily;
   }
   
-  public void compact(SSTable [] ssTables) throws IOException{
+  public void compact(SsTable [] ssTables) throws IOException{
     String lowestKey = null;
     SsTableStreamReader [] r = new SsTableStreamReader[ssTables.length];
     Token [] t = new Token[ssTables.length];

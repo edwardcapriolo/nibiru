@@ -23,10 +23,10 @@ public class SsTableReader {
   private RandomAccessFile indexRaf;
   private FileChannel indexChannel;
   private MappedByteBuffer indexBuffer;
-  private SSTable ssTable;
+  private SsTable ssTable;
   private KeyCache keyCache;
   
-  public SsTableReader(SSTable ssTable, KeyCache keyCache){
+  public SsTableReader(SsTable ssTable, KeyCache keyCache){
     this.ssTable = ssTable;
     this.keyCache = keyCache;
   }

@@ -5,7 +5,7 @@ import io.teknek.nibiru.Configuration;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class SSTable implements Comparable<SSTable>{
+public class SsTable implements Comparable<SsTable>{
 
   private KeyCache keyCache;
   private static AtomicLong ID = new AtomicLong();
@@ -13,7 +13,7 @@ public class SSTable implements Comparable<SSTable>{
   private ColumnFamily columnFamily;
   private SsTableReader ssTableReader;
   
-  public SSTable(ColumnFamily columnFamily){
+  public SsTable(ColumnFamily columnFamily){
     myId = ID.getAndIncrement();
     this.columnFamily = columnFamily;
   }
@@ -33,7 +33,7 @@ public class SSTable implements Comparable<SSTable>{
   }
 
   @Override
-  public int compareTo(SSTable o) {
+  public int compareTo(SsTable o) {
     if (o == this){
       return 0;
     }
