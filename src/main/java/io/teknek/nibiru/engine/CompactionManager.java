@@ -18,30 +18,30 @@ public class CompactionManager {
   }
   
   public void compact(SsTable [] ssTables) throws IOException {
-    SsTableStreamReader[] r = new SsTableStreamReader[ssTables.length];
-    SsTableStreamWriter w = new SsTableStreamWriter(getNewSsTableName(), 
+    SsTableStreamReader[] readers = new SsTableStreamReader[ssTables.length];
+    SsTableStreamWriter newSsTable = new SsTableStreamWriter(getNewSsTableName(), 
             columnFamily.getKeyspace().getConfiguration());
-    w.open();
-    Token[] t = new Token[ssTables.length];
+    newSsTable.open();
+    Token[] currentTokens = new Token[ssTables.length];
     for (int i = 0; i < ssTables.length; i++) {
-      r[i] = ssTables[i].getStreamReader();
+      readers[i] = ssTables[i].getStreamReader();
     }
-    for (int i = 0; i < t.length; i++) {
-      t[i] = r[i].getNextToken();
+    for (int i = 0; i < currentTokens.length; i++) {
+      currentTokens[i] = readers[i].getNextToken();
     }
-    while (!allNull(t)){
-      Token lowestToken = lowestToken(t);
+    while (!allNull(currentTokens)){
+      Token lowestToken = lowestToken(currentTokens);
       SortedMap<String,Val> allColumns = new TreeMap<>();
-      for (int i = 0; i < t.length; i++) {
-        if (t[i] != null && t[i].equals(lowestToken)) {
-          SortedMap<String, Val> columns = r[i].readColumns();
+      for (int i = 0; i < currentTokens.length; i++) {
+        if (currentTokens[i] != null && currentTokens[i].equals(lowestToken)) {
+          SortedMap<String, Val> columns = readers[i].readColumns();
           merge(allColumns, columns);
         }
       }
-      w.write(lowestToken,allColumns);
-      advance(lowestToken, r, t);
+      newSsTable.write(lowestToken, allColumns);
+      advance(lowestToken, readers, currentTokens);
     }
-    w.close();
+    newSsTable.close();
   }
   
   private void advance(Token lowestToken, SsTableStreamReader[] r, Token[] t) throws IOException{
