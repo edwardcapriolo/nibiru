@@ -30,6 +30,7 @@ public class SsTableStreamWriter {
   
   public void write(Token t, Map<String,Val> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
+    ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
     ssOutputStream.writeAndCount(t.getToken().getBytes());
     ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
     ssOutputStream.writeAndCount(t.getRowkey().getBytes());

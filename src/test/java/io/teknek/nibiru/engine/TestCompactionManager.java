@@ -6,6 +6,8 @@ import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import java.io.File;
 import java.io.IOException;
 
+import junit.framework.Assert;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,7 +45,16 @@ public class TestCompactionManager {
       w2.flushToDisk("2", configuration, m2);
       s2.open("2", configuration);
     }
-    CompactionManager cm = new CompactionManager(cf);
-    cm.compact(new SsTable [] { s,s2 });
+    CompactionManager cm = new CompactionManager(cf){
+      @Override
+      public String getNewSsTableName() {
+        return "3";
+      }
+    };
+    cm.compact(new SsTable [] { s, s2 });
+    //File f = new File(configuration.getSstableDirectory(), "3.ss");
+    SsTable ss = new SsTable(cf);
+    ss.open("3", configuration);
+    Assert.assertEquals("e", ss.get("row1", "column3").getValue());
   }
 }
