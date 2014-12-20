@@ -37,8 +37,8 @@ public class TestCompactionManager {
       s.open("1", configuration);
     }
     SsTable s2 = new SsTable(cf);
-    Memtable m2 = new Memtable(cf);
     {
+      Memtable m2 = new Memtable(cf);
       m2.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column1", "c", 1, 0L);
       m2.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1", "f", 3, 0L);
       SSTableWriter w2 = new SSTableWriter();
@@ -51,8 +51,7 @@ public class TestCompactionManager {
         return "3";
       }
     };
-    cm.compact(new SsTable [] { s, s2 });
-    //File f = new File(configuration.getSstableDirectory(), "3.ss");
+    cm.compact(new SsTable[] { s, s2 });
     SsTable ss = new SsTable(cf);
     ss.open("3", configuration);
     Assert.assertEquals("e", ss.get("row1", "column3").getValue());
