@@ -53,7 +53,7 @@ public class SsTableStreamWriter {
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
       ssOutputStream.writeAndCount(String.valueOf(j.getValue().getValue()).getBytes());
     }
-    ssOutputStream.writeAndCount('\n');
+    ssOutputStream.writeAndCount(SsTableReader.END_ROW);
   }
   
   public void close() throws IOException {
