@@ -53,12 +53,12 @@ public class CompactionManager {
   }
   
   private void merge(SortedMap<String,Val> allColumns, SortedMap<String,Val> otherColumns){
-    for (Map.Entry<String,Val> x: otherColumns.entrySet()){
-      Val existing = allColumns.get(x.getKey());
+    for (Map.Entry<String,Val> column: otherColumns.entrySet()){
+      Val existing = allColumns.get(column.getKey());
       if (existing == null) {
-        allColumns.put(x.getKey(), x.getValue());
-      } else if (existing.getTime() < x.getValue().getTime()){
-        allColumns.put(x.getKey(), x.getValue());
+        allColumns.put(column.getKey(), column.getValue());
+      } else if (existing.getTime() < column.getValue().getTime()){
+        allColumns.put(column.getKey(), column.getValue());
       }  // we should handle the equal/tombstone case here
     }
     
