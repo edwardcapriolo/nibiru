@@ -14,6 +14,8 @@ public class CompactionManager {
   
   public void compact(SsTable [] ssTables) throws IOException {
     SsTableStreamReader[] r = new SsTableStreamReader[ssTables.length];
+    SsTableStreamWriter w = new SsTableStreamWriter(String.valueOf(System.nanoTime()), 
+            this.columnFamily.getKeyspace().getConfiguration());
     Token[] t = new Token[ssTables.length];
     for (int i = 0; i < ssTables.length; i++) {
       r[i] = ssTables[i].getStreamReader();
@@ -30,6 +32,7 @@ public class CompactionManager {
           merge(allColumns, columns);
         }
       }
+      
       advance(lowestToken, r, t);
     }
   }

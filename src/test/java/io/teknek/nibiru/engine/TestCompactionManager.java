@@ -10,8 +10,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import junit.framework.Assert;
-
 public class TestCompactionManager {
 
   @Rule
@@ -45,7 +43,6 @@ public class TestCompactionManager {
       w2.flushToDisk("2", configuration, m2);
       s2.open("2", configuration);
     }
-    
     CompactionManager cm = new CompactionManager(cf);
     cm.compact(new SsTable [] { s,s2 });
   }
