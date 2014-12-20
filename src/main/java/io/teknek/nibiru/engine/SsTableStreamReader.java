@@ -1,6 +1,7 @@
 package io.teknek.nibiru.engine;
 
 import java.io.IOException;
+import java.util.SortedMap;
 
 public class SsTableStreamReader {
 
@@ -10,7 +11,10 @@ public class SsTableStreamReader {
     this.bg = bufferGroup;
   }
   
-  public Token getNextToken() throws IOException{
+  public Token getNextToken() throws IOException {
+    if (! (bg.currentIndex < bg.dst.length - 1 || bg.mbb.position()  < bg.channel.size())){
+      return null;
+    }
     if (bg.dst[bg.currentIndex] == SsTableReader.END_ROW){
       bg.advanceIndex();
     }
@@ -21,6 +25,11 @@ public class SsTableStreamReader {
     t.setRowkey(rowkey.toString());
     t.setToken(token.toString());
     return t;
-    
   }
+  
+  public SortedMap<String,Val>  readColumns() throws IOException {
+    SortedMap<String,Val> columns = SsTableReader.readColumns(bg);
+    return columns;
+  }
+  
 }

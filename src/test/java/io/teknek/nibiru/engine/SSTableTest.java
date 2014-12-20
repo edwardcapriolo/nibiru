@@ -46,6 +46,8 @@ public class SSTableTest {
       Assert.assertEquals("e", s.get("row2", "column1").getValue());
     }
     System.out.println((System.currentTimeMillis() - x));
+    
+    Assert.assertEquals("row1", s.getStreamReader().getNextToken().getRowkey());
   }
   
   

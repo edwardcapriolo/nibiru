@@ -84,7 +84,7 @@ public class SsTableReader {
     } while (bg.dst[bg.currentIndex] != END_ROWKEY);
   }
   
-  private StringBuilder readColumn(BufferGroup bg) throws IOException{
+  private static StringBuilder readColumn(BufferGroup bg) throws IOException{
     StringBuilder create = new StringBuilder();
     while (bg.dst[bg.currentIndex] != END_COLUMN_PART){
       create.append((char) bg.dst[bg.currentIndex]);
@@ -94,7 +94,7 @@ public class SsTableReader {
     return create;
   }
  
-  private StringBuilder endColumn(BufferGroup bg) throws IOException{
+  private static StringBuilder endColumn(BufferGroup bg) throws IOException{
     StringBuilder create = new StringBuilder();
     while (!(bg.dst[bg.currentIndex] == END_COLUMN ||bg.dst[bg.currentIndex] == END_ROW) ){
       create.append((char) bg.dst[bg.currentIndex]);
@@ -103,7 +103,7 @@ public class SsTableReader {
     return create;
   }
 
-  private SortedMap<String,Val> readColumns(BufferGroup bg) throws IOException {
+  static SortedMap<String,Val> readColumns(BufferGroup bg) throws IOException {
     SortedMap<String,Val> result = new TreeMap<>();
     do {
       if (bg.dst[bg.currentIndex] == END_COLUMN){

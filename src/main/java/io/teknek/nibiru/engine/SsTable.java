@@ -28,7 +28,13 @@ public class SsTable implements Comparable<SsTable>{
     return ssTableReader.getStreamReader();
   }
   
-  public Val get (String row, String column) throws IOException{
+  /*
+   * If row and column exist return Val
+   * if row is tombstoned return row tombstone
+   * If column is tombstoned return column tombstone
+   * In other words always return known data
+   */
+  public Val get(String row, String column) throws IOException{
     return ssTableReader.get(row, column);
   }
 
