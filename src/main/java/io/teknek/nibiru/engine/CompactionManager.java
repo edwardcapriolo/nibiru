@@ -70,7 +70,7 @@ public class CompactionManager {
       if (lowestToken == null){
         lowestToken = j;
       } else {
-        if (j.getToken().compareTo(lowestToken.getToken())==-1){
+        if (j.compareTo(lowestToken) == -1) {
           lowestToken = j;
         }
       }
