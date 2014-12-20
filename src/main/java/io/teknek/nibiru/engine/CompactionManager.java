@@ -33,7 +33,7 @@ public class CompactionManager {
       Token lowestToken = lowestToken(t);
       SortedMap<String,Val> allColumns = new TreeMap<>();
       for (int i = 0; i < t.length; i++) {
-        if (t[i].equals(lowestToken)) {
+        if (t[i] != null && t[i].equals(lowestToken)) {
           SortedMap<String, Val> columns = r[i].readColumns();
           merge(allColumns, columns);
         }
