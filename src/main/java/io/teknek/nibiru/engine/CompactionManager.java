@@ -24,10 +24,10 @@ public class CompactionManager {
       t[i] = r[i].getNextToken();
     }
     while (!allNull(t)){
-      String lowestToken = lowestToken(t);
+      Token lowestToken = lowestToken(t);
       SortedMap<String,Val> allColumns = new TreeMap<>();
       for (int i = 0; i < t.length; i++) {
-        if (t[i].getToken().equals(lowestToken)) {
+        if (t[i].getToken().equals(lowestToken.getToken())) {
           SortedMap<String, Val> columns = r[i].readColumns();
           merge(allColumns, columns);
         }
@@ -37,9 +37,9 @@ public class CompactionManager {
     }
   }
   
-  private void advance(String lowestToken, SsTableStreamReader[] r, Token[] t) throws IOException{
+  private void advance(Token lowestToken, SsTableStreamReader[] r, Token[] t) throws IOException{
     for (int i = 0; i < t.length; i++) {
-      if (t[i] != null && t[i].getToken().equals(lowestToken)){
+      if (t[i] != null && t[i].getToken().equals(lowestToken.getToken())){
         t[i] = r[i].getNextToken();
       }
     }
@@ -57,14 +57,14 @@ public class CompactionManager {
     
   }
   
-  private String lowestToken(Token [] t){
-    String lowestToken = null;
+  private Token lowestToken(Token [] t){
+    Token lowestToken = null;
     for (Token j: t){
       if (lowestToken == null){
-        lowestToken = j.getToken();
+        lowestToken = j;
       } else {
-        if (j.getToken().compareTo(lowestToken)==-1){
-          lowestToken = j.getToken();
+        if (j.getToken().compareTo(lowestToken.getToken())==-1){
+          lowestToken = j;
         }
       }
     }
