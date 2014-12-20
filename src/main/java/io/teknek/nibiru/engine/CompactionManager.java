@@ -55,7 +55,7 @@ public class CompactionManager {
   private void merge(SortedMap<String,Val> allColumns, SortedMap<String,Val> otherColumns){
     for (Map.Entry<String,Val> x: otherColumns.entrySet()){
       Val existing = allColumns.get(x.getKey());
-      if (existing==null){
+      if (existing == null) {
         allColumns.put(x.getKey(), x.getValue());
       } else if (existing.getTime() < x.getValue().getTime()){
         allColumns.put(x.getKey(), x.getValue());
