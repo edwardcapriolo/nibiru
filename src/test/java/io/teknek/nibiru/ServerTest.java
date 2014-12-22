@@ -64,6 +64,10 @@ public class ServerTest {
     Assert.assertEquals(4, s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getMemtableFlusher().getFlushCount());
     Assert.assertEquals(1, s.getCompactionManager().getNumberOfCompactions());
     Assert.assertEquals("4", x.getValue());
+    for (int i = 0; i < 9; i++) {
+      Val y = s.get(ks, cf, i+"", "age");
+      Assert.assertEquals("4", y.getValue());
+    }
   }
   
 }
