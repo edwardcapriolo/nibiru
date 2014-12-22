@@ -1,25 +1,61 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.Server;
+
 import java.io.IOException;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class CompactionManager {
-  private ColumnFamily columnFamily;
+public class CompactionManager implements Runnable{
+  private Server server;
+  private AtomicLong numberOfCompactions = new AtomicLong(0);
   
-  
-  public CompactionManager(ColumnFamily columnFamily){
-    this.columnFamily = columnFamily;
+  public CompactionManager(Server server){
+    this.server = server;
   }
   
-  public String getNewSsTableName(){
+  @Override
+  public void run() {
+    while (true){
+      for (Entry<String, Keyspace> keyspaces : server.getKeyspaces().entrySet()){
+        Keyspace keyspace = keyspaces.getValue();
+        for (Map.Entry<String,ColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
+          Set<SsTable> tables = columnFamilies.getValue().getSstable();
+          if (tables.size() >= 4){
+            SsTable [] ssArray = tables.toArray(new SsTable[] {});
+            try {
+              String newName = getNewSsTableName();
+              SsTable s = compact(ssArray, newName);
+              tables.add(s);
+              for (SsTable table : ssArray){
+                tables.remove(table);
+              }
+              numberOfCompactions.incrementAndGet();
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        }
+      } // end for
+      try {
+        Thread.sleep(1L);
+      } catch (InterruptedException e) {
+      }
+    } // end while
+  }
+
+  public  String getNewSsTableName(){
     return String.valueOf(System.nanoTime());
   }
   
-  public void compact(SsTable [] ssTables) throws IOException {
+  public static SsTable compact(SsTable [] ssTables, String newName) throws IOException {
+    ColumnFamily columnFamily = ssTables[0].getColumnFamily();
     SsTableStreamReader[] readers = new SsTableStreamReader[ssTables.length];
-    SsTableStreamWriter newSsTable = new SsTableStreamWriter(getNewSsTableName(), 
+    SsTableStreamWriter newSsTable = new SsTableStreamWriter(newName, 
             columnFamily.getKeyspace().getConfiguration());
     newSsTable.open();
     Token[] currentTokens = new Token[ssTables.length];
@@ -42,9 +78,12 @@ public class CompactionManager {
       advance(lowestToken, readers, currentTokens);
     }
     newSsTable.close();
+    SsTable s = new SsTable(columnFamily);
+    s.open(newName, columnFamily.getKeyspace().getConfiguration());
+    return s;
   }
   
-  private void advance(Token lowestToken, SsTableStreamReader[] r, Token[] t) throws IOException{
+  private static void advance(Token lowestToken, SsTableStreamReader[] r, Token[] t) throws IOException{
     for (int i = 0; i < t.length; i++) {
       if (t[i] != null && t[i].getToken().equals(lowestToken.getToken())){
         t[i] = r[i].getNextToken();
@@ -52,7 +91,7 @@ public class CompactionManager {
     }
   }
   
-  private void merge(SortedMap<String,Val> allColumns, SortedMap<String,Val> otherColumns){
+  private static void merge(SortedMap<String,Val> allColumns, SortedMap<String,Val> otherColumns){
     for (Map.Entry<String,Val> column: otherColumns.entrySet()){
       Val existing = allColumns.get(column.getKey());
       if (existing == null) {
@@ -61,10 +100,9 @@ public class CompactionManager {
         allColumns.put(column.getKey(), column.getValue());
       }  // we should handle the equal/tombstone case here
     }
-    
   }
   
-  private Token lowestToken(Token [] t){
+  private static Token lowestToken(Token [] t){
     Token lowestToken = null;
     for (Token j: t){
       if (lowestToken == null){
@@ -78,7 +116,7 @@ public class CompactionManager {
     return lowestToken;
   }
   
-  private boolean allNull(Token[] t){
+  private static boolean allNull(Token[] t){
     for (Token j : t){
       if (j != null){
         return false;
@@ -86,4 +124,9 @@ public class CompactionManager {
     }
     return true;
   }
+
+  public long getNumberOfCompactions() {
+    return numberOfCompactions.get();
+  }
+  
 }

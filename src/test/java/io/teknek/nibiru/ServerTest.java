@@ -35,9 +35,35 @@ public class ServerTest {
     s.put(ks, cf, "ziggy", "age", "8", 1);
     s.put(ks, cf, "dotty", "age", "4", 1);
     Thread.sleep(2000);
-    Assert.assertEquals(1, s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getMemtableFlusher().getFlushCount());
+    Assert.assertEquals(2, s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getMemtableFlusher().getFlushCount());
     x = s.get(ks, cf, "jack", "age");
     Assert.assertEquals("6", x.getValue());
     
   }
+  
+  @Test
+  public void compactionTest() throws IOException, InterruptedException{
+    String ks = "data";
+    String cf = "pets";
+    File tempFolder = testFolder.newFolder("sstable");
+    Configuration configuration = new Configuration();
+    configuration.setSstableDirectory(tempFolder);
+    Server s = new Server();
+    
+    s.setConfiguration(configuration);
+    s.init();
+    s.createKeyspace(ks);
+    s.createColumnFamily(ks, cf);
+    s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
+    for (int i = 0; i < 9; i++) {
+      s.put(ks, cf, i+"", "age", "4", 1);
+      Thread.sleep(1);
+    }
+    Val x = s.get(ks, cf, "8", "age");
+    Thread.sleep(1000);
+    Assert.assertEquals(4, s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getMemtableFlusher().getFlushCount());
+    Assert.assertEquals(1, s.getCompactionManager().getNumberOfCompactions());
+    Assert.assertEquals("4", x.getValue());
+  }
+  
 }

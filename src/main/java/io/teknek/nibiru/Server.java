@@ -1,5 +1,6 @@
 package io.teknek.nibiru;
 
+import io.teknek.nibiru.engine.CompactionManager;
 import io.teknek.nibiru.engine.Keyspace;
 import io.teknek.nibiru.engine.Val;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
@@ -12,25 +13,31 @@ public class Server {
   
   private ConcurrentMap<String,Keyspace> keyspaces;
   private Configuration configuration;
+  
   private TombstoneReaper tombstoneReaper;
   private Thread tombstoneRunnable;
+  
+  private CompactionManager compactionManager;
+  private Thread compactionRunnable;
   
   public Server(){
     configuration = new Configuration();
     keyspaces = new ConcurrentHashMap<>();
     tombstoneReaper = new TombstoneReaper(this);
+    compactionManager = new CompactionManager(this);
   }
   
   public void init(){
     tombstoneRunnable = new Thread(tombstoneReaper);
     tombstoneRunnable.start();
+    compactionRunnable = new Thread(compactionManager);
+    compactionRunnable.start();
   }
   
   public void createKeyspace(String keyspaceName){
     KeyspaceMetadata kmd = new KeyspaceMetadata(keyspaceName);
     Keyspace keyspace = new Keyspace(configuration);
     keyspace.setKeyspaceMetadata(kmd);
-    
     keyspaces.put(keyspaceName, keyspace);
   }
   
@@ -79,6 +86,10 @@ public class Server {
 
   public void setConfiguration(Configuration configuration) {
     this.configuration = configuration;
+  }
+
+  public CompactionManager getCompactionManager() {
+    return compactionManager;
   }
   
 }

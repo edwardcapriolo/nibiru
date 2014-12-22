@@ -45,13 +45,7 @@ public class TestCompactionManager {
       w2.flushToDisk("2", configuration, m2);
       s2.open("2", configuration);
     }
-    CompactionManager cm = new CompactionManager(cf){
-      @Override
-      public String getNewSsTableName() {
-        return "3";
-      }
-    };
-    cm.compact(new SsTable[] { s, s2 });
+    CompactionManager.compact(new SsTable[] { s, s2 }, "3");
     SsTable ss = new SsTable(cf);
     ss.open("3", configuration);
     Assert.assertEquals("e", ss.get("row1", "column3").getValue());

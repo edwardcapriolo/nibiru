@@ -124,7 +124,7 @@ public class ColumnFamily {
   void considerFlush(){
     Memtable now = memtable.get();
     if (columnFamilyMetadata.getFlushNumberOfRowKeys() != 0 
-            && now.size() > columnFamilyMetadata.getFlushNumberOfRowKeys()){
+            && now.size() >= columnFamilyMetadata.getFlushNumberOfRowKeys()){
       Memtable aNewTable = new Memtable(this); 
       boolean success = memtableFlusher.add(now);
       if (success){

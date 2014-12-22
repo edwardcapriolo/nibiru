@@ -24,6 +24,12 @@ public class SsTableStreamWriter {
   
   public void open() throws FileNotFoundException {
     File sstableFile = new File(configuration.getSstableDirectory(), id + ".ss");
+    if (!configuration.getSstableDirectory().exists()){
+      boolean create = configuration.getSstableDirectory().mkdirs();
+      if (!create){
+        throw new RuntimeException ("could not create "+ configuration.getSstableDirectory());
+      }
+    }
     ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
     indexWriter.open();
   }
