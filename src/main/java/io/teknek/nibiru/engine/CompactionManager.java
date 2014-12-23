@@ -25,7 +25,7 @@ public class CompactionManager implements Runnable{
         Keyspace keyspace = keyspaces.getValue();
         for (Map.Entry<String,ColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
           Set<SsTable> tables = columnFamilies.getValue().getSstable();
-          if (tables.size() >= 4){
+          if (tables.size() >= columnFamilies.getValue().getColumnFamilyMetadata().getMaxCompactionThreshold()){
             SsTable [] ssArray = tables.toArray(new SsTable[] {});
             try {
               String newName = getNewSsTableName();

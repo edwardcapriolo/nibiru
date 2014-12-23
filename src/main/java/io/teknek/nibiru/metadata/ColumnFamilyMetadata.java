@@ -5,6 +5,7 @@ public class ColumnFamilyMetadata {
   private long tombstoneGraceMillis;
   private int flushNumberOfRowKeys = 10000;
   private int keyCachePerSsTable = 1000;
+  private int maxCompactionThreshold = 4;
   
   public ColumnFamilyMetadata(){
     
@@ -40,6 +41,14 @@ public class ColumnFamilyMetadata {
 
   public void setKeyCachePerSsTable(int keyCachePerSsTable) {
     this.keyCachePerSsTable = keyCachePerSsTable;
+  }
+
+  public int getMaxCompactionThreshold() {
+    return maxCompactionThreshold;
+  }
+
+  public void setMaxCompactionThreshold(int maxCompactionThreshold) {
+    this.maxCompactionThreshold = maxCompactionThreshold;
   }
   
 }
