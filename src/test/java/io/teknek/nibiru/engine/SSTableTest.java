@@ -1,8 +1,6 @@
 package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Configuration;
-import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -21,24 +19,19 @@ public class SSTableTest {
   
   @Test
   public void aTest() throws IOException{
-    File tempFolder = testFolder.newFolder("sstable");
-    System.out.println("Test folder: " + testFolder.getRoot());
-    Configuration configuration = new Configuration();
-    configuration.setSstableDirectory(tempFolder);
-    ColumnFamily cf = new ColumnFamily(new Keyspace(configuration));
-    cf.setColumnFamilyMetadata(new ColumnFamilyMetadata());
-    Memtable m = new Memtable(cf);
-    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner();
+    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
+    ks1.createColumnFamily("abc");
+    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3", "e", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1", "e", 2, 0L);
-    SsTable s = new SsTable(cf);
+    SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
     //s.flushToDisk("1", configuration, m);
     SSTableWriter w = new SSTableWriter();
-    w.flushToDisk("1", configuration, m);
-    s.open("1", configuration);
+    w.flushToDisk("1", ks1.getConfiguration(), m);
+    s.open("1", ks1.getConfiguration());
     long x = System.currentTimeMillis();
     for (int i = 0 ; i < 50000 ; i++) {
       Assert.assertEquals("d", s.get("row1", "column2").getValue());
@@ -50,26 +43,30 @@ public class SSTableTest {
     Assert.assertEquals("row1", s.getStreamReader().getNextToken().getRowkey());
   }
   
+  public static Configuration getBasicConfiguration(TemporaryFolder testFolder){
+    File tempFolder = testFolder.newFolder("sstable");
+    File commitlog = testFolder.newFolder("commitlog");
+    Configuration configuration = new Configuration();
+    configuration.setSstableDirectory(tempFolder);
+    configuration.setCommitlogDirectory(commitlog);
+    return configuration;
+  }
   
   @Test
   public void aBiggerTest() throws IOException, InterruptedException{
-    File tempFolder = testFolder.newFolder("sstable");
-    System.out.println("Test folder: " + testFolder.getRoot());
-    Configuration configuration = new Configuration();
-    configuration.setSstableDirectory(tempFolder);
-    Memtable m = new Memtable(new ColumnFamily(new Keyspace(configuration)));
-    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner();
-    NumberFormat nf = new DecimalFormat("00000");
+    
+    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
+    ks1.createColumnFamily("abc");
+    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"));
     for (int i = 0; i < 10000; i++) {
+      NumberFormat nf = new DecimalFormat("00000");
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column2", "c", 1, 0L);
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column3", "c", 1, 0L);
     }
-    ColumnFamily cf = new ColumnFamily(new Keyspace(configuration));
-    cf.setColumnFamilyMetadata(new ColumnFamilyMetadata());
-    SsTable s = new SsTable(cf);
+    SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
     SSTableWriter w = new SSTableWriter();
-    w.flushToDisk("1", configuration, m);
-    s.open("1", configuration);
+    w.flushToDisk("1", ks1.getConfiguration(), m);
+    s.open("1", ks1.getConfiguration());
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {

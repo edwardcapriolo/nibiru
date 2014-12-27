@@ -10,27 +10,27 @@ import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 
 public class ColumnFamily {
 
-  private ColumnFamilyMetadata columnFamilyMetadata;
+  private final ColumnFamilyMetadata columnFamilyMetadata;
   private AtomicReference<Memtable> memtable;
   private final Keyspace keyspace;
   private MemtableFlusher memtableFlusher;
   private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
+  private CommitLog commitLog;
   
-  public ColumnFamily(Keyspace keyspace){
+  public ColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
     this.keyspace = keyspace;
+    this.columnFamilyMetadata = cfmd;
     memtable = new AtomicReference<Memtable>(new Memtable(this));
     memtableFlusher = new MemtableFlusher(this);
     memtableFlusher.start();
+    commitLog = new CommitLog(this);
+    commitLog.getAssociatedMemtables().add(memtable.get());
+    commitLog.start();
   }
 
   public ColumnFamilyMetadata getColumnFamilyMetadata() {
     return columnFamilyMetadata;
   }
-
-  public void setColumnFamilyMetadata(ColumnFamilyMetadata columnFamilyMetadata) {
-    this.columnFamilyMetadata = columnFamilyMetadata;
-  }
-
   
   @Deprecated
   public Memtable getMemtable() {
@@ -107,6 +107,7 @@ public class ColumnFamily {
   
   public void put(String rowkey, String column, String value, long time, long ttl){
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+    //commitLog.get().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
   }
   

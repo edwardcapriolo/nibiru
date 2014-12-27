@@ -5,6 +5,7 @@ import java.io.File;
 public class Configuration {
   private File sstableDirectory;
   private int indexInterval;
+  private File commitlogDirectory;
   
   public Configuration(){
     indexInterval = 1000;
@@ -24,5 +25,14 @@ public class Configuration {
   
   public void setIndexInterval(int indexInterval) {
     this.indexInterval = indexInterval;
+  }
+
+  public File getCommitlogDirectory() {
+    return commitlogDirectory;
+  }
+
+  public void setCommitlogDirectory(File commitlogDirectory) {
+    this.commitlogDirectory = commitlogDirectory;
   }  
+  
 }
