@@ -1,5 +1,6 @@
 package io.teknek.nibiru.engine;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -20,6 +21,11 @@ public class ColumnFamily {
     this.keyspace = keyspace;
     this.columnFamilyMetadata = cfmd;
     CommitLog commitLog = new CommitLog(this);
+    try {
+      commitLog.open();
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     memtable = new AtomicReference<Memtable>(new Memtable(this, commitLog));
     memtableFlusher = new MemtableFlusher(this);
     memtableFlusher.start();
@@ -104,7 +110,11 @@ public class ColumnFamily {
   }
   
   public void put(String rowkey, String column, String value, long time, long ttl){
-    memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+    try {
+      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+    } catch (IOException e) {
+      throw new RuntimeException (e);
+    }
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
   }
@@ -125,6 +135,11 @@ public class ColumnFamily {
     if (columnFamilyMetadata.getFlushNumberOfRowKeys() != 0 
             && now.size() >= columnFamilyMetadata.getFlushNumberOfRowKeys()){
       CommitLog commitLog = new CommitLog(this);
+      try {
+        commitLog.open();
+      } catch (FileNotFoundException e) {
+        throw new RuntimeException(e);
+      }
       Memtable aNewTable = new Memtable(this, commitLog); 
       boolean success = memtableFlusher.add(now);
       if (success){

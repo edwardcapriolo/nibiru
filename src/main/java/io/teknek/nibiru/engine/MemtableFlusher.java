@@ -41,6 +41,7 @@ public class MemtableFlusher implements Runnable {
           table.open(tableId, columnFamily.getKeyspace().getConfiguration());
           columnFamily.getSstable().add(table);
           memtables.remove(memtable);
+          memtable.getCommitLog().delete();
           flushes.incrementAndGet();
         } catch (IOException e) {
           //TODO: catch this and terminate server?
