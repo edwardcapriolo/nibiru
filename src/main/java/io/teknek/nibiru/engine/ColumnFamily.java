@@ -15,7 +15,7 @@ public class ColumnFamily {
   private final Keyspace keyspace;
   private MemtableFlusher memtableFlusher;
   private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
-  private CommitLog commitLog;
+  private AtomicReference<CommitLog> commitLog;
   
   public ColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
     this.keyspace = keyspace;
@@ -23,9 +23,7 @@ public class ColumnFamily {
     memtable = new AtomicReference<Memtable>(new Memtable(this));
     memtableFlusher = new MemtableFlusher(this);
     memtableFlusher.start();
-    commitLog = new CommitLog(this);
-    commitLog.getAssociatedMemtables().add(memtable.get());
-    commitLog.start();
+    commitLog = new AtomicReference<CommitLog>(new CommitLog(this));
   }
 
   public ColumnFamilyMetadata getColumnFamilyMetadata() {
@@ -107,7 +105,7 @@ public class ColumnFamily {
   
   public void put(String rowkey, String column, String value, long time, long ttl){
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
-    //commitLog.get().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+    commitLog.get().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
   }
   
@@ -129,10 +127,15 @@ public class ColumnFamily {
       Memtable aNewTable = new Memtable(this); 
       boolean success = memtableFlusher.add(now);
       if (success){
+        //this is a bit phishy we should make this one globabl object to swap at once
+        //commitLog = new AtomicReference<CommitLog>(new CommitLog(this));
+        CommitLog newCommitLog = new CommitLog(this);
+        CommitLog old = commitLog.getAndSet(newCommitLog);
         boolean swap = memtable.compareAndSet(now, aNewTable);
+        old.delete();
         if (!swap){
           throw new RuntimeException("race detected");
-        }
+        }        
       }
     }
   }
