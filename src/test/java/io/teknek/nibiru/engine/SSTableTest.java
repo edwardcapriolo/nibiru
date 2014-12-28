@@ -21,7 +21,7 @@ public class SSTableTest {
   public void aTest() throws IOException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     ks1.createColumnFamily("abc");
-    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"));
+    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
@@ -57,7 +57,7 @@ public class SSTableTest {
     
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     ks1.createColumnFamily("abc");
-    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"));
+    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
     for (int i = 0; i < 10000; i++) {
       NumberFormat nf = new DecimalFormat("00000");
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column2", "c", 1, 0L);
