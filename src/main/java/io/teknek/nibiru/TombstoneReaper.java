@@ -53,5 +53,13 @@ public class TombstoneReaper implements Runnable {
       }
     }
   }
+
+  public boolean isGoOn() {
+    return goOn;
+  }
+
+  public void setGoOn(boolean goOn) {
+    this.goOn = goOn;
+  }
   
 }

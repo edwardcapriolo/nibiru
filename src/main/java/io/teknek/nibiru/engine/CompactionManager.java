@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CompactionManager implements Runnable{
   private Server server;
   private AtomicLong numberOfCompactions = new AtomicLong(0);
+  private volatile boolean goOn = true;
   
   public CompactionManager(Server server){
     this.server = server;
@@ -20,7 +21,7 @@ public class CompactionManager implements Runnable{
   
   @Override
   public void run() {
-    while (true){
+    while (goOn){
       for (Entry<String, Keyspace> keyspaces : server.getKeyspaces().entrySet()){
         Keyspace keyspace = keyspaces.getValue();
         for (Map.Entry<String,ColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
@@ -127,6 +128,14 @@ public class CompactionManager implements Runnable{
 
   public long getNumberOfCompactions() {
     return numberOfCompactions.get();
+  }
+
+  public boolean isGoOn() {
+    return goOn;
+  }
+
+  public void setGoOn(boolean goOn) {
+    this.goOn = goOn;
   }
   
 }

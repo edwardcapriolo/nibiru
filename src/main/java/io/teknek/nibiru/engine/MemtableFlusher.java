@@ -9,6 +9,7 @@ public class MemtableFlusher implements Runnable {
   private ColumnFamily columnFamily;
   private Thread myThread;
   private AtomicLong flushes;
+  private volatile boolean goOn = true;
   
   public MemtableFlusher(ColumnFamily columnFamily){
     this.columnFamily = columnFamily;
@@ -30,7 +31,7 @@ public class MemtableFlusher implements Runnable {
   
   @Override
   public void run() {
-    while (true){
+    while (goOn){
       for (Memtable memtable : memtables){
         SSTableWriter ssTableWriter = new SSTableWriter();
         try {
@@ -59,4 +60,13 @@ public class MemtableFlusher implements Runnable {
   public long getFlushCount(){
     return flushes.get();
   }
+
+  public boolean isGoOn() {
+    return goOn;
+  }
+
+  public void setGoOn(boolean goOn) {
+    this.goOn = goOn;
+  }
+  
 }

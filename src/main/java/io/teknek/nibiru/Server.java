@@ -27,8 +27,14 @@ public class Server {
   
   public Server(){
     configuration = new Configuration();
+    keyspaces = createKeyspaces();
+    tombstoneReaper = new TombstoneReaper(this);
+    compactionManager = new CompactionManager(this);
+  }
+  
+  private ConcurrentMap<String,Keyspace> createKeyspaces(){
+    ConcurrentMap<String,Keyspace> keyspaces = new ConcurrentHashMap<>();
     XmlStorage storage = new XmlStorage();
-    keyspaces = new ConcurrentHashMap<>();
     Map<String,KeyspaceMetadata> meta = storage.read(configuration); 
     if (!(meta == null)){
       for (Map.Entry<String, KeyspaceMetadata> entry : meta.entrySet()){
@@ -41,8 +47,7 @@ public class Server {
         }
       }
     }
-    tombstoneReaper = new TombstoneReaper(this);
-    compactionManager = new CompactionManager(this);
+    return keyspaces;
   }
   
   private void persistMetadata(){
@@ -59,6 +64,16 @@ public class Server {
     tombstoneRunnable.start();
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
+  }
+  
+  public void shutdown(){
+    compactionManager.setGoOn(false);
+    tombstoneReaper.setGoOn(false);
+    for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
+      for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
+        columnFamilyEntry.getValue().getMemtableFlusher().setGoOn(false);
+      }
+    }
   }
   
   public void createKeyspace(String keyspaceName){
