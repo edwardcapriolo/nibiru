@@ -8,6 +8,7 @@ import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 import io.teknek.nibiru.metadata.XmlStorage;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +45,11 @@ public class Server {
         for (Map.Entry<String, ColumnFamilyMetadata> mentry : entry.getValue().getColumnFamilyMetaData().entrySet()){
           ColumnFamily cf = new ColumnFamily(k, mentry.getValue());
           k.getColumnFamilies().put(mentry.getKey(), cf);
+          try {
+            cf.init();
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
         }
       }
     }

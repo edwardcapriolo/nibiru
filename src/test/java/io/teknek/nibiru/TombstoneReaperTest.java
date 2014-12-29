@@ -2,19 +2,30 @@ package io.teknek.nibiru;
 
 import io.teknek.nibiru.engine.Val;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import junit.framework.Assert;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TombstoneReaperTest {
+  
+  @Rule
+  public TemporaryFolder testFolder = new TemporaryFolder();
+  
   @Test 
   public void testTombstoneGrace(){
     String keyspace = "testks";
     String columnFamily = "testcf";
-    Server s = new Server(new Configuration());
+    File tempFolder = testFolder.newFolder("sstable");
+    File commitlog = testFolder.newFolder("commitlog");
+    Configuration c = new Configuration();
+    c.setSstableDirectory(tempFolder);
+    Server s = new Server(c);
     s.init();
     s.createKeyspace(keyspace); 
     s.createColumnFamily(keyspace, columnFamily);

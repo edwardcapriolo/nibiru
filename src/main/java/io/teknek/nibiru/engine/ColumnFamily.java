@@ -1,11 +1,14 @@
 package io.teknek.nibiru.engine;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.security.auth.login.Configuration;
 
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 
@@ -32,6 +35,20 @@ public class ColumnFamily {
 
   }
 
+  public void init() throws IOException {
+    for(File ssTable: keyspace.getConfiguration().getSstableDirectory().listFiles()){
+      String [] parts = ssTable.getName().split("\\.");
+      if (parts.length == 2){
+        if ("ss".equalsIgnoreCase(parts[1])){
+          String id = parts[0];
+          SsTable toOpen = new SsTable(this);
+          toOpen.open(id, keyspace.getConfiguration());
+          sstable.add(toOpen);
+        }
+      }
+    }
+  }
+  
   public void shutdown(){
     getMemtableFlusher().setGoOn(false);
     for (SsTable s: sstable){
