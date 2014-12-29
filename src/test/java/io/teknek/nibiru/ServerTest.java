@@ -23,6 +23,7 @@ public class ServerTest {
     Configuration configuration = new Configuration();
     configuration.setSstableDirectory(tempFolder);
     Server s = new Server(configuration);
+    s.init();
     s.createKeyspace(ks);
     s.createColumnFamily(ks, cf);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
@@ -93,12 +94,11 @@ public class ServerTest {
     Thread.sleep(1000);
     
     {
-    Server j = new Server(configuration);
-    j.init();
-    
-    Assert.assertNotNull(j.getKeyspaces().get(ks).getColumnFamilies().get(cf));
-    Val y = j.get(ks, cf, "8", "age");
-    Assert.assertEquals("'", y.getValue());
+      Server j = new Server(configuration);
+      j.init();
+      Assert.assertNotNull(j.getKeyspaces().get(ks).getColumnFamilies().get(cf));
+      Val y = j.get(ks, cf, "8", "age");
+      Assert.assertEquals("'", y.getValue());
     }
     
   }

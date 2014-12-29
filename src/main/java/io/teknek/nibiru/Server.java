@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 
 public class Server {
   
+  /** will remain null until init() */
   private ConcurrentMap<String,Keyspace> keyspaces;
   private final Configuration configuration;
   
@@ -27,7 +28,6 @@ public class Server {
   
   public Server(Configuration configuration){
     this.configuration = configuration;
-    keyspaces = createKeyspaces();
     tombstoneReaper = new TombstoneReaper(this);
     compactionManager = new CompactionManager(this);
   }
@@ -60,6 +60,7 @@ public class Server {
   }
   
   public void init(){
+    keyspaces = createKeyspaces();
     tombstoneRunnable = new Thread(tombstoneReaper);
     tombstoneRunnable.start();
     compactionRunnable = new Thread(compactionManager);
