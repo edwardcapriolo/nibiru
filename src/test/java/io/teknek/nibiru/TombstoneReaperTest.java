@@ -14,7 +14,7 @@ public class TombstoneReaperTest {
   public void testTombstoneGrace(){
     String keyspace = "testks";
     String columnFamily = "testcf";
-    Server s = new Server();
+    Server s = new Server(new Configuration());
     s.createKeyspace(keyspace); 
     s.createColumnFamily(keyspace, columnFamily);
     s.getKeyspaces().get(keyspace).getColumnFamilies().get(columnFamily).getColumnFamilyMetadata().setTombstoneGraceMillis(2);

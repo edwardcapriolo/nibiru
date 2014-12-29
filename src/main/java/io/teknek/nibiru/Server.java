@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 public class Server {
   
   private ConcurrentMap<String,Keyspace> keyspaces;
-  private Configuration configuration;
+  private final Configuration configuration;
   
   private TombstoneReaper tombstoneReaper;
   private Thread tombstoneRunnable;
@@ -25,8 +25,8 @@ public class Server {
   private CompactionManager compactionManager;
   private Thread compactionRunnable;
   
-  public Server(){
-    configuration = new Configuration();
+  public Server(Configuration configuration){
+    this.configuration = configuration;
     keyspaces = createKeyspaces();
     tombstoneReaper = new TombstoneReaper(this);
     compactionManager = new CompactionManager(this);
@@ -103,6 +103,9 @@ public class Server {
   
   public Val get(String keyspace, String columnFamily, String rowkey, String column){
     Keyspace ks = keyspaces.get(keyspace);
+    if (ks == null){
+      throw new RuntimeException(keyspace + " is not found");
+    }
     return ks.getColumnFamilies().get(columnFamily)
             .get(rowkey, column);
   }
@@ -127,10 +130,6 @@ public class Server {
 
   public Configuration getConfiguration() {
     return configuration;
-  }
-
-  public void setConfiguration(Configuration configuration) {
-    this.configuration = configuration;
   }
 
   public CompactionManager getCompactionManager() {

@@ -22,8 +22,7 @@ public class ServerTest {
     System.out.println("Test folder: " + testFolder.getRoot());
     Configuration configuration = new Configuration();
     configuration.setSstableDirectory(tempFolder);
-    Server s = new Server();
-    s.setConfiguration(configuration);
+    Server s = new Server(configuration);
     s.createKeyspace(ks);
     s.createColumnFamily(ks, cf);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
@@ -48,9 +47,7 @@ public class ServerTest {
     File tempFolder = testFolder.newFolder("sstable");
     Configuration configuration = new Configuration();
     configuration.setSstableDirectory(tempFolder);
-    Server s = new Server();
-    
-    s.setConfiguration(configuration);
+    Server s = new Server(configuration);
     s.init();
     s.createKeyspace(ks);
     s.createColumnFamily(ks, cf);
@@ -69,5 +66,38 @@ public class ServerTest {
       Assert.assertEquals("4", y.getValue());
     }
   }
+  
+  
+  @Test
+  public void commitLogTests() throws IOException, InterruptedException{
+    String ks = "data";
+    String cf = "pets";
+    File tempFolder = testFolder.newFolder("sstable");
+    File commitlog = testFolder.newFolder("commitlog");
+    Configuration configuration = new Configuration();
+    configuration.setSstableDirectory(tempFolder);
+    configuration.setCommitlogDirectory(commitlog);
+    Server s = new Server(configuration);
+    s.init();
+    s.createKeyspace(ks);
+    s.createColumnFamily(ks, cf);
+    s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
+    for (int i = 0; i < 2; i++) {
+      s.put(ks, cf, i+"", "age", "4", 1);
+      Thread.sleep(1);
+    }
+    Val x = s.get(ks, cf, "8", "age");
+    Thread.sleep(1000);
+    s.shutdown();
+    Thread.sleep(1000);
+    
+    /*
+    Server j = new Server(configuration);
+    j.init();
+    Val y = j.get(ks, cf, "8", "age");
+    Assert.assertEquals("'", y.getValue());
+    */
+  }
+  
   
 }
