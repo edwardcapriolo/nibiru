@@ -11,8 +11,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
-public class XmlPersister implements MetaDataStorage {
+public class XmlStorage implements MetaDataStorage {
 
   public static final String SCHEMA_NAME = "schema.xml";
   
@@ -39,7 +40,7 @@ public class XmlPersister implements MetaDataStorage {
               new BufferedInputStream(
                   new FileInputStream(new File(configuration.getSstableDirectory(), SCHEMA_NAME))));
     } catch (FileNotFoundException e) {
-      throw new RuntimeException("im dead", e);
+      return null;
     }
     Object result = d.readObject();
     d.close();

@@ -1,6 +1,7 @@
 package io.teknek.nibiru.metadata;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import io.teknek.nibiru.Configuration;
 
