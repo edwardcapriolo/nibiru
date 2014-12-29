@@ -83,4 +83,7 @@ public class CommitLog {
     sstableFile.delete();
   }
 
+  public void close() throws IOException {
+    ssOutputStream.close();
+  }
 }

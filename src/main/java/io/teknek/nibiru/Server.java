@@ -67,11 +67,12 @@ public class Server {
   }
   
   public void shutdown(){
+    //these tasks should really be delegated to the column family but for now here is sufficient
     compactionManager.setGoOn(false);
     tombstoneReaper.setGoOn(false);
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
       for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
-        columnFamilyEntry.getValue().getMemtableFlusher().setGoOn(false);
+        columnFamilyEntry.getValue().shutdown();
       }
     }
   }

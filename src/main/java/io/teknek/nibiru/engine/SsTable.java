@@ -23,7 +23,10 @@ public class SsTable implements Comparable<SsTable>{
     ssTableReader = new SsTableReader(this, keyCache);
     ssTableReader.open(id);
   }
-    
+  
+  public void close() throws IOException {
+    ssTableReader.close();
+  }
   public SsTableStreamReader getStreamReader() throws IOException {
     return ssTableReader.getStreamReader();
   }

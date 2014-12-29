@@ -43,6 +43,13 @@ public class SsTableReader {
     indexBuffer = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());
   }
   
+  public void close() throws IOException {
+    ssChannel.close();
+    indexChannel.close();
+    ssRaf.close();
+    indexRaf.close();
+  }
+  
   public SsTableStreamReader getStreamReader() throws IOException {
     BufferGroup bg = new BufferGroup();
     bg.channel = ssChannel; 

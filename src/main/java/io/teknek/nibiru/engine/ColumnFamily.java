@@ -32,6 +32,23 @@ public class ColumnFamily {
 
   }
 
+  public void shutdown(){
+    getMemtableFlusher().setGoOn(false);
+    for (SsTable s: sstable){
+      try {
+        s.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    //TODO should probably flush here
+    try {
+      memtable.get().getCommitLog().close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+  
   public ColumnFamilyMetadata getColumnFamilyMetadata() {
     return columnFamilyMetadata;
   }
