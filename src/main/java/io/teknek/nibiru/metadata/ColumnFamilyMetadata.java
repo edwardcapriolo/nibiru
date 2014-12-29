@@ -59,5 +59,13 @@ public class ColumnFamilyMetadata {
   public void setCommitlogFlushBytes(long commitlogFlushBytes) {
     this.commitlogFlushBytes = commitlogFlushBytes;
   }
+
+  @Override
+  public String toString() {
+    return "ColumnFamilyMetadata [name=" + name + ", tombstoneGraceMillis=" + tombstoneGraceMillis
+            + ", flushNumberOfRowKeys=" + flushNumberOfRowKeys + ", keyCachePerSsTable="
+            + keyCachePerSsTable + ", maxCompactionThreshold=" + maxCompactionThreshold
+            + ", commitlogFlushBytes=" + commitlogFlushBytes + "]";
+  }
   
 }

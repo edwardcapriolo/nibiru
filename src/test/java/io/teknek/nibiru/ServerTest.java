@@ -82,6 +82,7 @@ public class ServerTest {
     s.createKeyspace(ks);
     s.createColumnFamily(ks, cf);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
+    System.out.println(s.getKeyspaces().get(ks).getKeyspaceMetadata());
     for (int i = 0; i < 2; i++) {
       s.put(ks, cf, i+"", "age", "4", 1);
       Thread.sleep(1);
@@ -91,12 +92,15 @@ public class ServerTest {
     s.shutdown();
     Thread.sleep(1000);
     
-    /*
+    {
     Server j = new Server(configuration);
     j.init();
+    
+    Assert.assertNotNull(j.getKeyspaces().get(ks).getColumnFamilies().get(cf));
     Val y = j.get(ks, cf, "8", "age");
     Assert.assertEquals("'", y.getValue());
-    */
+    }
+    
   }
   
   

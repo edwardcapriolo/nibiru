@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentMap;
 public class KeyspaceMetadata {
   private String name;
   private Partitioner partitioner;
+  //** only used in serialization **/
   private ConcurrentMap<String,ColumnFamilyMetadata> columnFamilyMetaData; 
   
   //serialization
@@ -44,6 +45,12 @@ public class KeyspaceMetadata {
 
   public void setPartitioner(Partitioner partitioner) {
     this.partitioner = partitioner;
+  }
+
+  @Override
+  public String toString() {
+    return "KeyspaceMetadata [name=" + name + ", partitioner=" + partitioner
+            + ", columnFamilyMetaData=" + columnFamilyMetaData + "]";
   }
 
 }

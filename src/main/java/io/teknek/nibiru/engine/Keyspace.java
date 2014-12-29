@@ -31,6 +31,7 @@ public class Keyspace {
     cfmd.setName(name);
     ColumnFamily cf = new ColumnFamily(this, cfmd);
     columnFamilies.put(name, cf);
+    keyspaceMetadata.getColumnFamilyMetaData().put(name, cfmd);
   }
 
   public ConcurrentMap<String, ColumnFamily> getColumnFamilies() {
