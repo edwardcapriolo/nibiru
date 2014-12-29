@@ -6,6 +6,7 @@ public class ColumnFamilyMetadata {
   private int flushNumberOfRowKeys = 10000;
   private int keyCachePerSsTable = 1000;
   private int maxCompactionThreshold = 4;
+  private long commitlogFlushBytes = 1000;
   
   public ColumnFamilyMetadata(){
     
@@ -49,6 +50,14 @@ public class ColumnFamilyMetadata {
 
   public void setMaxCompactionThreshold(int maxCompactionThreshold) {
     this.maxCompactionThreshold = maxCompactionThreshold;
+  }
+
+  public long getCommitlogFlushBytes() {
+    return commitlogFlushBytes;
+  }
+
+  public void setCommitlogFlushBytes(long commitlogFlushBytes) {
+    this.commitlogFlushBytes = commitlogFlushBytes;
   }
   
 }

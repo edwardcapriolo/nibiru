@@ -1,5 +1,8 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.TimeSource;
+import io.teknek.nibiru.TimeSourceImpl;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -7,7 +10,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class CommitLog {
 
@@ -17,6 +19,7 @@ public class CommitLog {
   private CountingBufferedOutputStream ssOutputStream;
   private long lastOffset = 0;
   private File sstableFile;
+  private TimeSource timeSource = new TimeSourceImpl();
   
   public CommitLog(ColumnFamily cf){
     this.columnFamily = cf;
@@ -24,7 +27,7 @@ public class CommitLog {
             .getCommitlogDirectory(), 
             columnFamily.getColumnFamilyMetadata()
             .getName());
-    tableId = String.valueOf(System.nanoTime());
+    tableId = String.valueOf(timeSource.getTimeInMillis());
     
   }
   
@@ -67,7 +70,9 @@ public class CommitLog {
       ssOutputStream.writeAndCount(String.valueOf(j.getValue().getValue()).getBytes());
     }
     ssOutputStream.writeAndCount(SsTableReader.END_ROW);
-    if (ssOutputStream.getWrittenOffset() - lastOffset > 1000){
+    
+    if (columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes() > 0 && 
+            ssOutputStream.getWrittenOffset() - lastOffset > columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes()){
       ssOutputStream.flush();
       lastOffset = ssOutputStream.getWrittenOffset();
     }
@@ -79,61 +84,3 @@ public class CommitLog {
   }
 
 }
-
-    /*  
-    public void run(){
-      while (true){
-        boolean anyTableUnflushed = false;
-        for (Memtable memtable : associatedMemtables){
-          if (columnFamily.getMemtable().compareTo(memtable) == 0){
-            anyTableUnflushed = true;
-          }
-        }
-        for (Memtable memtable : associatedMemtables){
-          if (this.columnFamily.getMemtableFlusher().getMemtables().contains(memtable)){
-            anyTableUnflushed = true;
-          }
-        }
-        if (!anyTableUnflushed){
-          System.out.println("Deleting commit log");
-          //commitlogs.delete
-        } else {
-          System.out.println("cant flush commit log");
-        }
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException e) {
-          
-        }
-      }
-    }
-    */
-
-/*  
-public void run(){
-  while (true){
-    boolean anyTableUnflushed = false;
-    for (Memtable memtable : associatedMemtables){
-      if (columnFamily.getMemtable().compareTo(memtable) == 0){
-        anyTableUnflushed = true;
-      }
-    }
-    for (Memtable memtable : associatedMemtables){
-      if (this.columnFamily.getMemtableFlusher().getMemtables().contains(memtable)){
-        anyTableUnflushed = true;
-      }
-    }
-    if (!anyTableUnflushed){
-      System.out.println("Deleting commit log");
-      //commitlogs.delete
-    } else {
-      System.out.println("cant flush commit log");
-    }
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      
-    }
-  }
-}
-*/

@@ -11,6 +11,11 @@ public class KeyspaceMetadata {
   private Partitioner partitioner;
   private ConcurrentMap<String,ColumnFamilyMetadata> columnFamilyMetaData; 
   
+  //serialization
+  public KeyspaceMetadata(){
+    
+  }
+  
   public KeyspaceMetadata(String name){
     this.name = name;
     this.partitioner = new NaturalPartitioner();
