@@ -10,8 +10,6 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.security.auth.login.Configuration;
-
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 
 public class ColumnFamily {
@@ -25,6 +23,7 @@ public class ColumnFamily {
   public ColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
     this.keyspace = keyspace;
     this.columnFamilyMetadata = cfmd;
+    //It would be nice to move this into init but some things are dependent
     CommitLog commitLog = new CommitLog(this);
     try {
       commitLog.open();
@@ -34,10 +33,9 @@ public class ColumnFamily {
     memtable = new AtomicReference<Memtable>(new Memtable(this, commitLog));
     memtableFlusher = new MemtableFlusher(this);
     memtableFlusher.start();
-
   }
 
-  public void init() throws IOException {
+  public void init() throws IOException {    
     for(File ssTable: keyspace.getConfiguration().getSstableDirectory().listFiles()){
       String [] parts = ssTable.getName().split("\\.");
       if (parts.length == 2){
