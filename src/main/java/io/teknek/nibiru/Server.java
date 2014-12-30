@@ -6,6 +6,7 @@ import io.teknek.nibiru.engine.Keyspace;
 import io.teknek.nibiru.engine.Val;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
+import io.teknek.nibiru.metadata.MetaDataStorage;
 import io.teknek.nibiru.metadata.XmlStorage;
 
 import java.io.IOException;
@@ -27,15 +28,21 @@ public class Server {
   private CompactionManager compactionManager;
   private Thread compactionRunnable;
   
+  private final MetaDataStorage storage;
+  
   public Server(Configuration configuration){
     this.configuration = configuration;
     tombstoneReaper = new TombstoneReaper(this);
     compactionManager = new CompactionManager(this);
+    try {
+      storage = (MetaDataStorage) Class.forName(configuration.getMetaDataStorageClass()).newInstance();
+    } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
   }
   
   private ConcurrentMap<String,Keyspace> createKeyspaces(){
     ConcurrentMap<String,Keyspace> keyspaces = new ConcurrentHashMap<>();
-    XmlStorage storage = new XmlStorage();
     Map<String,KeyspaceMetadata> meta = storage.read(configuration); 
     if (!(meta == null)){
       for (Map.Entry<String, KeyspaceMetadata> entry : meta.entrySet()){
@@ -57,7 +64,6 @@ public class Server {
   }
   
   private void persistMetadata(){
-    XmlStorage storage = new XmlStorage();
     Map<String,KeyspaceMetadata> meta = new HashMap<>();
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
       meta.put(entry.getKey(), entry.getValue().getKeyspaceMetadata());
