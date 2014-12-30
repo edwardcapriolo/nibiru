@@ -2,7 +2,11 @@ package io.teknek.nibiru;
 import java.io.File;
 import java.io.IOException;
 import io.teknek.nibiru.Server;
+import io.teknek.nibiru.engine.Keyspace;
+import io.teknek.nibiru.engine.SSTableTest;
 import io.teknek.nibiru.engine.Val;
+import io.teknek.nibiru.metadata.KeyspaceMetadata;
+import io.teknek.nibiru.partitioner.NaturalPartitioner;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -18,10 +22,7 @@ public class ServerTest {
   public void aTest() throws IOException, InterruptedException{
     String ks = "data";
     String cf = "pets";
-    File tempFolder = testFolder.newFolder("sstable");
-    System.out.println("Test folder: " + testFolder.getRoot());
-    Configuration configuration = new Configuration();
-    configuration.setSstableDirectory(tempFolder);
+    Configuration configuration = aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
     s.createKeyspace(ks);
@@ -45,9 +46,7 @@ public class ServerTest {
   public void compactionTest() throws IOException, InterruptedException{
     String ks = "data";
     String cf = "pets";
-    File tempFolder = testFolder.newFolder("sstable");
-    Configuration configuration = new Configuration();
-    configuration.setSstableDirectory(tempFolder);
+    Configuration configuration = aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
     s.createKeyspace(ks);
@@ -73,11 +72,7 @@ public class ServerTest {
   public void commitLogTests() throws IOException, InterruptedException{
     String ks = "data";
     String cf = "pets";
-    File tempFolder = testFolder.newFolder("sstable");
-    File commitlog = testFolder.newFolder("commitlog");
-    Configuration configuration = new Configuration();
-    configuration.setSstableDirectory(tempFolder);
-    configuration.setCommitlogDirectory(commitlog);
+    Configuration configuration = aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
     s.createKeyspace(ks);
@@ -103,5 +98,13 @@ public class ServerTest {
     } 
   }
   
+  public static Configuration aBasicConfiguration(TemporaryFolder testFolder){
+    File tempFolder = testFolder.newFolder("sstable");
+    File commitlog = testFolder.newFolder("commitlog");
+    Configuration configuration = new Configuration();
+    configuration.setSstableDirectory(tempFolder);
+    configuration.setCommitlogDirectory(commitlog);
+    return configuration;
+  }
   
 }
