@@ -23,10 +23,11 @@ public class CommitLogReader {
   }
   
   public void open() throws IOException {
-    File sstable = new File(columnFamily.getKeyspace().getConfiguration().getSstableDirectory(), id + CommitLog.EXTENSION);
+    File sstable = new File(CommitLog.getCommitLogDirectoryForColumnFamily(columnFamily), id + "." + CommitLog.EXTENSION);
     ssRaf = new RandomAccessFile(sstable, "r");
     ssChannel = ssRaf.getChannel();
     ssBuffer = ssChannel.map(FileChannel.MapMode.READ_ONLY, 0, ssChannel.size());
+    bg = new BufferGroup();
     bg.channel = ssChannel; 
     bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
     bg.setStartOffset((int) 0);

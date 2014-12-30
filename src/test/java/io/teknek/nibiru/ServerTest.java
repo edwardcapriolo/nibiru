@@ -85,16 +85,20 @@ public class ServerTest {
     }
     Val x = s.get(ks, cf, "0", "age");
     Assert.assertEquals("4", x.getValue());
+    {
+      Val y = s.get(ks, cf, "2", "age");
+      Assert.assertEquals("4", y.getValue());
+    }
     Thread.sleep(1000);
     s.shutdown();
     Thread.sleep(1000);
-    
     {
       Server j = new Server(configuration);
       j.init();
       Assert.assertNotNull(j.getKeyspaces().get(ks).getColumnFamilies().get(cf));
-      Val y = j.get(ks, cf, "3", "age");
+      Val y = j.get(ks, cf, "2", "age");
       Assert.assertEquals("4", y.getValue());
+      j.shutdown();
     } 
   }
   

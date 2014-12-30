@@ -3,6 +3,7 @@ package io.teknek.nibiru.engine;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -49,8 +50,8 @@ public class ColumnFamily {
       }
     }
     
-    for(File ssTable: keyspace.getConfiguration().getSstableDirectory().listFiles()){
-      String [] parts = ssTable.getName().split("\\.");
+    for(File commitlog: CommitLog.getCommitLogDirectoryForColumnFamily(this).listFiles()){
+      String [] parts = commitlog.getName().split("\\.");
       if (parts.length == 2){
         if (CommitLog.EXTENSION.equalsIgnoreCase(parts[1])){
           processCommitLog(parts[0]);
@@ -65,8 +66,10 @@ public class ColumnFamily {
     Token t;
     while ((t = r.getNextToken()) != null){
       SortedMap<String,Val> x = r.readColumns();
-      System.out.println("token" +t);
-      System.out.println("columns" +x);
+      for (Map.Entry<String,Val> col: x.entrySet()){
+        //note this changes the create time which could effect ttl. Need new constructor.
+        memtable.get().put(t, col.getKey(), col.getValue().getValue(), col.getValue().getTime(), col.getValue().getTtl());
+      }
     }
   }
   

@@ -14,7 +14,6 @@ import java.util.Map.Entry;
 public class CommitLog {
 
   private final ColumnFamily columnFamily;
-  private final File cfCommitlogDirectory;
   private final String tableId;
   private CountingBufferedOutputStream ssOutputStream;
   private long lastOffset = 0;
@@ -24,22 +23,24 @@ public class CommitLog {
   
   public CommitLog(ColumnFamily cf){
     this.columnFamily = cf;
-    cfCommitlogDirectory = new File(columnFamily.getKeyspace().getConfiguration()
+    tableId = String.valueOf(timeSource.getTimeInMillis());
+  }
+  
+  public static File getCommitLogDirectoryForColumnFamily(ColumnFamily columnFamily){
+    return new File(columnFamily.getKeyspace().getConfiguration()
             .getCommitlogDirectory(), 
             columnFamily.getColumnFamilyMetadata()
             .getName());
-    tableId = String.valueOf(timeSource.getTimeInMillis());
-    
   }
   
   public void open() throws FileNotFoundException {
-    if (!cfCommitlogDirectory.exists()){
-      boolean mkdir = cfCommitlogDirectory.mkdirs();
+    if (!getCommitLogDirectoryForColumnFamily(columnFamily).exists()){
+      boolean mkdir = getCommitLogDirectoryForColumnFamily(columnFamily).mkdirs();
       if (!mkdir){
         throw new RuntimeException("Could not create directory");
       }
     }
-    sstableFile = new File(this.cfCommitlogDirectory,  tableId + "." + EXTENSION);
+    sstableFile = new File(getCommitLogDirectoryForColumnFamily(columnFamily),  tableId + "." + EXTENSION);
     ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
   }
   
