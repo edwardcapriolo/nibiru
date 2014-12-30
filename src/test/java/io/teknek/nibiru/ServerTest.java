@@ -100,8 +100,7 @@ public class ServerTest {
       Assert.assertNotNull(j.getKeyspaces().get(ks).getColumnFamilies().get(cf));
       Val y = j.get(ks, cf, "0", "age");
       Assert.assertEquals("4", y.getValue());
-    }
-    
+    } 
   }
   
   

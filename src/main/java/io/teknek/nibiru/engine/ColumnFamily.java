@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,6 +47,26 @@ public class ColumnFamily {
           sstable.add(toOpen);
         }
       }
+    }
+    
+    for(File ssTable: keyspace.getConfiguration().getSstableDirectory().listFiles()){
+      String [] parts = ssTable.getName().split("\\.");
+      if (parts.length == 2){
+        if (CommitLog.EXTENSION.equalsIgnoreCase(parts[1])){
+          processCommitLog(parts[0]);
+        }
+      }
+    }
+  }
+  
+  void processCommitLog(String id) throws IOException {
+    CommitLogReader r = new CommitLogReader(id, this);
+    r.open();
+    Token t;
+    while ((t = r.getNextToken()) != null){
+      SortedMap<String,Val> x = r.readColumns();
+      System.out.println("token" +t);
+      System.out.println("columns" +x);
     }
   }
   

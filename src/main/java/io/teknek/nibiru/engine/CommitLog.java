@@ -20,6 +20,7 @@ public class CommitLog {
   private long lastOffset = 0;
   private File sstableFile;
   private TimeSource timeSource = new TimeSourceImpl();
+  public static final String EXTENSION = "commitlog";
   
   public CommitLog(ColumnFamily cf){
     this.columnFamily = cf;
@@ -38,7 +39,7 @@ public class CommitLog {
         throw new RuntimeException("Could not create directory");
       }
     }
-    sstableFile = new File(this.cfCommitlogDirectory, columnFamily.getColumnFamilyMetadata().getName() + "-" + tableId + ".commit");
+    sstableFile = new File(this.cfCommitlogDirectory,  tableId + "." + EXTENSION);
     ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
   }
   
