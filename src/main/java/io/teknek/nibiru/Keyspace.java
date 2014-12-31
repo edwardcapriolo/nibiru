@@ -11,7 +11,7 @@ public class Keyspace {
 
   private KeyspaceMetadata keyspaceMetadata;
   private Configuration configuration;
-  private ConcurrentMap<String,DefaultColumnFamily> columnFamilies;
+  private ConcurrentMap<String,ColumnFamily> columnFamilies;
   
   public Keyspace(Configuration configuration){
     columnFamilies = new ConcurrentHashMap<>();
@@ -34,11 +34,11 @@ public class Keyspace {
     keyspaceMetadata.getColumnFamilyMetaData().put(name, cfmd);
   }
 
-  public ConcurrentMap<String, DefaultColumnFamily> getColumnFamilies() {
+  public ConcurrentMap<String, ColumnFamily> getColumnFamilies() {
     return columnFamilies;
   }
 
-  public void setColumnFamilies(ConcurrentMap<String, DefaultColumnFamily> columnFamilies) {
+  public void setColumnFamilies(ConcurrentMap<String, ColumnFamily> columnFamilies) {
     this.columnFamilies = columnFamilies;
   }
   

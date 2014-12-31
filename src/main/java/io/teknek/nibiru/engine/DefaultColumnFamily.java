@@ -6,26 +6,23 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
  
+import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 
-public class DefaultColumnFamily {
+public class DefaultColumnFamily extends ColumnFamily {
 
-  private final ColumnFamilyMetadata columnFamilyMetadata;
   private AtomicReference<Memtable> memtable;
-  private final Keyspace keyspace;
   private MemtableFlusher memtableFlusher;
   private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   
   public DefaultColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
-    this.keyspace = keyspace;
-    this.columnFamilyMetadata = cfmd;
+    super(keyspace,cfmd);
     //It would be nice to move this into init but some things are dependent
     CommitLog commitLog = new CommitLog(this);
     try {
@@ -177,13 +174,7 @@ public class DefaultColumnFamily {
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
   }
-  
-  public ConcurrentNavigableMap<String, Val>  slice(String rowkey, String start, String end){
-    return memtable.get().slice(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), start, end);
-    //also search flushed memtables
-    //also search sstables
-  }
-  
+    
   public void put(String rowkey, String column, String value, long time){
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, 0);
     considerFlush();
@@ -222,5 +213,10 @@ public class DefaultColumnFamily {
     return memtableFlusher;
   }
   
-  
 }
+/*
+ *   public ConcurrentNavigableMap<String, Val>  slice(String rowkey, String start, String end){
+    return memtable.get().slice(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), start, end);
+    //also search flushed memtables
+    //also search sstables
+  } */

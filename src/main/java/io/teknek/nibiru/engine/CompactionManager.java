@@ -1,5 +1,6 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
@@ -27,8 +28,8 @@ public class CompactionManager implements Runnable{
     while (goOn){
       for (Entry<String, Keyspace> keyspaces : server.getKeyspaces().entrySet()){
         Keyspace keyspace = keyspaces.getValue();
-        for (Map.Entry<String,DefaultColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
-          Set<SsTable> tables = columnFamilies.getValue().getSstable();
+        for (Map.Entry<String,ColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
+          Set<SsTable> tables = ((DefaultColumnFamily) columnFamilies.getValue()).getSstable();
           if (tables.size() >= columnFamilies.getValue().getColumnFamilyMetadata().getMaxCompactionThreshold()){
             SsTable [] ssArray = tables.toArray(new SsTable[] {});
             try {
@@ -57,7 +58,7 @@ public class CompactionManager implements Runnable{
   }
   
   public static SsTable compact(SsTable [] ssTables, String newName) throws IOException {
-    DefaultColumnFamily columnFamily = ssTables[0].getColumnFamily();
+    DefaultColumnFamily columnFamily = (DefaultColumnFamily) ssTables[0].getColumnFamily();
     SsTableStreamReader[] readers = new SsTableStreamReader[ssTables.length];
     SsTableStreamWriter newSsTable = new SsTableStreamWriter(newName, 
             columnFamily.getKeyspace().getConfiguration());

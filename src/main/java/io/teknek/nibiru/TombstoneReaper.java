@@ -31,16 +31,16 @@ public class TombstoneReaper implements Runnable {
   }
 
   private void processKeyspace(Keyspace keyspace){
-    for (Map.Entry<String, DefaultColumnFamily> entry: keyspace.getColumnFamilies().entrySet()){
+    for (Map.Entry<String, ColumnFamily> entry: keyspace.getColumnFamilies().entrySet()){
       long now = System.currentTimeMillis();
       processColumnFamily(entry.getValue(), now);
     }
   }
   
   //VisibleForTesting
-  public void processColumnFamily(DefaultColumnFamily columnFamily, long currentTimeMillis){
+  public void processColumnFamily(ColumnFamily columnFamily, long currentTimeMillis){
     long graceMillis = columnFamily.getColumnFamilyMetadata().getTombstoneGraceMillis();
-    for (Entry<Token, ConcurrentSkipListMap<String, Val>> entry : columnFamily.getMemtable().getData().entrySet()){
+    for (Entry<Token, ConcurrentSkipListMap<String, Val>> entry : ((DefaultColumnFamily) columnFamily).getMemtable().getData().entrySet()){
       for (Map.Entry<String, Val> innerEntry : entry.getValue().entrySet()){
         if (innerEntry.getValue().getValue() == null){
           if (innerEntry.getValue().getCreateTime() + graceMillis < currentTimeMillis){

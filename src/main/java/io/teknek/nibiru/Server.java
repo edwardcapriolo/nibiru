@@ -8,6 +8,8 @@ import io.teknek.nibiru.metadata.MetaDataStorage;
 import io.teknek.nibiru.metadata.XmlStorage;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,11 +49,19 @@ public class Server {
         Keyspace k = new Keyspace(configuration);
         k.setKeyspaceMetadata(entry.getValue());
         keyspaces.put(entry.getKey(), k);
+        
         for (Map.Entry<String, ColumnFamilyMetadata> mentry : entry.getValue().getColumnFamilyMetaData().entrySet()){
-          DefaultColumnFamily cf = new DefaultColumnFamily(k, mentry.getValue());
-          k.getColumnFamilies().put(mentry.getKey(), cf);
+          ColumnFamily columnFamily = null;
           try {
-            cf.init();
+            Class<?> cfClass = Class.forName(DefaultColumnFamily.class.getName());
+            Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetadata.class);
+            columnFamily = (ColumnFamily) cons.newInstance(k, mentry.getValue());
+          } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+          }
+          k.getColumnFamilies().put(mentry.getKey(), columnFamily);
+          try {
+            columnFamily.init();
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -60,6 +70,7 @@ public class Server {
     }
     return keyspaces;
   }
+  
   
   private void persistMetadata(){
     Map<String,KeyspaceMetadata> meta = new HashMap<>();
@@ -76,14 +87,17 @@ public class Server {
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
   }
-  
-  public void shutdown(){
-    //these tasks should really be delegated to the column family but for now here is sufficient
+ 
+  public void shutdown() {
     compactionManager.setGoOn(false);
     tombstoneReaper.setGoOn(false);
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
-      for (Map.Entry<String, DefaultColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
-        columnFamilyEntry.getValue().shutdown();
+      for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
+        try {
+          columnFamilyEntry.getValue().shutdown();
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
       }
     }
   }
@@ -125,11 +139,6 @@ public class Server {
     Keyspace ks = keyspaces.get(keyspace);
     ks.getColumnFamilies().get(columnFamily).delete(rowkey, column, time);
   }
-
-  public ConcurrentNavigableMap<String, Val> slice(String keyspace, String columnFamily, String rowkey, String startColumn, String endColumn){
-    Keyspace ks = keyspaces.get(keyspace);
-    return ks.getColumnFamilies().get(columnFamily).slice(rowkey, startColumn, endColumn);
-  }
   
   public ConcurrentMap<String, Keyspace> getKeyspaces() {
     return keyspaces;
@@ -148,3 +157,8 @@ public class Server {
   }
   
 }
+/*
+ *   public ConcurrentNavigableMap<String, Val> slice(String keyspace, String columnFamily, String rowkey, String startColumn, String endColumn){
+    Keyspace ks = keyspaces.get(keyspace);
+    return ks.getColumnFamilies().get(columnFamily).slice(rowkey, startColumn, endColumn);
+  } */

@@ -1,5 +1,6 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Val;
 
@@ -11,10 +12,10 @@ public class SsTable implements Comparable<SsTable>{
   private KeyCache keyCache;
   private static AtomicLong ID = new AtomicLong();
   private long myId; 
-  private DefaultColumnFamily columnFamily;
+  private ColumnFamily columnFamily;
   private SsTableReader ssTableReader;
   
-  public SsTable(DefaultColumnFamily columnFamily){
+  public SsTable(ColumnFamily columnFamily){
     myId = ID.getAndIncrement();
     this.columnFamily = columnFamily;
   }
@@ -56,7 +57,7 @@ public class SsTable implements Comparable<SsTable>{
     }
   }
 
-  public DefaultColumnFamily getColumnFamily() {
+  public ColumnFamily getColumnFamily() {
     return columnFamily;
   }
   

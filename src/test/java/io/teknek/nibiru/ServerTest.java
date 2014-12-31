@@ -2,6 +2,7 @@ package io.teknek.nibiru;
 import java.io.File;
 import java.io.IOException;
 import io.teknek.nibiru.Server;
+import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.engine.SSTableTest;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
@@ -34,7 +35,8 @@ public class ServerTest {
     s.put(ks, cf, "ziggy", "age", "8", 1);
     s.put(ks, cf, "dotty", "age", "4", 1);
     Thread.sleep(2000);
-    Assert.assertEquals(2, s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getMemtableFlusher().getFlushCount());
+    Assert.assertEquals(2, ((DefaultColumnFamily) s.getKeyspaces().get(ks).getColumnFamilies().get(cf))
+            .getMemtableFlusher().getFlushCount());
     x = s.get(ks, cf, "jack", "age");
     Assert.assertEquals("6", x.getValue());
     
@@ -56,7 +58,8 @@ public class ServerTest {
     }
     Val x = s.get(ks, cf, "8", "age");
     Thread.sleep(1000);
-    Assert.assertEquals(4, s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getMemtableFlusher().getFlushCount());
+    Assert.assertEquals(4, ((DefaultColumnFamily) s.getKeyspaces().get(ks).getColumnFamilies().get(cf))
+            .getMemtableFlusher().getFlushCount());
     Assert.assertEquals(1, s.getCompactionManager().getNumberOfCompactions());
     Assert.assertEquals("4", x.getValue());
     for (int i = 0; i < 9; i++) {
