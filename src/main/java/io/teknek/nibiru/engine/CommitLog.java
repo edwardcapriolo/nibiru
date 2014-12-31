@@ -16,7 +16,7 @@ import java.util.Map.Entry;
 
 public class CommitLog {
 
-  private final ColumnFamily columnFamily;
+  private final DefaultColumnFamily columnFamily;
   private final String tableId;
   private CountingBufferedOutputStream ssOutputStream;
   private long lastOffset = 0;
@@ -24,12 +24,12 @@ public class CommitLog {
   private TimeSource timeSource = new TimeSourceImpl();
   public static final String EXTENSION = "commitlog";
   
-  public CommitLog(ColumnFamily cf){
+  public CommitLog(DefaultColumnFamily cf){
     this.columnFamily = cf;
     tableId = String.valueOf(timeSource.getTimeInMillis());
   }
   
-  public static File getCommitLogDirectoryForColumnFamily(ColumnFamily columnFamily){
+  public static File getCommitLogDirectoryForColumnFamily(DefaultColumnFamily columnFamily){
     return new File(columnFamily.getKeyspace().getConfiguration()
             .getCommitlogDirectory(), 
             columnFamily.getColumnFamilyMetadata()

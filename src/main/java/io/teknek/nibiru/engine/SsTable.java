@@ -11,10 +11,10 @@ public class SsTable implements Comparable<SsTable>{
   private KeyCache keyCache;
   private static AtomicLong ID = new AtomicLong();
   private long myId; 
-  private ColumnFamily columnFamily;
+  private DefaultColumnFamily columnFamily;
   private SsTableReader ssTableReader;
   
-  public SsTable(ColumnFamily columnFamily){
+  public SsTable(DefaultColumnFamily columnFamily){
     myId = ID.getAndIncrement();
     this.columnFamily = columnFamily;
   }
@@ -56,7 +56,7 @@ public class SsTable implements Comparable<SsTable>{
     }
   }
 
-  public ColumnFamily getColumnFamily() {
+  public DefaultColumnFamily getColumnFamily() {
     return columnFamily;
   }
   

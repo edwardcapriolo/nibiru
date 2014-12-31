@@ -19,9 +19,9 @@ public class CommitLogReader {
   private MappedByteBuffer ssBuffer;
   private BufferGroup bg;
   private final String id;
-  private final ColumnFamily columnFamily;
+  private final DefaultColumnFamily columnFamily;
   
-  public CommitLogReader(String id, ColumnFamily columnFamily){
+  public CommitLogReader(String id, DefaultColumnFamily columnFamily){
     this.id = id;
     this.columnFamily = columnFamily;
   }

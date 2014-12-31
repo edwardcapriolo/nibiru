@@ -15,12 +15,12 @@ public class Memtable implements Comparable<Memtable>{
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String,Val>> data;
   private TimeSource timeSource;
-  private final ColumnFamily columnFamily;
+  private final DefaultColumnFamily columnFamily;
   private final long myId;
   private static AtomicLong MEMTABLE_ID = new AtomicLong();
   private final CommitLog commitLog;
   
-  public Memtable(ColumnFamily columnFamily, CommitLog commitLog){
+  public Memtable(DefaultColumnFamily columnFamily, CommitLog commitLog){
     data = new ConcurrentSkipListMap<>();
     timeSource = new TimeSourceImpl();
     this.columnFamily = columnFamily;

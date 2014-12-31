@@ -1,6 +1,6 @@
 package io.teknek.nibiru;
 
-import io.teknek.nibiru.engine.ColumnFamily;
+import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.engine.CompactionManager;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
@@ -48,7 +48,7 @@ public class Server {
         k.setKeyspaceMetadata(entry.getValue());
         keyspaces.put(entry.getKey(), k);
         for (Map.Entry<String, ColumnFamilyMetadata> mentry : entry.getValue().getColumnFamilyMetaData().entrySet()){
-          ColumnFamily cf = new ColumnFamily(k, mentry.getValue());
+          DefaultColumnFamily cf = new DefaultColumnFamily(k, mentry.getValue());
           k.getColumnFamilies().put(mentry.getKey(), cf);
           try {
             cf.init();
@@ -82,7 +82,7 @@ public class Server {
     compactionManager.setGoOn(false);
     tombstoneReaper.setGoOn(false);
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
-      for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
+      for (Map.Entry<String, DefaultColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
         columnFamilyEntry.getValue().shutdown();
       }
     }

@@ -27,7 +27,7 @@ public class CompactionManager implements Runnable{
     while (goOn){
       for (Entry<String, Keyspace> keyspaces : server.getKeyspaces().entrySet()){
         Keyspace keyspace = keyspaces.getValue();
-        for (Map.Entry<String,ColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
+        for (Map.Entry<String,DefaultColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
           Set<SsTable> tables = columnFamilies.getValue().getSstable();
           if (tables.size() >= columnFamilies.getValue().getColumnFamilyMetadata().getMaxCompactionThreshold()){
             SsTable [] ssArray = tables.toArray(new SsTable[] {});
@@ -57,7 +57,7 @@ public class CompactionManager implements Runnable{
   }
   
   public static SsTable compact(SsTable [] ssTables, String newName) throws IOException {
-    ColumnFamily columnFamily = ssTables[0].getColumnFamily();
+    DefaultColumnFamily columnFamily = ssTables[0].getColumnFamily();
     SsTableStreamReader[] readers = new SsTableStreamReader[ssTables.length];
     SsTableStreamWriter newSsTable = new SsTableStreamWriter(newName, 
             columnFamily.getKeyspace().getConfiguration());

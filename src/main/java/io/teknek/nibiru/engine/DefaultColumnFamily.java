@@ -9,13 +9,13 @@ import java.util.SortedMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
-
+ 
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 
-public class ColumnFamily {
+public class DefaultColumnFamily {
 
   private final ColumnFamilyMetadata columnFamilyMetadata;
   private AtomicReference<Memtable> memtable;
@@ -23,7 +23,7 @@ public class ColumnFamily {
   private MemtableFlusher memtableFlusher;
   private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   
-  public ColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
+  public DefaultColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
     this.keyspace = keyspace;
     this.columnFamilyMetadata = cfmd;
     //It would be nice to move this into init but some things are dependent

@@ -1,6 +1,6 @@
 package io.teknek.nibiru;
 
-import io.teknek.nibiru.engine.ColumnFamily;
+import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 
@@ -11,7 +11,7 @@ public class Keyspace {
 
   private KeyspaceMetadata keyspaceMetadata;
   private Configuration configuration;
-  private ConcurrentMap<String,ColumnFamily> columnFamilies;
+  private ConcurrentMap<String,DefaultColumnFamily> columnFamilies;
   
   public Keyspace(Configuration configuration){
     columnFamilies = new ConcurrentHashMap<>();
@@ -29,16 +29,16 @@ public class Keyspace {
   public void createColumnFamily(String name){
     ColumnFamilyMetadata cfmd = new ColumnFamilyMetadata();
     cfmd.setName(name);
-    ColumnFamily cf = new ColumnFamily(this, cfmd);
+    DefaultColumnFamily cf = new DefaultColumnFamily(this, cfmd);
     columnFamilies.put(name, cf);
     keyspaceMetadata.getColumnFamilyMetaData().put(name, cfmd);
   }
 
-  public ConcurrentMap<String, ColumnFamily> getColumnFamilies() {
+  public ConcurrentMap<String, DefaultColumnFamily> getColumnFamilies() {
     return columnFamilies;
   }
 
-  public void setColumnFamilies(ConcurrentMap<String, ColumnFamily> columnFamilies) {
+  public void setColumnFamilies(ConcurrentMap<String, DefaultColumnFamily> columnFamilies) {
     this.columnFamilies = columnFamilies;
   }
   

@@ -6,12 +6,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MemtableFlusher implements Runnable {
   private ConcurrentSkipListSet<Memtable> memtables = new ConcurrentSkipListSet<>();
-  private ColumnFamily columnFamily;
+  private DefaultColumnFamily columnFamily;
   private Thread myThread;
   private AtomicLong flushes;
   private volatile boolean goOn = true;
   
-  public MemtableFlusher(ColumnFamily columnFamily){
+  public MemtableFlusher(DefaultColumnFamily columnFamily){
     this.columnFamily = columnFamily;
     flushes = new AtomicLong(0);
   }
