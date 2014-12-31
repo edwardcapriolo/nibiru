@@ -1,6 +1,6 @@
 package io.teknek.nibiru.partitioner;
 
-import io.teknek.nibiru.engine.Token;
+import io.teknek.nibiru.Token;
 
 import java.security.NoSuchAlgorithmException;
 

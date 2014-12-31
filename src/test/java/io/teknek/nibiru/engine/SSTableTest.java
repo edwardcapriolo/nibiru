@@ -1,6 +1,8 @@
 package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.Keyspace;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;

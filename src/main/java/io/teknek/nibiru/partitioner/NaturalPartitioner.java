@@ -1,6 +1,6 @@
 package io.teknek.nibiru.partitioner;
 
-import io.teknek.nibiru.engine.Token;
+import io.teknek.nibiru.Token;
 
 public class NaturalPartitioner implements Partitioner {
   public Token partition(String in){

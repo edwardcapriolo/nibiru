@@ -2,8 +2,6 @@ package io.teknek.nibiru;
 
 import io.teknek.nibiru.engine.ColumnFamily;
 import io.teknek.nibiru.engine.CompactionManager;
-import io.teknek.nibiru.engine.Keyspace;
-import io.teknek.nibiru.engine.Val;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 import io.teknek.nibiru.metadata.MetaDataStorage;

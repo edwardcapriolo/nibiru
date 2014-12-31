@@ -1,8 +1,8 @@
 package io.teknek.nibiru.engine;
 import io.teknek.nibiru.Configuration;
-import io.teknek.nibiru.engine.Keyspace;
+import io.teknek.nibiru.Keyspace;
+import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.Memtable;
-import io.teknek.nibiru.engine.Val;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 import io.teknek.nibiru.partitioner.Md5Partitioner;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;

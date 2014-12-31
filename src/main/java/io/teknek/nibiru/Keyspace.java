@@ -1,6 +1,6 @@
-package io.teknek.nibiru.engine;
+package io.teknek.nibiru;
 
-import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.engine.ColumnFamily;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 

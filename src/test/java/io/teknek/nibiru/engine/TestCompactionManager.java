@@ -1,5 +1,7 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.Keyspace;
+
 import java.io.IOException;
 
 import junit.framework.Assert;

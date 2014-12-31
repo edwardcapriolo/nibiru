@@ -1,9 +1,6 @@
 package io.teknek.nibiru;
 
 import io.teknek.nibiru.engine.ColumnFamily;
-import io.teknek.nibiru.engine.Keyspace;
-import io.teknek.nibiru.engine.Token;
-import io.teknek.nibiru.engine.Val;
 
 import java.util.Map;
 import java.util.Map.Entry;
