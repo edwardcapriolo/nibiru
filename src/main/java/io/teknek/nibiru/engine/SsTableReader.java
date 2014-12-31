@@ -1,5 +1,7 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.io.BufferGroup;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -155,7 +157,7 @@ public class SsTableReader {
       if (bg.dst[bg.currentIndex] == END_ROW){
         bg.advanceIndex();
       }
-      long startOfRow = bg.mbb.position() - bg.getBlockSize()  + bg.currentIndex;
+      long startOfRow = bg.mbb.position() - bg.blockSize  + bg.currentIndex;
       readHeader(bg);
       StringBuilder token = readToken(bg);
       if (token.toString().equals(searchToken)){

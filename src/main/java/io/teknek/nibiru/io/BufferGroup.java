@@ -1,24 +1,24 @@
-package io.teknek.nibiru.engine;
+package io.teknek.nibiru.io;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class BufferGroup {
-  private int blockSize = 1024;
-  byte [] dst = new byte [blockSize];
-  int currentIndex = 0;
-  FileChannel channel;
-  MappedByteBuffer mbb;
+  public int blockSize = 1024;
+  public byte [] dst = new byte [blockSize];
+  public int currentIndex = 0;
+  public FileChannel channel;
+  public MappedByteBuffer mbb;
   
   public BufferGroup(){} 
   
-  void setStartOffset(int offset) throws IOException{
+  public void setStartOffset(int offset) throws IOException{
     mbb.position(offset);
     read();
   }
   
-  void read() throws IOException{
+  public void read() throws IOException{
     long l = channel.size();
     if (l - mbb.position() < blockSize){
       blockSize = (int) (l -mbb.position());
@@ -28,14 +28,11 @@ public class BufferGroup {
     currentIndex = 0;
   }
   
-  void advanceIndex() throws IOException{
+  public void advanceIndex() throws IOException{
     currentIndex++;
     if (currentIndex == blockSize){
       read();
     }
   }
   
-  public int getBlockSize(){
-    return this.blockSize;
-  }
 }

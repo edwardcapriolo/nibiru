@@ -1,5 +1,7 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.io.BufferGroup;
+
 import java.io.IOException;
 import java.util.SortedMap;
 

@@ -1,4 +1,4 @@
-package io.teknek.nibiru.engine;
+package io.teknek.nibiru.io;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;

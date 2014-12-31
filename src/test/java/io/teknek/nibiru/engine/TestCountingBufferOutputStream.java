@@ -1,5 +1,7 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.io.CountingBufferedOutputStream;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

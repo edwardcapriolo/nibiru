@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.io.CountingBufferedOutputStream;
 
 public class SsTableStreamWriter {
 

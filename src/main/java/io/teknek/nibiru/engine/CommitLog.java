@@ -2,6 +2,7 @@ package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.TimeSource;
 import io.teknek.nibiru.TimeSourceImpl;
+import io.teknek.nibiru.io.CountingBufferedOutputStream;
 
 import java.io.File;
 import java.io.FileNotFoundException;
