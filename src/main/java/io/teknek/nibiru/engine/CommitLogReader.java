@@ -20,14 +20,15 @@ public class CommitLogReader {
   private BufferGroup bg;
   private final String id;
   private final DefaultColumnFamily columnFamily;
+  private final File sstable;
   
   public CommitLogReader(String id, DefaultColumnFamily columnFamily){
     this.id = id;
     this.columnFamily = columnFamily;
+    sstable = new File(CommitLog.getCommitLogDirectoryForColumnFamily(columnFamily), id + "." + CommitLog.EXTENSION);
   }
   
   public void open() throws IOException {
-    File sstable = new File(CommitLog.getCommitLogDirectoryForColumnFamily(columnFamily), id + "." + CommitLog.EXTENSION);
     ssRaf = new RandomAccessFile(sstable, "r");
     ssChannel = ssRaf.getChannel();
     ssBuffer = ssChannel.map(FileChannel.MapMode.READ_ONLY, 0, ssChannel.size());
@@ -56,6 +57,15 @@ public class CommitLogReader {
   public SortedMap<String,Val>  readColumns() throws IOException {
     SortedMap<String,Val> columns = SsTableReader.readColumns(bg);
     return columns;
+  }
+  
+  public void close() throws IOException {
+    ssRaf.close();
+    ssChannel.close();
+  }
+  
+  public void delete(){
+    sstable.delete();
   }
   
 }

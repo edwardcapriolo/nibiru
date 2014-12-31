@@ -69,6 +69,8 @@ public class DefaultColumnFamily extends ColumnFamily {
         memtable.get().put(t, col.getKey(), col.getValue().getValue(), col.getValue().getTime(), col.getValue().getTtl());
       }
     }
+    r.close();
+    r.delete();
   }
   
   public void shutdown(){
