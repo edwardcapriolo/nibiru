@@ -40,7 +40,7 @@ public class Server {
       throw new RuntimeException(e);
     }
   }
-  
+
   private ConcurrentMap<String,Keyspace> createKeyspaces(){
     ConcurrentMap<String,Keyspace> keyspaces = new ConcurrentHashMap<>();
     Map<String,KeyspaceMetadata> meta = storage.read(configuration); 
@@ -49,7 +49,6 @@ public class Server {
         Keyspace k = new Keyspace(configuration);
         k.setKeyspaceMetadata(entry.getValue());
         keyspaces.put(entry.getKey(), k);
-        
         for (Map.Entry<String, ColumnFamilyMetadata> mentry : entry.getValue().getColumnFamilyMetaData().entrySet()){
           ColumnFamily columnFamily = null;
           try {

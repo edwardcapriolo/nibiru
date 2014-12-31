@@ -1,7 +1,10 @@
 package io.teknek.nibiru.metadata;
 
+import io.teknek.nibiru.engine.DefaultColumnFamily;
+
 public class ColumnFamilyMetadata {
   private String name;
+  private String implementingClass;
   private long tombstoneGraceMillis;
   private int flushNumberOfRowKeys = 10000;
   private int keyCachePerSsTable = 1000;
@@ -58,6 +61,14 @@ public class ColumnFamilyMetadata {
 
   public void setCommitlogFlushBytes(long commitlogFlushBytes) {
     this.commitlogFlushBytes = commitlogFlushBytes;
+  }
+
+  public String getImplementingClass() {
+    return implementingClass;
+  }
+
+  public void setImplementingClass(String implementingClass) {
+    this.implementingClass = implementingClass;
   }
 
   @Override

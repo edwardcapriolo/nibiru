@@ -4,6 +4,8 @@ import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -29,8 +31,17 @@ public class Keyspace {
   public void createColumnFamily(String name){
     ColumnFamilyMetadata cfmd = new ColumnFamilyMetadata();
     cfmd.setName(name);
-    DefaultColumnFamily cf = new DefaultColumnFamily(this, cfmd);
-    columnFamilies.put(name, cf);
+    cfmd.setImplementingClass(DefaultColumnFamily.class.getName());
+    ColumnFamily columnFamily = null;
+    try {
+      Class<?> cfClass = Class.forName(DefaultColumnFamily.class.getName());
+      Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetadata.class);
+      columnFamily = (ColumnFamily) cons.newInstance(this, cfmd);
+    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+    columnFamily = new DefaultColumnFamily(this, cfmd);
+    columnFamilies.put(name, columnFamily);
     keyspaceMetadata.getColumnFamilyMetaData().put(name, cfmd);
   }
 
