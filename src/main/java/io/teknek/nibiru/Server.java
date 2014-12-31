@@ -5,8 +5,6 @@ import io.teknek.nibiru.engine.CompactionManager;
 import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
 import io.teknek.nibiru.metadata.KeyspaceMetadata;
 import io.teknek.nibiru.metadata.MetaDataStorage;
-import io.teknek.nibiru.metadata.XmlStorage;
-
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentNavigableMap;
 
 public class Server {
   
