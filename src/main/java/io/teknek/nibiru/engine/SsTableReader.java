@@ -142,7 +142,11 @@ public class SsTableReader {
     } while (bg.dst[bg.currentIndex] != END_ROW);
   }
 
-  public Val get (Token searchToken, String column) throws IOException{
+  public Val get(Token searchToken, String column) throws IOException {
+    boolean mightContain = bloomFilter.mightContain(searchToken);
+    if (!mightContain) {
+      return null;
+    }
     BufferGroup bgIndex = new BufferGroup();
     bgIndex.channel = indexChannel;
     bgIndex.mbb = (MappedByteBuffer) indexBuffer.duplicate();

@@ -3,10 +3,6 @@ import java.io.File;
 import java.io.IOException;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
-import io.teknek.nibiru.engine.SSTableTest;
-import io.teknek.nibiru.metadata.KeyspaceMetadata;
-import io.teknek.nibiru.partitioner.NaturalPartitioner;
-
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

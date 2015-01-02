@@ -15,7 +15,7 @@ import com.google.common.hash.PrimitiveSink;
 public class BloomFilterWriter {
 
   private final BloomFilter<Token> bloomFilter;
-  private static final int expectedInsertions = 100; //Be smarter here
+  private static final int expectedInsertions = 50000; //Be smarter here
   private final String id;
   private final Configuration configuration;
   
