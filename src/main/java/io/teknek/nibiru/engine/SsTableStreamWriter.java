@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.common.hash.BloomFilter;
+import com.google.common.hash.Funnel;
+
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
@@ -18,11 +21,14 @@ public class SsTableStreamWriter {
   private final String id;
   private final IndexWriter indexWriter;
   private CountingBufferedOutputStream ssOutputStream;
+  private BloomFilterWriter bloomFilter;
+  
   
   public SsTableStreamWriter(String id, Configuration configuration){
     this.configuration = configuration;
     this.id = id;
     indexWriter = new IndexWriter(id, configuration);
+    bloomFilter = new BloomFilterWriter(id, configuration);
   }
   
   public void open() throws FileNotFoundException {
@@ -39,6 +45,7 @@ public class SsTableStreamWriter {
   
   public void write(Token t, Map<String,Val> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
+    bloomFilter.put(t);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
     ssOutputStream.writeAndCount(t.getToken().getBytes());
     ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
