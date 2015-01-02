@@ -36,9 +36,9 @@ public class SSTableTest {
     s.open("1", ks1.getConfiguration());
     long x = System.currentTimeMillis();
     for (int i = 0 ; i < 50000 ; i++) {
-      Assert.assertEquals("d", s.get("row1", "column2").getValue());
-      Assert.assertEquals("e", s.get("row1", "column3").getValue());
-      Assert.assertEquals("e", s.get("row2", "column1").getValue());
+      Assert.assertEquals("d", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
+      Assert.assertEquals("e", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3").getValue());
+      Assert.assertEquals("e", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1").getValue());
     }
     System.out.println((System.currentTimeMillis() - x));
     
@@ -72,28 +72,28 @@ public class SSTableTest {
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get("00001", "column2").getValue());
+        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("00001"), "column2").getValue());
       }
       System.out.println("index match " + (System.currentTimeMillis() - x));
     }
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get("08999", "column2").getValue());
+        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("08999"), "column2").getValue());
       }
       System.out.println("far from index " +(System.currentTimeMillis() - x));
     }
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get("00001", "column2").getValue());
+        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("00001"), "column2").getValue());
       }
       System.out.println("index match " + (System.currentTimeMillis() - x));
     }
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get("08999", "column2").getValue());
+        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("08999"), "column2").getValue());
       }
       System.out.println("far from index " +(System.currentTimeMillis() - x));
     }

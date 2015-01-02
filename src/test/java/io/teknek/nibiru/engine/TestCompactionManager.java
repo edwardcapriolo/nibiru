@@ -43,6 +43,6 @@ public class TestCompactionManager {
     CompactionManager.compact(new SsTable[] { s, s2 }, "3");
     SsTable ss = new SsTable(ks1.getColumnFamilies().get("abc"));
     ss.open("3", ks1.getConfiguration());
-    Assert.assertEquals("e", ss.get("row1", "column3").getValue());
+    Assert.assertEquals("e", ss.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3").getValue());
   }
 }

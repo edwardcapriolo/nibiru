@@ -40,9 +40,13 @@ public class BloomFilterWriter {
     return bloomFilter.mightContain(t);
   }
   
+  public static File getFileForId(String id, Configuration configuration){
+    return new File(
+            configuration.getSstableDirectory(), id + ".bf");
+  }
+  
   public void writeAndClose() throws IOException {
-    BufferedOutputStream bo = new BufferedOutputStream(new FileOutputStream(new File(
-            configuration.getSstableDirectory(), id + ".bf")));
+    BufferedOutputStream bo = new BufferedOutputStream(new FileOutputStream(getFileForId(id,configuration)));
     bloomFilter.writeTo(bo);
     bo.close();
   }
