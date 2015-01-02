@@ -61,7 +61,7 @@ public class CompactionManager implements Runnable{
     DefaultColumnFamily columnFamily = (DefaultColumnFamily) ssTables[0].getColumnFamily();
     SsTableStreamReader[] readers = new SsTableStreamReader[ssTables.length];
     SsTableStreamWriter newSsTable = new SsTableStreamWriter(newName, 
-            columnFamily.getKeyspace().getConfiguration());
+            columnFamily);
     newSsTable.open();
     Token[] currentTokens = new Token[ssTables.length];
     for (int i = 0; i < ssTables.length; i++) {

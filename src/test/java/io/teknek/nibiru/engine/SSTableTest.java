@@ -32,7 +32,7 @@ public class SSTableTest {
     SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
     //s.flushToDisk("1", configuration, m);
     SSTableWriter w = new SSTableWriter();
-    w.flushToDisk("1", ks1.getConfiguration(), m);
+    w.flushToDisk("1", ks1.getColumnFamilies().get("abc"), m);
     s.open("1", ks1.getConfiguration());
     long x = System.currentTimeMillis();
     for (int i = 0 ; i < 50000 ; i++) {
@@ -67,7 +67,7 @@ public class SSTableTest {
     }
     SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
     SSTableWriter w = new SSTableWriter();
-    w.flushToDisk("1", ks1.getConfiguration(), m);
+    w.flushToDisk("1", ks1.getColumnFamilies().get("abc"), m);
     s.open("1", ks1.getConfiguration());
     {
       long x = System.currentTimeMillis();
