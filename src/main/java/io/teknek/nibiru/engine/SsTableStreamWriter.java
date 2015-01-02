@@ -7,30 +7,32 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
 
 public class SsTableStreamWriter {
 
-  private final Configuration configuration;
+  private final ColumnFamily columnFamily;
   private final String id;
   private final IndexWriter indexWriter;
   private CountingBufferedOutputStream ssOutputStream;
+  private BloomFilterWriter bloomFilter;
   
-  public SsTableStreamWriter(String id, Configuration configuration){
-    this.configuration = configuration;
+  public SsTableStreamWriter(String id, ColumnFamily columnFamily){
     this.id = id;
-    indexWriter = new IndexWriter(id, configuration);
+    this.columnFamily = columnFamily;
+    indexWriter = new IndexWriter(id, columnFamily.getKeyspace().getConfiguration());
+    bloomFilter = new BloomFilterWriter(id, columnFamily.getKeyspace().getConfiguration());
   }
   
   public void open() throws FileNotFoundException {
-    File sstableFile = new File(configuration.getSstableDirectory(), id + ".ss");
-    if (!configuration.getSstableDirectory().exists()){
-      boolean create = configuration.getSstableDirectory().mkdirs();
+    File sstableFile = new File(columnFamily.getKeyspace().getConfiguration().getSstableDirectory(), id + ".ss");
+    if (!columnFamily.getKeyspace().getConfiguration().getSstableDirectory().exists()){
+      boolean create = columnFamily.getKeyspace().getConfiguration().getSstableDirectory().mkdirs();
       if (!create){
-        throw new RuntimeException ("could not create "+ configuration.getSstableDirectory());
+        throw new RuntimeException ("could not create "+ columnFamily.getKeyspace().getConfiguration().getSstableDirectory());
       }
     }
     ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
@@ -39,6 +41,7 @@ public class SsTableStreamWriter {
   
   public void write(Token t, Map<String,Val> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
+    bloomFilter.put(t);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
     ssOutputStream.writeAndCount(t.getToken().getBytes());
     ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
@@ -68,5 +71,6 @@ public class SsTableStreamWriter {
   public void close() throws IOException {
     indexWriter.close();
     ssOutputStream.close();
+    bloomFilter.writeAndClose();
   }
 }

@@ -1,5 +1,6 @@
 package io.teknek.nibiru.engine;
 
+import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.io.BufferGroup;
 
@@ -28,10 +29,12 @@ public class SsTableReader {
   private MappedByteBuffer indexBuffer;
   private SsTable ssTable;
   private KeyCache keyCache;
+  private BloomFilter bloomFilter;
   
-  public SsTableReader(SsTable ssTable, KeyCache keyCache){
+  public SsTableReader(SsTable ssTable, KeyCache keyCache, BloomFilter bloomFilter){
     this.ssTable = ssTable;
     this.keyCache = keyCache;
+    this.bloomFilter = bloomFilter;
   }
   
   public void open(String id) throws IOException{
@@ -139,7 +142,11 @@ public class SsTableReader {
     } while (bg.dst[bg.currentIndex] != END_ROW);
   }
 
-  public Val get (String row, String column) throws IOException{
+  public Val get(Token searchToken, String column) throws IOException {
+    boolean mightContain = bloomFilter.mightContain(searchToken);
+    if (!mightContain) {
+      return null;
+    }
     BufferGroup bgIndex = new BufferGroup();
     bgIndex.channel = indexChannel;
     bgIndex.mbb = (MappedByteBuffer) indexBuffer.duplicate();
@@ -148,12 +155,12 @@ public class SsTableReader {
     BufferGroup bg = new BufferGroup();
     bg.channel = ssChannel; 
     bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
-    long startOffset = keyCache.get(row);
+    long startOffset = keyCache.get(searchToken.getRowkey());
     if (startOffset == -1){
-      startOffset = index.findStartOffset(row);
+      startOffset = index.findStartOffset(searchToken.getToken());
     }
     bg.setStartOffset((int)startOffset);
-    String searchToken = row;//this is not correct
+
     do {
       if (bg.dst[bg.currentIndex] == END_ROW){
         bg.advanceIndex();
@@ -161,10 +168,10 @@ public class SsTableReader {
       long startOfRow = bg.mbb.position() - bg.blockSize  + bg.currentIndex;
       readHeader(bg);
       StringBuilder token = readToken(bg);
-      if (token.toString().equals(searchToken)){
+      if (token.toString().equals(searchToken.getToken())){
         StringBuilder rowkey = readRowkey(bg);
-        if (rowkey.toString().equals(row)){
-          keyCache.put(row, startOfRow);
+        if (rowkey.toString().equals(searchToken.getRowkey())){
+          keyCache.put(searchToken.getRowkey(), startOfRow);
           SortedMap<String,Val> columns = readColumns(bg);
           return columns.get(column);
         } else {

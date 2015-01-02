@@ -130,10 +130,11 @@ public class DefaultColumnFamily extends ColumnFamily {
         }
       }
     }
+    Token token = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
     for (SsTable sstable: this.getSstable()){
       Val x = null;
       try {
-        x = sstable.get(rowkey, column);
+        x = sstable.get(token, column);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -164,6 +165,7 @@ public class DefaultColumnFamily extends ColumnFamily {
   
   public void delete(String rowkey, String column, long time){
     memtable.get().delete(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, time);
+    //commit log
     considerFlush();
   }
   
@@ -179,6 +181,7 @@ public class DefaultColumnFamily extends ColumnFamily {
     
   public void put(String rowkey, String column, String value, long time){
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, 0);
+    //commit log
     considerFlush();
   }
   

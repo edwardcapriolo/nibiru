@@ -2,6 +2,7 @@ package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 
 import java.io.IOException;
@@ -14,15 +15,18 @@ public class SsTable implements Comparable<SsTable>{
   private long myId; 
   private ColumnFamily columnFamily;
   private SsTableReader ssTableReader;
+  private BloomFilter bloomFilterReader;
   
   public SsTable(ColumnFamily columnFamily){
-    myId = ID.getAndIncrement();
     this.columnFamily = columnFamily;
+    myId = ID.getAndIncrement();
   }
   
   public void open(String id, Configuration conf) throws IOException {    
+    bloomFilterReader = new BloomFilter();
+    bloomFilterReader.open(id, conf);
     keyCache = new KeyCache(columnFamily.getColumnFamilyMetadata().getKeyCachePerSsTable());
-    ssTableReader = new SsTableReader(this, keyCache);
+    ssTableReader = new SsTableReader(this, keyCache, bloomFilterReader);
     ssTableReader.open(id);
   }
   
@@ -39,7 +43,7 @@ public class SsTable implements Comparable<SsTable>{
    * If column is tombstoned return column tombstone
    * In other words always return known data
    */
-  public Val get(String row, String column) throws IOException{
+  public Val get(Token row, String column) throws IOException{
     return ssTableReader.get(row, column);
   }
 
