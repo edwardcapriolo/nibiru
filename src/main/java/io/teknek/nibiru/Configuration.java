@@ -6,12 +6,10 @@ import java.io.File;
 
 public class Configuration {
   private File dataDirectory;
-  private int indexInterval;
   private File commitlogDirectory;
   private String metaDataStorageClass = XmlStorage.class.getName();
   
   public Configuration(){
-    indexInterval = 1000;
   }
   
   public File getDataDirectory() {
@@ -22,14 +20,6 @@ public class Configuration {
     this.dataDirectory = sstableDirectory;
   }
   
-  public int getIndexInterval() {
-    return indexInterval;
-  }
-  
-  public void setIndexInterval(int indexInterval) {
-    this.indexInterval = indexInterval;
-  }
-
   public File getCommitlogDirectory() {
     return commitlogDirectory;
   }

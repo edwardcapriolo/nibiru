@@ -1,7 +1,5 @@
 package io.teknek.nibiru.metadata;
 
-import io.teknek.nibiru.engine.DefaultColumnFamily;
-
 public class ColumnFamilyMetadata {
   private String name;
   private String implementingClass;
@@ -10,6 +8,7 @@ public class ColumnFamilyMetadata {
   private int keyCachePerSsTable = 1000;
   private int maxCompactionThreshold = 4;
   private long commitlogFlushBytes = 1000;
+  private long indexInterval = 1000;
   
   public ColumnFamilyMetadata(){
     
@@ -69,6 +68,14 @@ public class ColumnFamilyMetadata {
 
   public void setImplementingClass(String implementingClass) {
     this.implementingClass = implementingClass;
+  }
+
+  public long getIndexInterval() {
+    return indexInterval;
+  }
+
+  public void setIndexInterval(long indexInterval) {
+    this.indexInterval = indexInterval;
   }
 
   @Override

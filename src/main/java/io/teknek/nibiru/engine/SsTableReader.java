@@ -38,12 +38,12 @@ public class SsTableReader {
   }
   
   public void open(String id) throws IOException{
-    File sstable = new File(ssTable.getColumnFamily().getKeyspace().getConfiguration().getSstableDirectory(), id + ".ss");
+    File sstable = new File(ssTable.getColumnFamily().getKeyspace().getConfiguration().getDataDirectory(), id + ".ss");
     ssRaf = new RandomAccessFile(sstable, "r");
     ssChannel = ssRaf.getChannel();
     ssBuffer = ssChannel.map(FileChannel.MapMode.READ_ONLY, 0, ssChannel.size());
     
-    File index = new File(ssTable.getColumnFamily().getKeyspace().getConfiguration().getSstableDirectory(), id + ".index");
+    File index = new File(ssTable.getColumnFamily().getKeyspace().getConfiguration().getDataDirectory(), id + ".index");
     indexRaf = new RandomAccessFile(index, "r");
     indexChannel = indexRaf.getChannel();
     indexBuffer = indexChannel.map(FileChannel.MapMode.READ_ONLY, 0, indexChannel.size());

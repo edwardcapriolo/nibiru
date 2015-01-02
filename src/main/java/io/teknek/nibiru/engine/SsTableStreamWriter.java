@@ -23,7 +23,7 @@ public class SsTableStreamWriter {
   public SsTableStreamWriter(String id, ColumnFamily columnFamily){
     this.id = id;
     this.columnFamily = columnFamily;
-    indexWriter = new IndexWriter(id, columnFamily.getKeyspace().getConfiguration());
+    indexWriter = new IndexWriter(id, columnFamily);
     bloomFilter = new BloomFilterWriter(id, columnFamily.getKeyspace().getConfiguration());
   }
   
