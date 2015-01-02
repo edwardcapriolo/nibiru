@@ -20,7 +20,7 @@ public class TestXmlStorage {
   @Test
   public void writeAndReadBack(){
     Configuration conf = new Configuration();
-    conf.setSstableDirectory(testFolder.getRoot());
+    conf.setDataDirectory(testFolder.getRoot());
     XmlStorage x = new XmlStorage();
     Map<String,KeyspaceMetadata> m = new HashMap<>();
     KeyspaceMetadata key = new KeyspaceMetadata("abc");

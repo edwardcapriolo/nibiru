@@ -48,7 +48,7 @@ public class SSTableTest {
     File tempFolder = testFolder.newFolder("sstable");
     File commitlog = testFolder.newFolder("commitlog");
     Configuration configuration = new Configuration();
-    configuration.setSstableDirectory(tempFolder);
+    configuration.setDataDirectory(tempFolder);
     configuration.setCommitlogDirectory(commitlog);
     return configuration;
   }

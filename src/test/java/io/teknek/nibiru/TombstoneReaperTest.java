@@ -24,7 +24,7 @@ public class TombstoneReaperTest {
     File tempFolder = testFolder.newFolder("sstable");
     File commitlog = testFolder.newFolder("commitlog");
     Configuration c = new Configuration();
-    c.setSstableDirectory(tempFolder);
+    c.setDataDirectory(tempFolder);
     Server s = new Server(c);
     s.init();
     s.createKeyspace(keyspace); 

@@ -35,11 +35,7 @@ public class BloomFilterWriter {
   public void put(Token t){
     bloomFilter.put(t);
   }
-  
-  public boolean mightContain(Token t){
-    return bloomFilter.mightContain(t);
-  }
-  
+    
   public static File getFileForId(String id, Configuration configuration){
     return new File(
             configuration.getSstableDirectory(), id + ".bf");

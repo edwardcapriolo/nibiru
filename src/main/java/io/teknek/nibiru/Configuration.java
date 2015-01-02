@@ -5,7 +5,7 @@ import io.teknek.nibiru.metadata.XmlStorage;
 import java.io.File;
 
 public class Configuration {
-  private File sstableDirectory;
+  private File dataDirectory;
   private int indexInterval;
   private File commitlogDirectory;
   private String metaDataStorageClass = XmlStorage.class.getName();
@@ -14,12 +14,12 @@ public class Configuration {
     indexInterval = 1000;
   }
   
-  public File getSstableDirectory() {
-    return sstableDirectory;
+  public File getDataDirectory() {
+    return dataDirectory;
   }
   
-  public void setSstableDirectory(File sstableDirectory) {
-    this.sstableDirectory = sstableDirectory;
+  public void setDataDirectory(File sstableDirectory) {
+    this.dataDirectory = sstableDirectory;
   }
   
   public int getIndexInterval() {
