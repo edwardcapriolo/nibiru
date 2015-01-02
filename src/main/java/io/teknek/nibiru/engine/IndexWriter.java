@@ -21,7 +21,7 @@ public class IndexWriter {
   }
   
   public void open() throws FileNotFoundException {
-    File indexFile = new File(conf.getSstableDirectory(), id + ".index");
+    File indexFile = new File(conf.getDataDirectory(), id + ".index");
     indexStream = new BufferedOutputStream(new FileOutputStream(indexFile));
   }
   

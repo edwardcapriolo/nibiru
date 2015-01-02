@@ -23,7 +23,7 @@ public class XmlStorage implements MetaDataStorage {
     try {
       
       e = new XMLEncoder (new BufferedOutputStream(new FileOutputStream(
-              new File(configuration.getSstableDirectory(), SCHEMA_NAME))));
+              new File(configuration.getDataDirectory(), SCHEMA_NAME))));
     } catch (FileNotFoundException ex){
       throw new RuntimeException("im dead", ex);
     }
@@ -38,7 +38,7 @@ public class XmlStorage implements MetaDataStorage {
     try {
       d = new XMLDecoder(
               new BufferedInputStream(
-                  new FileInputStream(new File(configuration.getSstableDirectory(), SCHEMA_NAME))));
+                  new FileInputStream(new File(configuration.getDataDirectory(), SCHEMA_NAME))));
     } catch (FileNotFoundException e) {
       return null;
     }

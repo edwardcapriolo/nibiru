@@ -36,7 +36,7 @@ public class DefaultColumnFamily extends ColumnFamily {
   }
 
   public void init() throws IOException {    
-    for(File ssTable: keyspace.getConfiguration().getSstableDirectory().listFiles()){
+    for(File ssTable: keyspace.getConfiguration().getDataDirectory().listFiles()){
       String [] parts = ssTable.getName().split("\\.");
       if (parts.length == 2){
         if ("ss".equalsIgnoreCase(parts[1])){

@@ -38,7 +38,7 @@ public class BloomFilterWriter {
     
   public static File getFileForId(String id, Configuration configuration){
     return new File(
-            configuration.getSstableDirectory(), id + ".bf");
+            configuration.getDataDirectory(), id + ".bf");
   }
   
   public void writeAndClose() throws IOException {

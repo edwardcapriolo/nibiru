@@ -28,11 +28,11 @@ public class SsTableStreamWriter {
   }
   
   public void open() throws FileNotFoundException {
-    File sstableFile = new File(columnFamily.getKeyspace().getConfiguration().getSstableDirectory(), id + ".ss");
-    if (!columnFamily.getKeyspace().getConfiguration().getSstableDirectory().exists()){
-      boolean create = columnFamily.getKeyspace().getConfiguration().getSstableDirectory().mkdirs();
+    File sstableFile = new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory(), id + ".ss");
+    if (!columnFamily.getKeyspace().getConfiguration().getDataDirectory().exists()){
+      boolean create = columnFamily.getKeyspace().getConfiguration().getDataDirectory().mkdirs();
       if (!create){
-        throw new RuntimeException ("could not create "+ columnFamily.getKeyspace().getConfiguration().getSstableDirectory());
+        throw new RuntimeException ("could not create "+ columnFamily.getKeyspace().getConfiguration().getDataDirectory());
       }
     }
     ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
