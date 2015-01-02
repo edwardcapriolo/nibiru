@@ -7,11 +7,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnel;
-
 import io.teknek.nibiru.ColumnFamily;
-import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
@@ -23,7 +19,6 @@ public class SsTableStreamWriter {
   private final IndexWriter indexWriter;
   private CountingBufferedOutputStream ssOutputStream;
   private BloomFilterWriter bloomFilter;
-  
   
   public SsTableStreamWriter(String id, ColumnFamily columnFamily){
     this.id = id;
@@ -76,5 +71,6 @@ public class SsTableStreamWriter {
   public void close() throws IOException {
     indexWriter.close();
     ssOutputStream.close();
+    bloomFilter.writeAndClose();
   }
 }
