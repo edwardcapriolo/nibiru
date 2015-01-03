@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.TombstoneReaper;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
