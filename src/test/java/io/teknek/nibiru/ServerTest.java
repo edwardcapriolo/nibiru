@@ -20,8 +20,8 @@ public class ServerTest {
     Configuration configuration = aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
-    s.createKeyspace(ks);
-    s.createColumnFamily(ks, cf);
+    s.getMetaDataManager().createKeyspace(ks, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, null);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     s.put(ks, cf, "jack", "name", "bunnyjack", 1);
     s.put(ks, cf, "jack", "age", "6", 1);
@@ -45,8 +45,8 @@ public class ServerTest {
     Configuration configuration = aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
-    s.createKeyspace(ks);
-    s.createColumnFamily(ks, cf);
+    s.getMetaDataManager().createKeyspace(ks, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, null);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     for (int i = 0; i < 9; i++) {
       s.put(ks, cf, i+"", "age", "4", 1);
@@ -72,8 +72,8 @@ public class ServerTest {
     Configuration configuration = aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
-    s.createKeyspace(ks);
-    s.createColumnFamily(ks, cf);
+    s.getMetaDataManager().createKeyspace(ks, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, null);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setCommitlogFlushBytes(1);
     for (int i = 0; i < 3; i++) {

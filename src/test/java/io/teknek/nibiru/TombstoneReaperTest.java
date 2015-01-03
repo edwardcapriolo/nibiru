@@ -20,26 +20,26 @@ public class TombstoneReaperTest {
   
   @Ignore
   public void testTombstoneGrace(){
-    String keyspace = "testks";
-    String columnFamily = "testcf";
+    String ks = "testks";
+    String cf = "testcf";
     File tempFolder = testFolder.newFolder("sstable");
     File commitlog = testFolder.newFolder("commitlog");
     Configuration c = new Configuration();
     c.setDataDirectory(tempFolder);
     Server s = new Server(c);
     s.init();
-    s.createKeyspace(keyspace); 
-    s.createColumnFamily(keyspace, columnFamily);
-    s.getKeyspaces().get(keyspace).getColumnFamilies().get(columnFamily).getColumnFamilyMetadata().setTombstoneGraceMillis(2);
-    ((DefaultColumnFamily) s.getKeyspaces().get(keyspace).getColumnFamilies().get(columnFamily)).getMemtable().setTimeSource(
+    s.getMetaDataManager().createKeyspace(ks, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, null);
+    s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setTombstoneGraceMillis(2);
+    ((DefaultColumnFamily) s.getKeyspaces().get(ks).getColumnFamilies().get(cf)).getMemtable().setTimeSource(
             new TimeSource(){
               public long getTimeInMillis() {
                 return 2;
               }}
             );
-    s.put(keyspace, columnFamily, "mykey", "mycolumn", "abc", 1L);
-    s.put(keyspace, columnFamily, "mykey", "mycolumn2", "abc", 1L);
-    s.delete(keyspace, columnFamily, "mykey", "mycolumn", 3);
+    s.put(ks, cf, "mykey", "mycolumn", "abc", 1L);
+    s.put(ks, cf, "mykey", "mycolumn2", "abc", 1L);
+    s.delete(ks, cf, "mykey", "mycolumn", 3);
     //s.getTombstoneReaper().processColumnFamily(s.getKeyspaces().get(keyspace).getColumnFamilies().get(columnFamily), 3);
     {
       Map<String, Val> results = new HashMap<>();

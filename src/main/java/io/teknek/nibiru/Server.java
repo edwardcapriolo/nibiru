@@ -1,16 +1,8 @@
 package io.teknek.nibiru;
 
 import io.teknek.nibiru.engine.CompactionManager;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
-import io.teknek.nibiru.metadata.KeyspaceAndColumnFamilyMetaData;
-import io.teknek.nibiru.metadata.KeyspaceMetaData;
-import io.teknek.nibiru.metadata.MetaDataStorage;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -32,7 +24,6 @@ public class Server {
   
   public void init(){
     metaDataManager.init();
-    //keyspaces = createKeyspaces();
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
   }
@@ -49,34 +40,7 @@ public class Server {
       }
     }
   }
-  
-  public void createKeyspace(String keyspaceName){
-    KeyspaceMetaData kmd = new KeyspaceMetaData(keyspaceName);
-    Keyspace keyspace = new Keyspace(configuration);
-    keyspace.setKeyspaceMetadata(kmd);
-    keyspaces.put(keyspaceName, keyspace);
-    persistMetadata();
-  }
-  
-  public void createColumnFamily(String keyspace, String columnFamily){
-    keyspaces.get(keyspace).createColumnFamily(columnFamily);
-    persistMetadata();
-  }
-
-  private void persistMetadata(){
-    Map<String,KeyspaceAndColumnFamilyMetaData> meta = new HashMap<>();
-    for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
-      KeyspaceAndColumnFamilyMetaData kfmd = new KeyspaceAndColumnFamilyMetaData();
-      kfmd.setKeyspaceMetaData(entry.getValue().getKeyspaceMetadata());
-      for (Map.Entry<String, ColumnFamily> cfEntry : entry.getValue().getColumnFamilies().entrySet()){
-        kfmd.getColumnFamilies().put(cfEntry.getKey(), cfEntry.getValue().getColumnFamilyMetadata());
-      }
-      meta.put(entry.getKey(), kfmd);
-    }
-    metaDataManager.persist(meta);
-  }
-
-  
+    
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
     Keyspace ks = keyspaces.get(keyspace);
     ks.getColumnFamilies().get(columnFamily)
@@ -113,6 +77,11 @@ public class Server {
   public CompactionManager getCompactionManager() {
     return compactionManager;
   }
+
+  public MetaDataManager getMetaDataManager() {
+    return metaDataManager;
+  }
+  
   
 }
 /*
