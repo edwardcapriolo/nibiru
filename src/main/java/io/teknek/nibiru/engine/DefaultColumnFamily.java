@@ -21,8 +21,9 @@ public class DefaultColumnFamily extends ColumnFamily {
   private MemtableFlusher memtableFlusher;
   private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   
+  
   public DefaultColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
-    super(keyspace,cfmd);
+    super(keyspace, cfmd);
     //It would be nice to move this into init but some things are dependent
     CommitLog commitLog = new CommitLog(this);
     try {
