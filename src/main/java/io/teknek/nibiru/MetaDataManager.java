@@ -1,6 +1,12 @@
 package io.teknek.nibiru;
 
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceAndColumnFamilyMetaData;
@@ -10,10 +16,12 @@ import io.teknek.nibiru.metadata.MetaDataStorage;
 public class MetaDataManager {
 
   private MetaDataStorage metaDataStorage;
+  private final Server server;
   private final Configuration configuration;
   
-  public MetaDataManager(Configuration configuration){
+  public MetaDataManager(Configuration configuration, Server server){
     this.configuration = configuration;
+    this.server = server;
   }
   
   public void init(){
@@ -21,6 +29,36 @@ public class MetaDataManager {
       metaDataStorage = (MetaDataStorage) Class.forName(configuration.getMetaDataStorageClass()).newInstance();
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
       throw new RuntimeException(e);
+    }
+    createKeyspaces();
+  }
+  
+  private void createKeyspaces(){
+
+    Map<String,KeyspaceAndColumnFamilyMetaData> meta = read(); 
+    if (!(meta == null)){
+      for (Entry<String, KeyspaceAndColumnFamilyMetaData> keyspaceEntry : meta.entrySet()){
+        Keyspace k = new Keyspace(configuration);
+        k.setKeyspaceMetadata(keyspaceEntry.getValue().getKeyspaceMetaData());
+        
+        for (Map.Entry<String, ColumnFamilyMetaData> columnFamilyEntry : keyspaceEntry.getValue().getColumnFamilies().entrySet()){
+          ColumnFamily columnFamily = null;
+          try {
+            Class<?> cfClass = Class.forName(columnFamilyEntry.getValue().getImplementingClass());
+            Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetaData.class);
+            columnFamily = (ColumnFamily) cons.newInstance(k, columnFamilyEntry.getValue());
+          } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+          }
+          k.getColumnFamilies().put(columnFamilyEntry.getKey(), columnFamily);
+          try {
+            columnFamily.init();
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        server.getKeyspaces().put(keyspaceEntry.getKey(), k);
+      }
     }
   }
   

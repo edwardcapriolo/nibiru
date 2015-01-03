@@ -16,53 +16,23 @@ import java.util.concurrent.ConcurrentMap;
 
 public class Server {
   
-  /** will remain null until init() */
-  private ConcurrentMap<String,Keyspace> keyspaces;
+  private final ConcurrentMap<String,Keyspace> keyspaces;
   private final Configuration configuration;
+  private MetaDataManager metaDataManager;
     
   private CompactionManager compactionManager;
   private Thread compactionRunnable;
   
-  private MetaDataManager metaDataManager;
-  
   public Server(Configuration configuration){
     this.configuration = configuration;
+    keyspaces = new ConcurrentHashMap<String,Keyspace>();
     compactionManager = new CompactionManager(this);
-    metaDataManager = new MetaDataManager(configuration);
-  }
-
-  private ConcurrentMap<String,Keyspace> createKeyspaces(){
-    ConcurrentMap<String,Keyspace> keyspaces = new ConcurrentHashMap<>();
-    Map<String,KeyspaceAndColumnFamilyMetaData> meta = metaDataManager.read(); 
-    if (!(meta == null)){
-      for (Entry<String, KeyspaceAndColumnFamilyMetaData> keyspaceEntry : meta.entrySet()){
-        Keyspace k = new Keyspace(configuration);
-        k.setKeyspaceMetadata(keyspaceEntry.getValue().getKeyspaceMetaData());
-        keyspaces.put(keyspaceEntry.getKey(), k);
-        for (Map.Entry<String, ColumnFamilyMetaData> columnFamilyEntry : keyspaceEntry.getValue().getColumnFamilies().entrySet()){
-          ColumnFamily columnFamily = null;
-          try {
-            Class<?> cfClass = Class.forName(columnFamilyEntry.getValue().getImplementingClass());
-            Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetaData.class);
-            columnFamily = (ColumnFamily) cons.newInstance(k, columnFamilyEntry.getValue());
-          } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-          }
-          k.getColumnFamilies().put(columnFamilyEntry.getKey(), columnFamily);
-          try {
-            columnFamily.init();
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }
-    }
-    return keyspaces;
+    metaDataManager = new MetaDataManager(configuration, this);
   }
   
   public void init(){
     metaDataManager.init();
-    keyspaces = createKeyspaces();
+    //keyspaces = createKeyspaces();
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
   }
