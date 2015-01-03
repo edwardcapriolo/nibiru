@@ -1,8 +1,12 @@
 package io.teknek.nibiru.metadata;
 
+import java.util.Map;
+
 public class ColumnFamilyMetadata {
   private String name;
   private String implementingClass;
+  
+  private Map<String,Object> properties;
   private long tombstoneGraceMillis;
   private int flushNumberOfRowKeys = 10000;
   private int keyCachePerSsTable = 1000;
@@ -84,6 +88,14 @@ public class ColumnFamilyMetadata {
             + ", flushNumberOfRowKeys=" + flushNumberOfRowKeys + ", keyCachePerSsTable="
             + keyCachePerSsTable + ", maxCompactionThreshold=" + maxCompactionThreshold
             + ", commitlogFlushBytes=" + commitlogFlushBytes + "]";
+  }
+
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
   }
   
 }

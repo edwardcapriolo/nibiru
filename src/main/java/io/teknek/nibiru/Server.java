@@ -42,20 +42,20 @@ public class Server {
     ConcurrentMap<String,Keyspace> keyspaces = new ConcurrentHashMap<>();
     Map<String,KeyspaceMetadata> meta = storage.read(configuration); 
     if (!(meta == null)){
-      for (Map.Entry<String, KeyspaceMetadata> entry : meta.entrySet()){
+      for (Map.Entry<String, KeyspaceMetadata> keyspaceEntry : meta.entrySet()){
         Keyspace k = new Keyspace(configuration);
-        k.setKeyspaceMetadata(entry.getValue());
-        keyspaces.put(entry.getKey(), k);
-        for (Map.Entry<String, ColumnFamilyMetadata> mentry : entry.getValue().getColumnFamilyMetaData().entrySet()){
+        k.setKeyspaceMetadata(keyspaceEntry.getValue());
+        keyspaces.put(keyspaceEntry.getKey(), k);
+        for (Map.Entry<String, ColumnFamilyMetadata> columnFamilyEntry : keyspaceEntry.getValue().getColumnFamilyMetaData().entrySet()){
           ColumnFamily columnFamily = null;
           try {
-            Class<?> cfClass = Class.forName(DefaultColumnFamily.class.getName());
+            Class<?> cfClass = Class.forName(columnFamilyEntry.getValue().getImplementingClass());
             Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetadata.class);
-            columnFamily = (ColumnFamily) cons.newInstance(k, mentry.getValue());
+            columnFamily = (ColumnFamily) cons.newInstance(k, columnFamilyEntry.getValue());
           } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
           }
-          k.getColumnFamilies().put(mentry.getKey(), columnFamily);
+          k.getColumnFamilies().put(columnFamilyEntry.getKey(), columnFamily);
           try {
             columnFamily.init();
           } catch (IOException e) {
