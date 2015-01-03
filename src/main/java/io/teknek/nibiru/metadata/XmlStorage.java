@@ -11,14 +11,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 
 public class XmlStorage implements MetaDataStorage {
 
   public static final String SCHEMA_NAME = "schema.xml";
   
   @Override
-  public void persist(Configuration configuration, Map<String, KeyspaceMetadata> writeThis) {
+  public void persist(Configuration configuration, Map<String, KeyspaceAndColumnFamilyMetaData> writeThis) {
     XMLEncoder e ;
     try {
       
@@ -33,7 +32,7 @@ public class XmlStorage implements MetaDataStorage {
   }
 
   @Override
-  public Map<String, KeyspaceMetadata> read(Configuration configuration) {
+  public Map<String, KeyspaceAndColumnFamilyMetaData> read(Configuration configuration) {
     XMLDecoder d;
     try {
       d = new XMLDecoder(
@@ -44,7 +43,7 @@ public class XmlStorage implements MetaDataStorage {
     }
     Object result = d.readObject();
     d.close();
-    return (Map<String, KeyspaceMetadata>) result;
+    return (Map<String, KeyspaceAndColumnFamilyMetaData>) result;
   }
 
 }

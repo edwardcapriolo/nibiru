@@ -2,18 +2,18 @@ package io.teknek.nibiru;
 
 import java.io.IOException;
 
-import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
+import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 public abstract class ColumnFamily {
   protected final Keyspace keyspace;
-  protected final ColumnFamilyMetadata columnFamilyMetadata;
+  protected final ColumnFamilyMetaData columnFamilyMetadata;
   
-  public ColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
+  public ColumnFamily(Keyspace keyspace, ColumnFamilyMetaData cfmd){
     this.keyspace = keyspace;
     this.columnFamilyMetadata = cfmd;
   }
 
-  public ColumnFamilyMetadata getColumnFamilyMetadata() {
+  public ColumnFamilyMetaData getColumnFamilyMetadata() {
     return columnFamilyMetadata;
   }
   

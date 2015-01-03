@@ -8,32 +8,23 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 public class TombstoneReaper implements Runnable {
 
-  private final Server server;
+  private final DefaultColumnFamily columnFamily;
   private volatile boolean goOn;
   
-  public TombstoneReaper(Server server){
-    this.server = server;
+  public TombstoneReaper(DefaultColumnFamily columnFamily){
+    this.columnFamily = columnFamily;
     goOn = true;
   }
   
   @Override
   public void run() {
     while(goOn){
-      for (Map.Entry<String,Keyspace> entry : server.getKeyspaces().entrySet()){
-        processKeyspace(entry.getValue());
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-          
-        }
-      }
-    }
-  }
-
-  private void processKeyspace(Keyspace keyspace){
-    for (Map.Entry<String, ColumnFamily> entry: keyspace.getColumnFamilies().entrySet()){
       long now = System.currentTimeMillis();
-      processColumnFamily(entry.getValue(), now);
+      processColumnFamily(this.columnFamily, now);
+      try {
+        Thread.sleep(2);
+      } catch (InterruptedException e) {
+      }
     }
   }
   

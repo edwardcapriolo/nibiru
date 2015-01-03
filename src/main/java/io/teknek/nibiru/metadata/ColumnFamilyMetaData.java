@@ -2,7 +2,7 @@ package io.teknek.nibiru.metadata;
 
 import java.util.Map;
 
-public class ColumnFamilyMetadata {
+public class ColumnFamilyMetaData {
   private String name;
   private String implementingClass;
   
@@ -13,8 +13,9 @@ public class ColumnFamilyMetadata {
   private int maxCompactionThreshold = 4;
   private long commitlogFlushBytes = 1000;
   private long indexInterval = 1000;
+  private boolean inMemoryColumnFamily = false;
   
-  public ColumnFamilyMetadata(){
+  public ColumnFamilyMetaData(){
     
   }
 
@@ -96,6 +97,14 @@ public class ColumnFamilyMetadata {
 
   public void setProperties(Map<String, Object> properties) {
     this.properties = properties;
+  }
+
+  public boolean isInMemoryColumnFamily() {
+    return inMemoryColumnFamily;
+  }
+
+  public void setInMemoryColumnFamily(boolean inMemoryColumnFamily) {
+    this.inMemoryColumnFamily = inMemoryColumnFamily;
   }
   
 }

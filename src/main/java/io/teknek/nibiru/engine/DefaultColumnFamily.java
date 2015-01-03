@@ -12,8 +12,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
+import io.teknek.nibiru.TombstoneReaper;
 import io.teknek.nibiru.Val;
-import io.teknek.nibiru.metadata.ColumnFamilyMetadata;
+import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 public class DefaultColumnFamily extends ColumnFamily {
 
@@ -21,8 +22,7 @@ public class DefaultColumnFamily extends ColumnFamily {
   private MemtableFlusher memtableFlusher;
   private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   
-  
-  public DefaultColumnFamily(Keyspace keyspace, ColumnFamilyMetadata cfmd){
+  public DefaultColumnFamily(Keyspace keyspace, ColumnFamilyMetaData cfmd){
     super(keyspace, cfmd);
     //It would be nice to move this into init but some things are dependent
     CommitLog commitLog = new CommitLog(this);
@@ -36,7 +36,7 @@ public class DefaultColumnFamily extends ColumnFamily {
     memtableFlusher.start();
   }
 
-  public void init() throws IOException {    
+  public void init() throws IOException {
     for(File ssTable: keyspace.getConfiguration().getDataDirectory().listFiles()){
       String [] parts = ssTable.getName().split("\\.");
       if (parts.length == 2){
@@ -91,7 +91,7 @@ public class DefaultColumnFamily extends ColumnFamily {
     }
   }
   
-  public ColumnFamilyMetadata getColumnFamilyMetadata() {
+  public ColumnFamilyMetaData getColumnFamilyMetadata() {
     return columnFamilyMetadata;
   }
   

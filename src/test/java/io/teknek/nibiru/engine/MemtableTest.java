@@ -3,7 +3,7 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.Memtable;
-import io.teknek.nibiru.metadata.KeyspaceMetadata;
+import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.partitioner.Md5Partitioner;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
 
@@ -24,14 +24,14 @@ public class MemtableTest {
   
   public static Keyspace keyspaceWithNaturalPartitioner(TemporaryFolder testFolder){
     Keyspace ks1 = new Keyspace(SSTableTest.getBasicConfiguration(testFolder));
-    ks1.setKeyspaceMetadata(new KeyspaceMetadata("testks"));
+    ks1.setKeyspaceMetadata(new KeyspaceMetaData("testks"));
     ks1.getKeyspaceMetadata().setPartitioner(new NaturalPartitioner());
     return ks1;
   }
   
   private Keyspace keyspaceWithMd5Partitioner(){
     Keyspace ks1 = new Keyspace(new Configuration());
-    ks1.setKeyspaceMetadata(new KeyspaceMetadata("testks"));
+    ks1.setKeyspaceMetadata(new KeyspaceMetaData("testks"));
     ks1.getKeyspaceMetadata().setPartitioner(new Md5Partitioner());
     return ks1;
   }
