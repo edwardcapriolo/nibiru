@@ -10,7 +10,7 @@ public class Server {
   
   private final ConcurrentMap<String,Keyspace> keyspaces;
   private final Configuration configuration;
-  private MetaDataManager metaDataManager;
+  private final MetaDataManager metaDataManager;
     
   private CompactionManager compactionManager;
   private Thread compactionRunnable;

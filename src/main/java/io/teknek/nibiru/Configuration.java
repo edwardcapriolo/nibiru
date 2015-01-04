@@ -8,6 +8,7 @@ public class Configuration {
   private File dataDirectory;
   private File commitlogDirectory;
   private String metaDataStorageClass = XmlStorage.class.getName();
+  private int transportPort = 7070;
   
   public Configuration(){
   }
@@ -34,6 +35,14 @@ public class Configuration {
 
   public void setMetaDataStorageClass(String metaDataStorageClass) {
     this.metaDataStorageClass = metaDataStorageClass;
+  }
+
+  public int getTransportPort() {
+    return transportPort;
+  }
+
+  public void setTransportPort(int transportPort) {
+    this.transportPort = transportPort;
   }  
   
 }

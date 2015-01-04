@@ -1,4 +1,4 @@
-package io.teknek.nibiru;
+package io.teknek.nibiru.transport;
 
 import java.util.Map;
 
@@ -6,7 +6,6 @@ public class Message {
   private String keyspace;
   private String columnFamily;
   private String requestPersonality;
-
   private Map<String,Object> payload;
   
   public Message(){
