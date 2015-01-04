@@ -43,13 +43,22 @@ public class Server {
     
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
     Keyspace ks = keyspaces.get(keyspace);
-    ks.getColumnFamilies().get(columnFamily)
-      .put(rowkey, column, value, time, 0L);
+    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    if (cf instanceof ColumnFamilyPersonality){
+      ((ColumnFamilyPersonality) cf).put(rowkey, column, value, time, 0L);
+    } else {
+      throw new RuntimeException("Does not support this personality");
+    }
   }
   
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl){
     Keyspace ks = keyspaces.get(keyspace);
-    ks.getColumnFamilies().get(columnFamily).put(rowkey, column, value, time);
+    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    if (cf instanceof ColumnFamilyPersonality){
+      ((ColumnFamilyPersonality) cf).put(rowkey, column, value, time);
+    } else {
+      throw new RuntimeException("Does not support this personality");
+    }
   }
   
   public Val get(String keyspace, String columnFamily, String rowkey, String column){
@@ -57,13 +66,22 @@ public class Server {
     if (ks == null){
       throw new RuntimeException(keyspace + " is not found");
     }
-    return ks.getColumnFamilies().get(columnFamily)
-            .get(rowkey, column);
+    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    if (cf instanceof ColumnFamilyPersonality){
+      return ((ColumnFamilyPersonality) cf).get(rowkey, column);
+    } else {
+      throw new RuntimeException("Does not support this personality");
+    }
   }
   
   public void delete(String keyspace, String columnFamily, String rowkey, String column, long time){
     Keyspace ks = keyspaces.get(keyspace);
-    ks.getColumnFamilies().get(columnFamily).delete(rowkey, column, time);
+    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    if (cf instanceof ColumnFamilyPersonality){
+      ((ColumnFamilyPersonality) cf).delete(rowkey, column, time);
+    } else {
+      throw new RuntimeException("Does not support this personality");
+    }
   }
   
   public ConcurrentMap<String, Keyspace> getKeyspaces() {

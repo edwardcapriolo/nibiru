@@ -10,12 +10,13 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
  
 import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.ColumnFamilyPersonality;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
-public class DefaultColumnFamily extends ColumnFamily {
+public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPersonality {
 
   private AtomicReference<Memtable> memtable;
   private MemtableFlusher memtableFlusher;
