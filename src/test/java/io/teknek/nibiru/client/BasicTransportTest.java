@@ -53,6 +53,6 @@ public class BasicTransportTest {
     m.setPayload(payload);
     ObjectMapper om = new ObjectMapper();
     Response response = cl.post("http://127.0.0.1:" + configuration.getTransportPort(), m);
-    Assert.assertEquals("6", om.convertValue( response.get("payload"), Val.class).getValue());
+    Assert.assertEquals("6", om.convertValue(response.get("payload"), Val.class).getValue());
   }
 }
