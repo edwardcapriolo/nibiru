@@ -46,6 +46,7 @@ public class Server {
         }
       }
     }
+    transport.shutdown();
   }
     
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time){

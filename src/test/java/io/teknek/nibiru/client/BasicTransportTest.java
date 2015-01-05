@@ -27,7 +27,6 @@ public class BasicTransportTest {
 
   @Test
   public void doIt() throws IllegalStateException, UnsupportedEncodingException, IOException, RuntimeException {
-
     String ks = "data";
     String cf = "pets";
     Configuration configuration = ServerTest.aBasicConfiguration(testFolder);
@@ -54,7 +53,6 @@ public class BasicTransportTest {
     m.setPayload(payload);
     ObjectMapper om = new ObjectMapper();
     Response response = cl.post("http://127.0.0.1:" + configuration.getTransportPort(), m);
-    System.out.println(om.writeValueAsString(response));
     Assert.assertEquals("6", om.convertValue( response.get("payload"), Val.class).getValue());
   }
 }

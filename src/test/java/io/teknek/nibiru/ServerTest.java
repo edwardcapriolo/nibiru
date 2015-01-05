@@ -35,7 +35,7 @@ public class ServerTest {
             .getMemtableFlusher().getFlushCount());
     x = s.get(ks, cf, "jack", "age");
     Assert.assertEquals("6", x.getValue());
-    
+    s.shutdown();
   }
   
   @Test
@@ -62,6 +62,7 @@ public class ServerTest {
       Val y = s.get(ks, cf, i+"", "age");
       Assert.assertEquals("4", y.getValue());
     }
+    s.shutdown();
   }
   
   
@@ -96,7 +97,8 @@ public class ServerTest {
       Val y = j.get(ks, cf, "2", "age");
       Assert.assertEquals("4", y.getValue());
       j.shutdown();
-    } 
+    }
+    s.shutdown();
   }
   
   public static Configuration aBasicConfiguration(TemporaryFolder testFolder){
