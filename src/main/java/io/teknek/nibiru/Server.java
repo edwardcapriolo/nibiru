@@ -1,6 +1,8 @@
 package io.teknek.nibiru;
 
 import io.teknek.nibiru.engine.CompactionManager;
+import io.teknek.nibiru.transport.HttpJsonTransport;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +13,8 @@ public class Server {
   private final ConcurrentMap<String,Keyspace> keyspaces;
   private final Configuration configuration;
   private final MetaDataManager metaDataManager;
+  private final HttpJsonTransport transport;
+  private final Coordinator coordinator;
     
   private CompactionManager compactionManager;
   private Thread compactionRunnable;
@@ -20,10 +24,13 @@ public class Server {
     keyspaces = new ConcurrentHashMap<String,Keyspace>();
     compactionManager = new CompactionManager(this);
     metaDataManager = new MetaDataManager(configuration, this);
+    coordinator = new Coordinator(this);
+    transport = new HttpJsonTransport(configuration, coordinator);
   }
   
   public void init(){
     metaDataManager.init();
+    transport.init();
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
   }

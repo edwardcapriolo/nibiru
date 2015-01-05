@@ -7,6 +7,9 @@ public class Val {
   private long createTime;
   private long ttl;
   
+  //serialization
+  private Val(){}
+  
   public Val(String value, long time, long createTime, long ttl){
     this.value = value;
     this.time = time;

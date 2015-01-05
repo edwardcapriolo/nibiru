@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.Coordinator;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mortbay.jetty.Handler;
@@ -22,9 +23,11 @@ public class HttpJsonTransport {
   private static ObjectMapper MAPPER = new ObjectMapper();
   private final Configuration configuration;
   private final AtomicBoolean RUNNING = new AtomicBoolean(false);
+  private final Coordinator coordinator; 
   
-  public HttpJsonTransport(Configuration configuration){
+  public HttpJsonTransport(Configuration configuration, Coordinator cordinator){
     this.configuration = configuration;
+    this.coordinator = cordinator;
   }
   
   public void init(){
@@ -57,7 +60,7 @@ public class HttpJsonTransport {
         Message message = MAPPER.readValue(baseRequest.getInputStream(), Message.class);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=utf-8");
-        //MAPPER.writeValue(response.getOutputStream(), copy.doRequest(requestFromBody));
+        MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
         response.getOutputStream().close();
         baseRequest.setHandled(true);
       }
