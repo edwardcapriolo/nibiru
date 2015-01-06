@@ -40,8 +40,22 @@ public class ColumnFamilyClient extends Client {
     }
   }
 
-  public void delete(String keyspace, String columnFamily, String rowkey, String column, long time){
-    
+  public void delete(String keyspace, String columnFamily, String rowkey, String column, long time) throws ClientException {
+    Message m = new Message();
+    m.setKeyspace(keyspace);
+    m.setColumnFamily(columnFamily);
+    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
+            .put("type", "delete")
+            .put("rowkey", rowkey)
+            .put("column", column)
+            .put("time", time).build();
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
   }
 
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl){

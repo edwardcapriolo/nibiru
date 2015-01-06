@@ -33,6 +33,8 @@ public class BasicTransportTest {
     ColumnFamilyClient cl = new ColumnFamilyClient("127.0.0.1", s.getConfiguration().getTransportPort());
     Assert.assertEquals("6", cl.get(ServerTest.ks, ServerTest.cf, "jack", "age").getValue());
     Assert.assertEquals("bunnyjack", cl.get(ServerTest.ks, ServerTest.cf, "jack", "name").getValue());
+    cl.delete(ServerTest.ks, ServerTest.cf, "jack", "name", 2L);
+    Assert.assertEquals(null, cl.get(ServerTest.ks, ServerTest.cf, "jack", "name").getValue());
     s.shutdown();
   }
 }

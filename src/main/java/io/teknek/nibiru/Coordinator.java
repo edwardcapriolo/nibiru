@@ -41,10 +41,16 @@ public class Coordinator {
         return r;
       } else if (message.getPayload().get("type").equals("put")) {
         personality.put(
-                (String)message.getPayload().get("rowkey"),
+                (String) message.getPayload().get("rowkey"),
                 (String) message.getPayload().get("column"),
                 (String) message.getPayload().get("value"),
                 (Long) message.getPayload().get("time"));
+        return new Response();
+      } else if (message.getPayload().get("type").equals("delete")) { 
+        personality.delete(
+                (String) message.getPayload().get("rowkey"),
+                (String) message.getPayload().get("column"),
+                ((Number) message.getPayload().get("time")).longValue());
         return new Response();
       } else {
         throw new RuntimeException("Does not support this type of message");
