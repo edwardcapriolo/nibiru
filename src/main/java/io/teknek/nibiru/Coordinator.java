@@ -41,12 +41,22 @@ public class Coordinator {
         r.put("payload", v);
         return r;
       } else if (message.getPayload().get("type").equals("put")) {
-        personality.put(
+        Long l = ((Long) message.getPayload().get("ttl"));
+        if (l == null){
+          personality.put(
                 (String) message.getPayload().get("rowkey"),
                 (String) message.getPayload().get("column"),
                 (String) message.getPayload().get("value"),
                 ((Number) message.getPayload().get("time")).longValue());
-        return new Response();
+          return new Response();
+        } else {
+          personality.put(
+                  (String) message.getPayload().get("rowkey"),
+                  (String) message.getPayload().get("column"),
+                  (String) message.getPayload().get("value"),
+                  ((Number) message.getPayload().get("time")).longValue(), l);
+          return new Response();
+        }
       } else if (message.getPayload().get("type").equals("delete")) { 
         personality.delete(
                 (String) message.getPayload().get("rowkey"),

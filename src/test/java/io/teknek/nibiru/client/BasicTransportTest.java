@@ -35,6 +35,8 @@ public class BasicTransportTest {
     Assert.assertEquals("bunnyjack", cl.get(ServerTest.ks, ServerTest.cf, "jack", "name").getValue());
     cl.delete(ServerTest.ks, ServerTest.cf, "jack", "name", 2L);
     Assert.assertEquals(null, cl.get(ServerTest.ks, ServerTest.cf, "jack", "name").getValue());
+    cl.put(ServerTest.ks, ServerTest.cf, "jack", "weight", "6lbds", 2L);
+    Assert.assertEquals("6lbds", cl.get(ServerTest.ks, ServerTest.cf, "jack", "weight").getValue());
     s.shutdown();
   }
 }
