@@ -25,20 +25,14 @@ public class BasicTransportTest {
 
   @Test
   public void doIt() throws IllegalStateException, UnsupportedEncodingException, IOException, RuntimeException, ClientException {
-    String ks = "data";
-    String cf = "pets";
-    Configuration configuration = ServerTest.aBasicConfiguration(testFolder);
-    Server s = new Server(configuration);
-    s.init();
-    s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, null);
-    s.put(ks, cf, "jack", "name", "bunnyjack", 1);
-    s.put(ks, cf, "jack", "age", "6", 1);
-    Val x = s.get(ks, cf, "jack", "age");
+    Server s = ServerTest.aBasicServer(testFolder);
+    s.put(ServerTest.ks, ServerTest.cf, "jack", "name", "bunnyjack", 1);
+    s.put(ServerTest.ks, ServerTest.cf, "jack", "age", "6", 1);
+    Val x = s.get(ServerTest.ks, ServerTest.cf, "jack", "age");
     Assert.assertEquals("6", x.getValue());
-    ColumnFamilyClient cl = new ColumnFamilyClient("127.0.0.1", configuration.getTransportPort());
-    Assert.assertEquals("6", cl.get(ks, cf, "jack", "age").getValue());
-    Assert.assertEquals("bunnyjack", cl.get(ks, cf, "jack", "name").getValue());
+    ColumnFamilyClient cl = new ColumnFamilyClient("127.0.0.1", s.getConfiguration().getTransportPort());
+    Assert.assertEquals("6", cl.get(ServerTest.ks, ServerTest.cf, "jack", "age").getValue());
+    Assert.assertEquals("bunnyjack", cl.get(ServerTest.ks, ServerTest.cf, "jack", "name").getValue());
     s.shutdown();
   }
 }

@@ -10,6 +10,8 @@ import org.junit.rules.TemporaryFolder;
 
 public class ServerTest {
 
+  public static String ks = "data";
+  public static String cf = "pets";
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
   
@@ -108,6 +110,17 @@ public class ServerTest {
     configuration.setDataDirectory(tempFolder);
     configuration.setCommitlogDirectory(commitlog);
     return configuration;
+  }
+  
+  public static Server aBasicServer(TemporaryFolder testFolder){
+    String ks = "data";
+    String cf = "pets";
+    Configuration configuration = ServerTest.aBasicConfiguration(testFolder);
+    Server s = new Server(configuration);
+    s.init();
+    s.getMetaDataManager().createKeyspace(ks, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, null);
+    return s;
   }
   
 }
