@@ -11,8 +11,6 @@ import java.io.UnsupportedEncodingException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -21,9 +19,17 @@ public class Client {
   private ObjectMapper MAPPER = new ObjectMapper();
   private DefaultHttpClient httpClient = new DefaultHttpClient();
   
-  public Response post(String url, Message request)
+  private String host;
+  private int port;
+  
+  public Client(String host, int port){
+    this.host = host;
+    this.port = port;
+  }
+  
+  public Response post( Message request)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
-    HttpPost postRequest = new HttpPost(url);
+    HttpPost postRequest = new HttpPost("http://"+host+":"+port);
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
     input.setContentType("application/json");
     postRequest.setEntity(input);
