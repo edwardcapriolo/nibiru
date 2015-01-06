@@ -5,6 +5,9 @@ import java.io.UnsupportedEncodingException;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.ServerTest;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.Response;
+
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +34,8 @@ public class BasicTransportTest {
     Assert.assertEquals("6lbds", cl.get(ServerTest.ks, ServerTest.cf, "jack", "weight").getValue());
     cl.put(ServerTest.ks, ServerTest.cf, "jack", "height", "7in", 10L);
     Assert.assertEquals("7in", cl.get(ServerTest.ks, ServerTest.cf, "jack", "height").getValue());
+    Response r = cl.post(new Message());
+    Assert.assertTrue(r.containsKey("exception"));
     s.shutdown();
   }
 }

@@ -60,7 +60,13 @@ public class HttpJsonTransport {
         Message message = MAPPER.readValue(baseRequest.getInputStream(), Message.class);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=utf-8");
-        MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
+        try {
+          MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
+        } catch (RuntimeException ex){
+          Response r = new Response();
+          r.put("exception", ex.getMessage());
+          MAPPER.writeValue(response.getOutputStream(), r);
+        }
         response.getOutputStream().close();
         baseRequest.setHandled(true);
       }
