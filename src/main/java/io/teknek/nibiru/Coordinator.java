@@ -1,7 +1,5 @@
 package io.teknek.nibiru;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
