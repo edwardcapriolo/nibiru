@@ -1,7 +1,6 @@
 package io.teknek.nibiru.client;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;

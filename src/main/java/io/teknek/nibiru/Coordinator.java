@@ -34,7 +34,8 @@ public class Coordinator {
     if (cf instanceof ColumnFamilyPersonality){
       ColumnFamilyPersonality personality = (ColumnFamilyPersonality) cf;
       if (message.getPayload().get("type").equals("get")){
-        Val v = personality.get((String)message.getPayload().get("rowkey"),
+        Val v = personality.get(
+                (String)message.getPayload().get("rowkey"),
                 (String) message.getPayload().get("column"));
         Response r = new Response();
         r.put("payload", v);
@@ -44,7 +45,7 @@ public class Coordinator {
                 (String) message.getPayload().get("rowkey"),
                 (String) message.getPayload().get("column"),
                 (String) message.getPayload().get("value"),
-                (Long) message.getPayload().get("time"));
+                ((Number) message.getPayload().get("time")).longValue());
         return new Response();
       } else if (message.getPayload().get("type").equals("delete")) { 
         personality.delete(
