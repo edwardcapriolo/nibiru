@@ -37,6 +37,8 @@ public class BasicTransportTest {
     Assert.assertEquals(null, cl.get(ServerTest.ks, ServerTest.cf, "jack", "name").getValue());
     cl.put(ServerTest.ks, ServerTest.cf, "jack", "weight", "6lbds", 2L);
     Assert.assertEquals("6lbds", cl.get(ServerTest.ks, ServerTest.cf, "jack", "weight").getValue());
+    cl.put(ServerTest.ks, ServerTest.cf, "jack", "height", "7in", 10L);
+    Assert.assertEquals("7in", cl.get(ServerTest.ks, ServerTest.cf, "jack", "height").getValue());
     s.shutdown();
   }
 }

@@ -57,17 +57,26 @@ public class ColumnFamilyClient extends Client {
     }
   }
 
-  public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl){
-    
+  public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl) throws ClientException{
+    Message m = new Message();
+    m.setKeyspace(keyspace);
+    m.setColumnFamily(columnFamily);
+    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
+            .put("type", "put")
+            .put("rowkey", rowkey)
+            .put("column", column)
+            .put("value", value)
+            .put("time", time)
+            .put("ttl", ttl).build();
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
   }
 
-  /*
-   *  personality.put(
-                  (String) message.getPayload().get("rowkey"),
-                  (String) message.getPayload().get("column"),
-                  (String) message.getPayload().get("value"),
-                  ((Number) message.getPayload().get("time")).longValue(), l);
-   */
   public void put(String keyspace, String columnFamily,String rowkey, String column, String value, long time) throws ClientException{
     Message m = new Message();
     m.setKeyspace(keyspace);
@@ -85,7 +94,5 @@ public class ColumnFamilyClient extends Client {
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
-    
-    
   }
 }
