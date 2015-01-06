@@ -2,17 +2,9 @@ package io.teknek.nibiru.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Map;
-
-import io.teknek.nibiru.ColumnFamilyPersonality;
-import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.ServerTest;
 import io.teknek.nibiru.Val;
-import io.teknek.nibiru.transport.Message;
-import io.teknek.nibiru.transport.Response;
-
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
