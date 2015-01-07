@@ -14,6 +14,7 @@ public class ColumnFamilyMetaData {
   private long commitlogFlushBytes = 1000;
   private long indexInterval = 1000;
   private boolean inMemoryColumnFamily = false;
+  private long operationTimeoutInMs = 5000;
   
   public ColumnFamilyMetaData(){
     
@@ -105,6 +106,14 @@ public class ColumnFamilyMetaData {
 
   public void setInMemoryColumnFamily(boolean inMemoryColumnFamily) {
     this.inMemoryColumnFamily = inMemoryColumnFamily;
+  }
+
+  public long getOperationTimeoutInMs() {
+    return operationTimeoutInMs;
+  }
+
+  public void setOperationTimeoutInMs(long operationTimeoutInMs) {
+    this.operationTimeoutInMs = operationTimeoutInMs;
   }
   
 }

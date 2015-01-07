@@ -25,9 +25,10 @@ public class Coordinator {
       return null;
     }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
+    ColumnFamily columnFamily = keyspace.getColumnFamilies().get(message.getColumnFamily());
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace);
-    
+    long timeoutInMs = determineTimeout(columnFamily, message);
     if (destinations.contains(destinationLocal)) {
       if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
         return handleColumnFamilyPersonality(message);
@@ -36,6 +37,14 @@ public class Coordinator {
       }
     } else {
       throw new UnsupportedOperationException("We can not route messages. Yet!");
+    }
+  }
+  
+  private static long determineTimeout(ColumnFamily columnFamily, Message message){
+    if (message.getPayload().containsKey("timeout")){
+      return ((Number) message.getPayload().get("timeout")).longValue();
+    } else {
+      return columnFamily.getColumnFamilyMetadata().getOperationTimeoutInMs();
     }
   }
   
