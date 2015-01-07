@@ -40,6 +40,7 @@ public class Server {
  
   public void shutdown() {
     compactionManager.setGoOn(false);
+    transport.shutdown();
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
       for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
         try {
@@ -49,7 +50,6 @@ public class Server {
         }
       }
     }
-    transport.shutdown();
   }
     
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
