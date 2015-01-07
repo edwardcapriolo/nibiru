@@ -16,7 +16,7 @@ public class Coordinator {
   }
   
   public void init(){
-    destinationLocal = new Destination();// we should compare string or uuid here
+    destinationLocal = new Destination();
     destinationLocal.setDestinationId(server.getServerId().getU().toString());
   }
   
@@ -27,6 +27,7 @@ public class Coordinator {
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace);
+    
     if (destinations.contains(destinationLocal)) {
       if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
         return handleColumnFamilyPersonality(message);
