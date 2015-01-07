@@ -15,6 +15,7 @@ public class Server {
   private final MetaDataManager metaDataManager;
   private final HttpJsonTransport transport;
   private final Coordinator coordinator;
+  private final ServerId serverId;
     
   private CompactionManager compactionManager;
   private Thread compactionRunnable;
@@ -26,9 +27,11 @@ public class Server {
     metaDataManager = new MetaDataManager(configuration, this);
     coordinator = new Coordinator(this);
     transport = new HttpJsonTransport(configuration, coordinator);
+    serverId = new ServerId(configuration);
   }
   
   public void init(){
+    serverId.init();
     metaDataManager.init();
     transport.init();
     compactionRunnable = new Thread(compactionManager);
@@ -107,7 +110,10 @@ public class Server {
   public MetaDataManager getMetaDataManager() {
     return metaDataManager;
   }
-  
+
+  public ServerId getServerId() {
+    return serverId;
+  }
   
 }
 /*

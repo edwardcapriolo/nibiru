@@ -1,6 +1,8 @@
 package io.teknek.nibiru;
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
+
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import org.junit.Assert;
@@ -67,6 +69,21 @@ public class ServerTest {
     s.shutdown();
   }
   
+  @Test
+  public void serverIdTest() {
+    UUID u1, u2;
+    {
+      Server s = aBasicServer(testFolder);
+      u1 = s.getServerId().getU();
+      s.shutdown();
+    }
+    {
+      Server j = aBasicServer(testFolder);
+      u2 = j.getServerId().getU();
+      j.shutdown();
+    }
+    Assert.assertEquals(u1, u2);
+  }
   
   @Test
   public void commitLogTests() throws IOException, InterruptedException{
@@ -122,5 +139,6 @@ public class ServerTest {
     s.getMetaDataManager().createColumnFamily(ks, cf, null);
     return s;
   }
+  
   
 }
