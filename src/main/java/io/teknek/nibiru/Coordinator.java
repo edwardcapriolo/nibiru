@@ -9,21 +9,26 @@ public class Coordinator {
 
   private static final String SYSTEM_KEYSPACE = "system";  
   private final Server server;
+  private Destination destinationLocal;
   
   public Coordinator(Server server){
     this.server = server;
   }
   
-  public Response handle(Message message){
-    if (SYSTEM_KEYSPACE.equals(message.getKeyspace())){
+  public void init(){
+    destinationLocal = new Destination();// we should compare string or uuid here
+    destinationLocal.setDestinationId(server.getServerId().getU().toString());
+  }
+  
+  public Response handle(Message message) {
+    if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
       return null;
     }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
-    List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter().routesTo(message, server.getServerId(), keyspace);
-    Destination d = new Destination();//we should compare string or uuid here
-    d.setDestinationId(server.getServerId().getU().toString());
-    if (destinations.contains(d)){
-      if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())){
+    List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
+            .routesTo(message, server.getServerId(), keyspace);
+    if (destinations.contains(destinationLocal)) {
+      if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
         return handleColumnFamilyPersonality(message);
       } else {
         throw new UnsupportedOperationException(message.getRequestPersonality());

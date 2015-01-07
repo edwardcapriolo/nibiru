@@ -36,6 +36,7 @@ public class Server {
     transport.init();
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
+    coordinator.init();
   }
  
   public void shutdown() {
