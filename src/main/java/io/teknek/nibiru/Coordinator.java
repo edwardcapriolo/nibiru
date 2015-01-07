@@ -1,5 +1,7 @@
 package io.teknek.nibiru;
 
+import java.util.List;
+
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -16,10 +18,18 @@ public class Coordinator {
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())){
       return null;
     }
-    if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())){
-      return handleColumnFamilyPersonality(message);
+    Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
+    List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter().routesTo(message, server.getServerId(), keyspace);
+    Destination d = new Destination();//we should compare string or uuid here
+    d.setDestinationId(server.getServerId().getU().toString());
+    if (destinations.contains(d)){
+      if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())){
+        return handleColumnFamilyPersonality(message);
+      } else {
+        throw new UnsupportedOperationException(message.getRequestPersonality());
+      }
     } else {
-      throw new UnsupportedOperationException(message.getRequestPersonality());
+      throw new UnsupportedOperationException("We can not route messages. Yet!");
     }
   }
   
