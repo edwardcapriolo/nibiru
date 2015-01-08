@@ -7,8 +7,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.teknek.nibiru.ColumnFamilyPersonality;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 

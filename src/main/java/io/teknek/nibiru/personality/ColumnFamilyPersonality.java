@@ -1,4 +1,6 @@
-package io.teknek.nibiru;
+package io.teknek.nibiru.personality;
+
+import io.teknek.nibiru.Val;
 
 public interface ColumnFamilyPersonality {
 

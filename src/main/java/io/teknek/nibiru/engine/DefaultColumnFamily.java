@@ -10,11 +10,11 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
  
 import io.teknek.nibiru.ColumnFamily;
-import io.teknek.nibiru.ColumnFamilyPersonality;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
 public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPersonality {
 

@@ -2,6 +2,7 @@ package io.teknek.nibiru;
 
 import java.util.List;
 
+import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 

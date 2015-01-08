@@ -1,6 +1,7 @@
 package io.teknek.nibiru;
 
 import io.teknek.nibiru.engine.CompactionManager;
+import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.HttpJsonTransport;
 
 import java.io.IOException;
