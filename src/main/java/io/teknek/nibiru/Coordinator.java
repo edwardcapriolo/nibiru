@@ -64,12 +64,12 @@ public class Coordinator {
     if (cf instanceof KeyValuePersonality){
       KeyValuePersonality personality = (KeyValuePersonality) cf;
       if (message.getPayload().get("type").equals("get")){
-        String s = personality.get((String) message.getPayload().get("rowkey"));
+        String s = personality.get((String) message.getPayload().get("key"));
         Response r = new Response();
         r.put("payload", s);
         return r;
       } else if (message.getPayload().get("type").equals("put")){
-        personality.put((String) message.getPayload().get("rowkey"), 
+        personality.put((String) message.getPayload().get("key"), 
                 (String) message.getPayload().get("value"));
         return new Response();
       } else {
