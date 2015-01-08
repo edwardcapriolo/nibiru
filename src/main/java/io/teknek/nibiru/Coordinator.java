@@ -26,19 +26,18 @@ public class Coordinator {
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
       return null;
     }
+
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
+    if (keyspace == null){
+      throw new RuntimeException(message.getKeyspace() + " is not found");
+    }
     ColumnFamily columnFamily = keyspace.getColumnFamilies().get(message.getColumnFamily());
+    if (columnFamily == null){
+      throw new RuntimeException(message.getColumnFamily() + " is not found");
+    }
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace);
     long timeoutInMs = determineTimeout(columnFamily, message);
-    Keyspace ks = server.getKeyspaces().get(message.getKeyspace());
-    if (ks == null){
-      throw new RuntimeException(message.getKeyspace() + " is not found");
-    }
-    ColumnFamily cf = ks.getColumnFamilies().get(message.getColumnFamily());
-    if (cf == null){
-      throw new RuntimeException(message.getColumnFamily() + " is not found");
-    }
     if (destinations.contains(destinationLocal)) {
       if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
         return handleColumnFamilyPersonality(message, keyspace, columnFamily);
