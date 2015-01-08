@@ -1,6 +1,7 @@
 package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Keyspace;
+import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import java.io.IOException;
 
@@ -10,6 +11,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.collect.ImmutableMap;
+
 public class TestCompactionManager {
 
   @Rule
@@ -18,7 +21,7 @@ public class TestCompactionManager {
   @Test
   public void test() throws IOException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createColumnFamily("abc");
+    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     
     SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
     {

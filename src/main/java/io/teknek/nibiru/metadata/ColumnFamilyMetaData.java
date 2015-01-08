@@ -3,6 +3,7 @@ package io.teknek.nibiru.metadata;
 import java.util.Map;
 
 public class ColumnFamilyMetaData {
+  public static final String IMPLEMENTING_CLASS = "implementing_class"; 
   private String name;
   private String implementingClass;
   

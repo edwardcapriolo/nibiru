@@ -1,19 +1,28 @@
 package io.teknek.nibiru;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
+import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.collect.ImmutableMap;
+
 public class ServerTest {
 
   public static String ks = "data";
   public static String cf = "pets";
+  public static Map<String, Object> standardColumnFamily = new ImmutableMap.Builder<String, Object>()
+          .put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
+          .build();
+  
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
   
@@ -25,7 +34,7 @@ public class ServerTest {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     s.put(ks, cf, "jack", "name", "bunnyjack", 1);
     s.put(ks, cf, "jack", "age", "6", 1);
@@ -50,7 +59,7 @@ public class ServerTest {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     for (int i = 0; i < 9; i++) {
       s.put(ks, cf, i+"", "age", "4", 1);
@@ -93,7 +102,7 @@ public class ServerTest {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setCommitlogFlushBytes(1);
     for (int i = 0; i < 3; i++) {
@@ -136,7 +145,7 @@ public class ServerTest {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, null);
+    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
     return s;
   }
   

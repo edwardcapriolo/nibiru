@@ -80,7 +80,7 @@ public class MetaDataManager {
   }
   
   public void createColumnFamily(String keyspaceName, String columnFamilyName, Map<String,Object> properties){
-    server.getKeyspaces().get(keyspaceName).createColumnFamily(columnFamilyName);
+    server.getKeyspaces().get(keyspaceName).createColumnFamily(columnFamilyName, properties);
     persistMetadata();
   }
   

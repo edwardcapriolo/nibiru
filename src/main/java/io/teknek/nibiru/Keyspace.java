@@ -6,6 +6,7 @@ import io.teknek.nibiru.metadata.KeyspaceMetaData;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -28,13 +29,17 @@ public class Keyspace {
     this.keyspaceMetadata = keyspaceMetadata;
   }
   
-  public void createColumnFamily(String name){
+  public void createColumnFamily(String name, Map<String,Object> properties){
     ColumnFamilyMetaData cfmd = new ColumnFamilyMetaData();
     cfmd.setName(name);
-    cfmd.setImplementingClass(DefaultColumnFamily.class.getName());
+    String implementingClass = (String) properties.get(ColumnFamilyMetaData.IMPLEMENTING_CLASS);
+    if (implementingClass == null){
+      throw new RuntimeException("property "+ ColumnFamilyMetaData.IMPLEMENTING_CLASS + " must be specified");
+    }
+    cfmd.setImplementingClass(implementingClass);
     ColumnFamily columnFamily = null;
     try {
-      Class<?> cfClass = Class.forName(DefaultColumnFamily.class.getName());
+      Class<?> cfClass = Class.forName(implementingClass);
       Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetaData.class);
       columnFamily = (ColumnFamily) cons.newInstance(this, cfmd);
     } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {

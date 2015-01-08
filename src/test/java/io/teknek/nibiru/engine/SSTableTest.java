@@ -2,6 +2,7 @@ package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Keyspace;
+import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +15,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.collect.ImmutableMap;
+
 public class SSTableTest {
 
   @Rule
@@ -22,7 +25,7 @@ public class SSTableTest {
   @Test
   public void aTest() throws IOException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createColumnFamily("abc");
+    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
@@ -57,7 +60,7 @@ public class SSTableTest {
   public void aBiggerTest() throws IOException, InterruptedException{
     
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createColumnFamily("abc");
+    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
     for (int i = 0; i < 10000; i++) {
       NumberFormat nf = new DecimalFormat("00000");
