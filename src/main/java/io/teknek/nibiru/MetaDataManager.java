@@ -62,6 +62,7 @@ public class MetaDataManager {
     KeyspaceMetaData kmd = new KeyspaceMetaData(keyspaceName);
     Keyspace keyspace = new Keyspace(configuration);
     keyspace.setKeyspaceMetadata(kmd);
+    kmd.setProperties(properties);
     server.getKeyspaces().put(keyspaceName, keyspace);
     persistMetadata();
   }

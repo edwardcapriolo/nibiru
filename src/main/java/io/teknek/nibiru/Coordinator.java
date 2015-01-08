@@ -26,7 +26,6 @@ public class Coordinator {
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
       return null;
     }
-
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
     if (keyspace == null){
       throw new RuntimeException(message.getKeyspace() + " is not found");

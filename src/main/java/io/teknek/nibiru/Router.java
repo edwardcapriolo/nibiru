@@ -13,7 +13,7 @@ public interface Router {
    * @param requestKeyspace
    * @return all hosts a given request can be routed to
    */
-  public abstract List<Destination> routesTo(Message message, ServerId local, Keyspace requestKeyspace);
+  public List<Destination> routesTo(Message message, ServerId local, Keyspace requestKeyspace);
     /*
     String rk = (String) m.getPayload().get("rowkey");//todo t
     Token partition = keyspace.getKeyspaceMetadata().getPartitioner().partition(rk);
