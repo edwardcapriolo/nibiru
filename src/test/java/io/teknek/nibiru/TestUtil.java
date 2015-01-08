@@ -19,13 +19,11 @@ public class TestUtil {
   public static String DATA_KEYSPACE = "data";
   
   public static Server aBasicServer(TemporaryFolder testFolder){
-    String ks = "data";
-    String cf = "pets";
     Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
-    s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, TestUtil.STANDARD_COLUMN_FAMILY);
+    s.getMetaDataManager().createKeyspace(DATA_KEYSPACE, null);
+    s.getMetaDataManager().createColumnFamily(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
     return s;
   }
 
