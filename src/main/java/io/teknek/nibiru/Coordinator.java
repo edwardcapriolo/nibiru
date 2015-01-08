@@ -3,6 +3,7 @@ package io.teknek.nibiru;
 import java.util.List;
 
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
+import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -30,9 +31,19 @@ public class Coordinator {
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace);
     long timeoutInMs = determineTimeout(columnFamily, message);
+    Keyspace ks = server.getKeyspaces().get(message.getKeyspace());
+    if (ks == null){
+      throw new RuntimeException(message.getKeyspace() + " is not found");
+    }
+    ColumnFamily cf = ks.getColumnFamilies().get(message.getColumnFamily());
+    if (cf == null){
+      throw new RuntimeException(message.getColumnFamily() + " is not found");
+    }
     if (destinations.contains(destinationLocal)) {
       if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
-        return handleColumnFamilyPersonality(message);
+        return handleColumnFamilyPersonality(message, keyspace, columnFamily);
+      } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) { 
+        return handleKeyValuePersonality(message, keyspace, columnFamily);
       } else {
         throw new UnsupportedOperationException(message.getRequestPersonality());
       }
@@ -49,12 +60,26 @@ public class Coordinator {
     }
   }
   
-  private Response handleColumnFamilyPersonality(Message message){
-    Keyspace ks = server.getKeyspaces().get(message.getKeyspace());
-    if (ks == null){
-      throw new RuntimeException(message.getKeyspace() + " is not found");
+  private Response handleKeyValuePersonality(Message message, Keyspace ks, ColumnFamily cf){
+    if (cf instanceof KeyValuePersonality){
+      KeyValuePersonality personality = (KeyValuePersonality) cf;
+      if (message.getPayload().get("type").equals("get")){
+        String s = personality.get((String) message.getPayload().get("rowkey"));
+        Response r = new Response();
+        r.put("payload", s);
+        return r;
+      } else if (message.getPayload().get("type").equals("put")){
+        personality.put((String) message.getPayload().get("rowkey"), 
+                (String) message.getPayload().get("value"));
+        return new Response();
+      } else {
+        throw new RuntimeException("Does not support this type of message");
+      }
     }
-    ColumnFamily cf = ks.getColumnFamilies().get(message.getColumnFamily());
+    return null;
+  }
+  
+  private Response handleColumnFamilyPersonality(Message message, Keyspace ks, ColumnFamily cf){
     if (cf instanceof ColumnFamilyPersonality){
       ColumnFamilyPersonality personality = (ColumnFamilyPersonality) cf;
       if (message.getPayload().get("type").equals("get")){
