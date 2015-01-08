@@ -44,5 +44,11 @@ public class Message {
     this.requestPersonality = requestPersonality;
   }
 
+  @Override
+  public String toString() {
+    return "Message [keyspace=" + keyspace + ", columnFamily=" + columnFamily
+            + ", requestPersonality=" + requestPersonality + ", payload=" + payload + "]";
+  }
+
   
 }

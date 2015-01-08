@@ -65,6 +65,7 @@ public class HttpJsonTransport {
         } catch (RuntimeException ex){
           Response r = new Response();
           r.put("exception", ex.getMessage());
+          System.err.println(message);
           ex.printStackTrace();
           MAPPER.writeValue(response.getOutputStream(), r);
         }
