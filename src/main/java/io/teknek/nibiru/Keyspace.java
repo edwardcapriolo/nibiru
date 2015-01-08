@@ -45,7 +45,6 @@ public class Keyspace {
     } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
-    columnFamily = new DefaultColumnFamily(this, cfmd);
     columnFamilies.put(name, columnFamily);
   }
 

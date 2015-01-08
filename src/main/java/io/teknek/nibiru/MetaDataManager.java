@@ -46,12 +46,12 @@ public class MetaDataManager {
           } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
           }
-          k.getColumnFamilies().put(columnFamilyEntry.getKey(), columnFamily);
           try {
             columnFamily.init();
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
+          k.getColumnFamilies().put(columnFamilyEntry.getKey(), columnFamily);
         }
         server.getKeyspaces().put(keyspaceEntry.getKey(), k);
       }
