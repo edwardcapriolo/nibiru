@@ -1,28 +1,18 @@
 package io.teknek.nibiru;
-import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.UUID;
 
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.collect.ImmutableMap;
 
 public class ServerTest {
 
-  public static String ks = "data";
-  public static String cf = "pets";
-  public static Map<String, Object> standardColumnFamily = new ImmutableMap.Builder<String, Object>()
-          .put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
-          .build();
-  
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
   
@@ -30,11 +20,11 @@ public class ServerTest {
   public void aTest() throws IOException, InterruptedException{
     String ks = "data";
     String cf = "pets";
-    Configuration configuration = aBasicConfiguration(testFolder);
+    Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
+    s.getMetaDataManager().createColumnFamily(ks, cf, TestUtil.STANDARD_COLUMN_FAMILY);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     s.put(ks, cf, "jack", "name", "bunnyjack", 1);
     s.put(ks, cf, "jack", "age", "6", 1);
@@ -55,11 +45,11 @@ public class ServerTest {
   public void compactionTest() throws IOException, InterruptedException{
     String ks = "data";
     String cf = "pets";
-    Configuration configuration = aBasicConfiguration(testFolder);
+    Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
+    s.getMetaDataManager().createColumnFamily(ks, cf, TestUtil.STANDARD_COLUMN_FAMILY);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     for (int i = 0; i < 9; i++) {
       s.put(ks, cf, i+"", "age", "4", 1);
@@ -82,12 +72,12 @@ public class ServerTest {
   public void serverIdTest() {
     UUID u1, u2;
     {
-      Server s = aBasicServer(testFolder);
+      Server s = TestUtil.aBasicServer(testFolder);
       u1 = s.getServerId().getU();
       s.shutdown();
     }
     {
-      Server j = aBasicServer(testFolder);
+      Server j = TestUtil.aBasicServer(testFolder);
       u2 = j.getServerId().getU();
       j.shutdown();
     }
@@ -98,11 +88,11 @@ public class ServerTest {
   public void commitLogTests() throws IOException, InterruptedException{
     String ks = "data";
     String cf = "pets";
-    Configuration configuration = aBasicConfiguration(testFolder);
+    Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
+    s.getMetaDataManager().createColumnFamily(ks, cf, TestUtil.STANDARD_COLUMN_FAMILY);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setCommitlogFlushBytes(1);
     for (int i = 0; i < 3; i++) {
@@ -127,26 +117,6 @@ public class ServerTest {
       j.shutdown();
     }
     s.shutdown();
-  }
-  
-  public static Configuration aBasicConfiguration(TemporaryFolder testFolder){
-    File tempFolder = testFolder.newFolder("sstable");
-    File commitlog = testFolder.newFolder("commitlog");
-    Configuration configuration = new Configuration();
-    configuration.setDataDirectory(tempFolder);
-    configuration.setCommitlogDirectory(commitlog);
-    return configuration;
-  }
-  
-  public static Server aBasicServer(TemporaryFolder testFolder){
-    String ks = "data";
-    String cf = "pets";
-    Configuration configuration = ServerTest.aBasicConfiguration(testFolder);
-    Server s = new Server(configuration);
-    s.init();
-    s.getMetaDataManager().createKeyspace(ks, null);
-    s.getMetaDataManager().createColumnFamily(ks, cf, standardColumnFamily);
-    return s;
   }
   
   
