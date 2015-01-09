@@ -48,7 +48,7 @@ public class TestCluster {
     s2.init();
     Thread.sleep(2000);
     Assert.assertEquals(1 , s2.getClusterMembership().getLiveMembers().size());
-    Assert.assertEquals("127.0.0.1",s2.getClusterMembership().getLiveMembers().get(0).getHost());
+    Assert.assertEquals("127.0.0.1", s2.getClusterMembership().getLiveMembers().get(0).getHost());
     s1.shutdown();
     s2.shutdown();
   }
