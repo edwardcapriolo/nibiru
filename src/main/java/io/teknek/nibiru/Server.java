@@ -1,5 +1,7 @@
 package io.teknek.nibiru;
 
+import io.teknek.nibiru.cluster.ClusterMembership;
+import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.engine.CompactionManager;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.HttpJsonTransport;
@@ -17,6 +19,7 @@ public class Server {
   private final HttpJsonTransport transport;
   private final Coordinator coordinator;
   private final ServerId serverId;
+  private final ClusterMembership clusterMembership;
     
   private CompactionManager compactionManager;
   private Thread compactionRunnable;
@@ -29,6 +32,7 @@ public class Server {
     coordinator = new Coordinator(this);
     transport = new HttpJsonTransport(configuration, coordinator);
     serverId = new ServerId(configuration);
+    clusterMembership = new GossipClusterMembership(configuration);
   }
   
   public void init(){
@@ -38,11 +42,14 @@ public class Server {
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
     coordinator.init();
+    clusterMembership.init();
+    
   }
  
   public void shutdown() {
     compactionManager.setGoOn(false);
     transport.shutdown();
+    clusterMembership.shutdown();
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
       for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
         try {
@@ -116,6 +123,11 @@ public class Server {
   public ServerId getServerId() {
     return serverId;
   }
+
+  public ClusterMembership getClusterMembership() {
+    return clusterMembership;
+  }
+  
   
 }
 /*
