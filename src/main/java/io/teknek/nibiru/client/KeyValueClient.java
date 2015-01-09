@@ -23,7 +23,7 @@ public class KeyValueClient extends Client {
     m.setRequestPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "put")
-            .put("key", key)
+            .put("rowkey", key)
             .put("value", value).build();
     m.setPayload(payload);
     try {
@@ -40,7 +40,7 @@ public class KeyValueClient extends Client {
     m.setRequestPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "get")
-            .put("key", key)
+            .put("rowkey", key)
             .build();
     m.setPayload(payload);
     try {

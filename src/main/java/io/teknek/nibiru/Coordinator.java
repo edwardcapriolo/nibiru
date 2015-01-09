@@ -36,7 +36,11 @@ public class Coordinator {
     }
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace);
+    /* This design forces every message to have a payload and a rowkey
+     * Which seems like a code smell */
+    Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition((String)message.getPayload().get("rowkey"));
     long timeoutInMs = determineTimeout(columnFamily, message);
+    
     if (destinations.contains(destinationLocal)) {
       if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
         return handleColumnFamilyPersonality(message, keyspace, columnFamily);
@@ -62,12 +66,12 @@ public class Coordinator {
     if (cf instanceof KeyValuePersonality){
       KeyValuePersonality personality = (KeyValuePersonality) cf;
       if (message.getPayload().get("type").equals("get")){
-        String s = personality.get((String) message.getPayload().get("key"));
+        String s = personality.get((String) message.getPayload().get("rowkey"));
         Response r = new Response();
         r.put("payload", s);
         return r;
       } else if (message.getPayload().get("type").equals("put")){
-        personality.put((String) message.getPayload().get("key"), 
+        personality.put((String) message.getPayload().get("rowkey"), 
                 (String) message.getPayload().get("value"));
         return new Response();
       } else {

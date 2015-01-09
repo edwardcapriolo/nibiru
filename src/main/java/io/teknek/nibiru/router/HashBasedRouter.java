@@ -10,6 +10,7 @@ import io.teknek.nibiru.transport.Message;
 public class HashBasedRouter implements Router {
 
   public static final String MOD = "MOD";
+  public static final String MAP = "MAP";
   
   @Override
   public List<Destination> routesTo(Message message, ServerId local, Keyspace requestKeyspace) {
@@ -17,7 +18,10 @@ public class HashBasedRouter implements Router {
     int x = -1;
     if (n != null){
       x = n.intValue();
-    }
+    } 
+    List<String> map = (List<String>) requestKeyspace.getKeyspaceMetadata().getProperties().get(MAP);
+    Destination d = new Destination();
+    
     return null;
   }
 
