@@ -9,6 +9,7 @@ public class Configuration {
   private File commitlogDirectory;
   private String metaDataStorageClass = XmlStorage.class.getName();
   private int transportPort = 7070;
+  private String transportHost = "127.0.0.1";
   
   public Configuration(){
   }
@@ -43,6 +44,14 @@ public class Configuration {
 
   public void setTransportPort(int transportPort) {
     this.transportPort = transportPort;
+  }
+
+  public String getTransportHost() {
+    return transportHost;
+  }
+
+  public void setTransportHost(String transportHost) {
+    this.transportHost = transportHost;
   }  
   
 }

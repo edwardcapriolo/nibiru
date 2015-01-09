@@ -2,6 +2,8 @@ package io.teknek.nibiru.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+
+import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.Val;
@@ -17,6 +19,9 @@ public class BasicTransportTest {
 
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
+  
+  @Rule
+  public TemporaryFolder testFolder2 = new TemporaryFolder();
 
   @Test
   public void doIt() throws IllegalStateException, UnsupportedEncodingException, IOException, RuntimeException, ClientException {
@@ -37,5 +42,19 @@ public class BasicTransportTest {
     Response r = cl.post(new Message());
     Assert.assertTrue(r.containsKey("exception"));
     s.shutdown();
+  }
+  
+  @Test
+  public void testBindHost(){
+    Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
+    configuration.setTransportHost("127.0.0.1");
+    Server s = new Server(configuration);
+    s.init();
+    Configuration configuration2 = TestUtil.aBasicConfiguration(testFolder2);
+    configuration2.setTransportHost("127.0.0.2");
+    Server s2 = new Server(configuration2);
+    s2.init();
+    s.shutdown();
+    s2.shutdown();
   }
 }

@@ -16,6 +16,7 @@ import org.mortbay.jetty.HttpConnection;
 import org.mortbay.jetty.Request;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.AbstractHandler;
+import org.mortbay.jetty.nio.SelectChannelConnector;
 
 public class HttpJsonTransport {
  
@@ -31,7 +32,11 @@ public class HttpJsonTransport {
   }
   
   public void init(){
-    server = new Server(configuration.getTransportPort());
+    SelectChannelConnector s = new SelectChannelConnector();
+    s.setHost(configuration.getTransportHost());
+    s.setPort(configuration.getTransportPort());
+    server = new Server();
+    server.addConnector(s);   
     server.setHandler(getHandler());
     try {
       server.start();
