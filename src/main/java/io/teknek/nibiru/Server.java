@@ -32,7 +32,7 @@ public class Server {
     coordinator = new Coordinator(this);
     transport = new HttpJsonTransport(configuration, coordinator);
     serverId = new ServerId(configuration);
-    clusterMembership = new GossipClusterMembership(configuration);
+    clusterMembership = new GossipClusterMembership(configuration, serverId);
   }
   
   public void init(){

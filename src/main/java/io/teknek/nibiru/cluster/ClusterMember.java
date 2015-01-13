@@ -5,6 +5,7 @@ public class ClusterMember {
   private String host;
   private int port;
   private long heatbeat;
+  private String id;
   
   public ClusterMember(){}
 
@@ -30,6 +31,20 @@ public class ClusterMember {
 
   public void setHeatbeat(long heatbeat) {
     this.heatbeat = heatbeat;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  @Override
+  public String toString() {
+    return "ClusterMember [host=" + host + ", port=" + port + ", heatbeat=" + heatbeat + ", id="
+            + id + "]";
   }
   
 }

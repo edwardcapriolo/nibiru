@@ -21,6 +21,7 @@ public class ColumnFamilyClient extends Client {
     super(host, port);
   }
 
+
   public Val get(String keyspace, String columnFamily, String rowkey, String column) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);

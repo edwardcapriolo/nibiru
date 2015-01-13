@@ -12,6 +12,7 @@ import com.google.code.gossip.LogLevel;
 import com.google.code.gossip.RemoteGossipMember;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.ServerId;
 
 public class GossipClusterMembership extends ClusterMembership{
 
@@ -20,8 +21,8 @@ public class GossipClusterMembership extends ClusterMembership{
   
   private GossipService gossipService;
   
-  public GossipClusterMembership(Configuration configuration) {
-    super(configuration);
+  public GossipClusterMembership(Configuration configuration, ServerId serverId) {
+    super(configuration, serverId);
   }
 
   @Override
@@ -36,25 +37,25 @@ public class GossipClusterMembership extends ClusterMembership{
     }
     int port = 2000;
     for (String host: hosts){
-      GossipMember g = new RemoteGossipMember(host, port);
+      GossipMember g = new RemoteGossipMember(host, port, "");
       startupMembers.add(g);
     }
     try {
-      gossipService = new GossipService(configuration.getTransportHost(), 2000, LogLevel.DEBUG, startupMembers, settings);
+      gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU().toString(), LogLevel.DEBUG, startupMembers, settings);
     } catch (UnknownHostException | InterruptedException e) {
       throw new RuntimeException(e);
     }
-    
+    gossipService.start();
   }
 
   @Override
   public void shutdown() {
     try {
-    gossipService.shutdown();
+      gossipService.shutdown();
+      
     } catch (RuntimeException ex) {
       System.err.println(ex);
     }
-    
   }
 
   @Override
@@ -66,6 +67,7 @@ public class GossipClusterMembership extends ClusterMembership{
       thisRow.setHost(member.getHost());
       thisRow.setPort(member.getPort());
       thisRow.setHeatbeat(member.getHeartbeat());
+      thisRow.setId(member.getId());
       results.add(thisRow);
     }
     return results;
@@ -80,6 +82,7 @@ public class GossipClusterMembership extends ClusterMembership{
       thisRow.setHost(member.getHost());
       thisRow.setPort(member.getPort());
       thisRow.setHeatbeat(member.getHeartbeat());
+      
       results.add(thisRow);
     }
     return results;
