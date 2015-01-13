@@ -20,11 +20,11 @@ public class KeyspaceMetaData {
     
   }
   
-  public KeyspaceMetaData(String name){
+  public KeyspaceMetaData(String name, Map<String,Object> properties){
     this.name = name;
     this.partitioner = new NaturalPartitioner();
     this.router = new LocalRouter();
-    this.properties = new HashMap<>();
+    this.properties = properties;
   }
 
   public String getName() {

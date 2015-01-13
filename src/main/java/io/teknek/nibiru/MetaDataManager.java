@@ -59,7 +59,7 @@ public class MetaDataManager {
   }
   
   public void createKeyspace(String keyspaceName, Map<String,Object> properties){
-    KeyspaceMetaData kmd = new KeyspaceMetaData(keyspaceName);
+    KeyspaceMetaData kmd = new KeyspaceMetaData(keyspaceName, properties);
     Keyspace keyspace = new Keyspace(configuration);
     keyspace.setKeyspaceMetadata(kmd);
     kmd.setProperties(properties);

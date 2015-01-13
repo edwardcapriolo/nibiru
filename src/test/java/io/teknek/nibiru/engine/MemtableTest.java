@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 public class MemtableTest {
   
@@ -28,14 +27,14 @@ public class MemtableTest {
   
   public static Keyspace keyspaceWithNaturalPartitioner(TemporaryFolder testFolder){
     Keyspace ks1 = new Keyspace(SSTableTest.getBasicConfiguration(testFolder));
-    ks1.setKeyspaceMetadata(new KeyspaceMetaData("testks"));
+    ks1.setKeyspaceMetadata(new KeyspaceMetaData("testks", new HashMap<String,Object>()));
     ks1.getKeyspaceMetadata().setPartitioner(new NaturalPartitioner());
     return ks1;
   }
   
   private Keyspace keyspaceWithMd5Partitioner(){
     Keyspace ks1 = new Keyspace(new Configuration());
-    ks1.setKeyspaceMetadata(new KeyspaceMetaData("testks"));
+    ks1.setKeyspaceMetadata(new KeyspaceMetaData("testks", new HashMap<String,Object>()));
     ks1.getKeyspaceMetadata().setPartitioner(new Md5Partitioner());
     return ks1;
   }
