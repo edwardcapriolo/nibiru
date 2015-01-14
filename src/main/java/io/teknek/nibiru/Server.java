@@ -49,6 +49,7 @@ public class Server {
   public void shutdown() {
     compactionManager.setGoOn(false);
     transport.shutdown();
+    coordinator.shutdown();
     clusterMembership.shutdown();
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
       for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){

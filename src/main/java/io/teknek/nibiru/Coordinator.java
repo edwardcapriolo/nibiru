@@ -1,11 +1,15 @@
 package io.teknek.nibiru;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.google.common.collect.ImmutableMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.MetaDataClient;
@@ -22,6 +26,7 @@ public class Coordinator {
   private final Server server;
   private Destination destinationLocal;
   private ConcurrentMap<ClusterMember,MetaDataClient> clients;
+  private ExecutorService metaExecutor = Executors.newFixedThreadPool(1024);
   
   public Coordinator(Server server){
     this.server = server;
@@ -31,6 +36,14 @@ public class Coordinator {
   public void init(){
     destinationLocal = new Destination();
     destinationLocal.setDestinationId(server.getServerId().getU().toString());
+  }
+  
+  public void shutdown(){
+    metaExecutor.shutdown();
+    try {
+      metaExecutor.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+    }
   }
   
   private MetaDataClient clientForClusterMember(ClusterMember clusterMember){
@@ -43,22 +56,30 @@ public class Coordinator {
     return c;
   }
   
-  private Response handleSystemMessage(Message message){
+  private Response handleSystemMessage(final Message message){
     if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
       server.getMetaDataManager().createOrUpdateKeyspace((String)message.getPayload().get("keyspace"), 
               (Map<String,Object>) message.getPayload().get("properties"));
       if (!message.getPayload().containsKey("reroute")){
+        message.getPayload().put("reroute", "");
+        List<Callable<Void>> calls = new ArrayList<>();
         for (ClusterMember clusterMember : server.getClusterMembership().getLiveMembers()){
-          message.getPayload().put("reroute", "");
-          MetaDataClient c = clientForClusterMember(clusterMember);
-          try {
-            c.createOrUpdateKeyspace(
-                    (String)message.getPayload().get("keyspace"), 
-                    (Map<String,Object>) message.getPayload().get("properties")
-                    );
-          } catch (ClientException e) {
-            System.err.println(e);
-          }
+          final MetaDataClient c = clientForClusterMember(clusterMember);
+          Callable<Void> call = new Callable<Void>(){
+            public Void call() throws Exception {
+              c.createOrUpdateKeyspace(
+                      (String)message.getPayload().get("keyspace"), 
+                      (Map<String,Object>) message.getPayload().get("properties")
+                      );
+              return null;
+            }};
+          calls.add(call); 
+        }
+        try {
+          List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
+          //TODO iterate futures 
+        } catch (InterruptedException e) {
+
         }
       }
       return new Response();
