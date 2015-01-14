@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import io.teknek.nibiru.Configuration;
-import io.teknek.nibiru.Coordinator;
+import io.teknek.nibiru.coordinator.Coordinator;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mortbay.jetty.Handler;

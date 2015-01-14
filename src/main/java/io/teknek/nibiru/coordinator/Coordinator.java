@@ -1,4 +1,4 @@
-package io.teknek.nibiru;
+package io.teknek.nibiru.coordinator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Destination;
+import io.teknek.nibiru.Keyspace;
+import io.teknek.nibiru.Server;
+import io.teknek.nibiru.Token;
+import io.teknek.nibiru.Val;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
