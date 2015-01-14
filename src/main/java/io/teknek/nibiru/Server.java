@@ -30,21 +30,20 @@ public class Server {
     keyspaces = new ConcurrentHashMap<String,Keyspace>();
     compactionManager = new CompactionManager(this);
     metaDataManager = new MetaDataManager(configuration, this);
-    coordinator = new Coordinator(this);
-    transport = new HttpJsonTransport(configuration, coordinator);
     serverId = new ServerId(configuration);
     clusterMembership = new GossipClusterMembership(configuration, serverId);
+    coordinator = new Coordinator(this);
+    transport = new HttpJsonTransport(configuration, coordinator);
   }
   
   public void init(){
     serverId.init();
     metaDataManager.init();
-    transport.init();
     compactionRunnable = new Thread(compactionManager);
     compactionRunnable.start();
-    coordinator.init();
     clusterMembership.init();
-    
+    coordinator.init();
+    transport.init();
   }
  
   public void shutdown() {

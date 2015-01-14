@@ -1,28 +1,14 @@
 package io.teknek.nibiru.coordinator;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
-import io.teknek.nibiru.client.ClientException;
-import io.teknek.nibiru.client.MetaDataClient;
-import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
-import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -31,73 +17,28 @@ public class Coordinator {
   private static final String SYSTEM_KEYSPACE = "system";  
   private final Server server;
   private Destination destinationLocal;
-  private ConcurrentMap<ClusterMember,MetaDataClient> clients;
-  private ExecutorService metaExecutor = Executors.newFixedThreadPool(1024);
+  private final MetaDataCoordinator metaDataCoordinator;
   
-  public Coordinator(Server server){
+  public Coordinator(Server server) {
     this.server = server;
-    clients = new ConcurrentHashMap<>();
+    metaDataCoordinator = new MetaDataCoordinator(this, server.getConfiguration(),
+            server.getMetaDataManager(), server.getClusterMembership());
   }
   
   public void init(){
     destinationLocal = new Destination();
     destinationLocal.setDestinationId(server.getServerId().getU().toString());
+    metaDataCoordinator.init();
   }
   
   public void shutdown(){
-    metaExecutor.shutdown();
-    try {
-      metaExecutor.awaitTermination(5, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-    }
-  }
-  
-  private MetaDataClient clientForClusterMember(ClusterMember clusterMember){
-    MetaDataClient c = clients.get(clusterMember);
-    if (c == null) {
-      c = new MetaDataClient(clusterMember.getHost(), server.getConfiguration()
-              .getTransportPort());
-      clients.putIfAbsent(clusterMember, c);
-    }
-    return c;
-  }
-  
-  private Response handleSystemMessage(final Message message){
-    if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
-      server.getMetaDataManager().createOrUpdateKeyspace((String)message.getPayload().get("keyspace"), 
-              (Map<String,Object>) message.getPayload().get("properties"));
-      if (!message.getPayload().containsKey("reroute")){
-        message.getPayload().put("reroute", "");
-        List<Callable<Void>> calls = new ArrayList<>();
-        for (ClusterMember clusterMember : server.getClusterMembership().getLiveMembers()){
-          final MetaDataClient c = clientForClusterMember(clusterMember);
-          Callable<Void> call = new Callable<Void>(){
-            public Void call() throws Exception {
-              c.createOrUpdateKeyspace(
-                      (String)message.getPayload().get("keyspace"), 
-                      (Map<String,Object>) message.getPayload().get("properties")
-                      );
-              return null;
-            }};
-          calls.add(call); 
-        }
-        try {
-          List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
-          //todo return results to client
-        } catch (InterruptedException e) {
-
-        }
-      }
-      return new Response();
-    } else {
-      throw new IllegalArgumentException("could not process " + message);
-    }
-    
+    metaDataCoordinator.shutdown();
   }
 
+  //ah switchboad logic
   public Response handle(Message message) {
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
-      return handleSystemMessage(message);
+      return metaDataCoordinator.handleSystemMessage(message);
     }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
     if (keyspace == null){
