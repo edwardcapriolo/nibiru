@@ -10,6 +10,8 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.ServerTest;
 import io.teknek.nibiru.TestUtil;
+import io.teknek.nibiru.client.ClientException;
+import io.teknek.nibiru.client.MetaDataClient;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,7 +29,7 @@ public class TestCluster {
   public TemporaryFolder node3Folder = new TemporaryFolder();
   
   @Test
-  public void letTwoNodesDiscoverEachOther() throws InterruptedException{
+  public void letTwoNodesDiscoverEachOther() throws InterruptedException, ClientException{
     Server s1, s2, s3;
     {
       Configuration conf = TestUtil.aBasicConfiguration(node1Folder);
@@ -62,9 +64,12 @@ public class TestCluster {
     Thread.sleep(11000);
     Assert.assertEquals(2 , s2.getClusterMembership().getLiveMembers().size());
     Assert.assertEquals("127.0.0.1", s2.getClusterMembership().getLiveMembers().get(0).getHost());
-    System.out.println("s1 "+s1.getClusterMembership().getLiveMembers());
-    System.out.println("s2 "+s2.getClusterMembership().getLiveMembers());
-    System.out.println("s3 "+s3.getClusterMembership().getLiveMembers());
+    MetaDataClient c = new MetaDataClient("127.0.0.1", s1.getConfiguration().getTransportPort());
+    c.createOrUpdateKeyspace("abc", new HashMap<String,Object>());
+    Thread.sleep(1000);
+    Assert.assertNotNull(s1.getKeyspaces().get("abc"));
+    Assert.assertNotNull(s2.getKeyspaces().get("abc"));
+    Assert.assertNotNull(s3.getKeyspaces().get("abc"));
     s1.shutdown();
     s2.shutdown();
     s3.shutdown();

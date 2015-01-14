@@ -1,9 +1,18 @@
 package io.teknek.nibiru;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import com.google.common.collect.ImmutableMap;
+
+import io.teknek.nibiru.client.ClientException;
+import io.teknek.nibiru.client.MetaDataClient;
+import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
+import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -12,9 +21,11 @@ public class Coordinator {
   private static final String SYSTEM_KEYSPACE = "system";  
   private final Server server;
   private Destination destinationLocal;
+  private ConcurrentMap<ClusterMember,MetaDataClient> clients;
   
   public Coordinator(Server server){
     this.server = server;
+    clients = new ConcurrentHashMap<>();
   }
   
   public void init(){
@@ -22,9 +33,44 @@ public class Coordinator {
     destinationLocal.setDestinationId(server.getServerId().getU().toString());
   }
   
+  private MetaDataClient clientForClusterMember(ClusterMember clusterMember){
+    MetaDataClient c = clients.get(clusterMember);
+    if (c == null) {
+      c = new MetaDataClient(clusterMember.getHost(), server.getConfiguration()
+              .getTransportPort());
+      clients.putIfAbsent(clusterMember, c);
+    }
+    return c;
+  }
+  
+  private Response handleSystemMessage(Message message){
+    if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
+      server.getMetaDataManager().createOrUpdateKeyspace((String)message.getPayload().get("keyspace"), 
+              (Map<String,Object>) message.getPayload().get("properties"));
+      if (!message.getPayload().containsKey("reroute")){
+        for (ClusterMember clusterMember : server.getClusterMembership().getLiveMembers()){
+          message.getPayload().put("reroute", "");
+          MetaDataClient c = clientForClusterMember(clusterMember);
+          try {
+            c.createOrUpdateKeyspace(
+                    (String)message.getPayload().get("keyspace"), 
+                    (Map<String,Object>) message.getPayload().get("properties")
+                    );
+          } catch (ClientException e) {
+            System.err.println(e);
+          }
+        }
+      }
+      return new Response();
+    } else {
+      throw new IllegalArgumentException("could not process " + message);
+    }
+    
+  }
+
   public Response handle(Message message) {
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
-      return null;
+      return handleSystemMessage(message);
     }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
     if (keyspace == null){

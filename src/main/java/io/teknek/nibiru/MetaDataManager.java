@@ -6,10 +6,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceAndColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.metadata.MetaDataStorage;
+import io.teknek.nibiru.partitioner.Partitioner;
 
 public class MetaDataManager {
 
@@ -31,12 +34,36 @@ public class MetaDataManager {
     createKeyspaces();
   }
   
+  private void populatePartitioner(KeyspaceMetaData keyspaceMetaData){
+    try {
+      Class<?> cfClass = Class.forName(keyspaceMetaData.getPartitionerClass());
+      Constructor<?> cons = cfClass.getConstructor();
+      Partitioner partitioner = (Partitioner) cons.newInstance();
+      keyspaceMetaData.setPartitioner(partitioner);
+    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  private void populateRouter(KeyspaceMetaData keyspaceMetaData){
+    try {
+      Class<?> cfClass = Class.forName(keyspaceMetaData.getRouterClass());
+      Constructor<?> cons = cfClass.getConstructor();
+      Router partitioner = (Router) cons.newInstance();
+      keyspaceMetaData.setRouter(partitioner);
+    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
   private void createKeyspaces(){
     Map<String,KeyspaceAndColumnFamilyMetaData> meta = read(); 
     if (!(meta == null)){
       for (Entry<String, KeyspaceAndColumnFamilyMetaData> keyspaceEntry : meta.entrySet()){
         Keyspace k = new Keyspace(configuration);
         k.setKeyspaceMetadata(keyspaceEntry.getValue().getKeyspaceMetaData());
+        populatePartitioner(k.getKeyspaceMetadata());
+        populateRouter(k.getKeyspaceMetadata());
         for (Map.Entry<String, ColumnFamilyMetaData> columnFamilyEntry : keyspaceEntry.getValue().getColumnFamilies().entrySet()){
           ColumnFamily columnFamily = null;
           try {
@@ -58,7 +85,7 @@ public class MetaDataManager {
     }
   }
   
-  public void createKeyspace(String keyspaceName, Map<String,Object> properties){
+  public void createOrUpdateKeyspace(String keyspaceName, Map<String,Object> properties){
     KeyspaceMetaData kmd = new KeyspaceMetaData(keyspaceName, properties);
     Keyspace keyspace = new Keyspace(configuration);
     keyspace.setKeyspaceMetadata(kmd);
