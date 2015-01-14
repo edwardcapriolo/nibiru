@@ -77,7 +77,7 @@ public class Coordinator {
         }
         try {
           List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
-          //TODO iterate futures 
+          //todo return results to client
         } catch (InterruptedException e) {
 
         }
