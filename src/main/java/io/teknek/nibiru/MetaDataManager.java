@@ -7,12 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceAndColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.metadata.MetaDataStorage;
 import io.teknek.nibiru.partitioner.Partitioner;
+import io.teknek.nibiru.router.Router;
 
 public class MetaDataManager {
 

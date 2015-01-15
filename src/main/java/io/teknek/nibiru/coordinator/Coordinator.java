@@ -48,12 +48,9 @@ public class Coordinator {
     if (columnFamily == null){
       throw new RuntimeException(message.getColumnFamily() + " is not found");
     }
-    Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition((String)message.getPayload().get("rowkey"));
+    Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition((String) message.getPayload().get("rowkey"));
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
-            .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership());
-    /* This design forces every message to have a payload and a rowkey
-     * Which seems like a code smell */
-
+            .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), t);
     long timeoutInMs = determineTimeout(columnFamily, message);
     
     if (destinations.contains(destinationLocal)) {

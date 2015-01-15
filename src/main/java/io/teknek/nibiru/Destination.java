@@ -39,5 +39,10 @@ public class Destination {
       return false;
     return true;
   }
+
+  @Override
+  public String toString() {
+    return "Destination [destinationId=" + destinationId + "]";
+  }
   
 }

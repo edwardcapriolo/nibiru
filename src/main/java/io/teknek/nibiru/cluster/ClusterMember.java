@@ -8,6 +8,13 @@ public class ClusterMember {
   private String id;
   
   public ClusterMember(){}
+  
+  public ClusterMember(String host, int port, long heartbeat, String id){
+    setHost(host);
+    setPort(port);
+    setHeatbeat(heartbeat);
+    setId(id);
+  }
 
   public String getHost() {
     return host;

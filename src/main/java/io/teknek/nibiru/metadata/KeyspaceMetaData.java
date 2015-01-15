@@ -1,9 +1,9 @@
 package io.teknek.nibiru.metadata;
 
-import io.teknek.nibiru.Router;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
 import io.teknek.nibiru.partitioner.Partitioner;
 import io.teknek.nibiru.router.LocalRouter;
+import io.teknek.nibiru.router.Router;
 
 import java.util.Map;
 
