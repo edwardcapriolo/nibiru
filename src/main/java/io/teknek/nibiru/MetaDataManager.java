@@ -90,7 +90,11 @@ public class MetaDataManager {
     Keyspace keyspace = new Keyspace(configuration);
     keyspace.setKeyspaceMetadata(kmd);
     kmd.setProperties(properties);
-    server.getKeyspaces().put(keyspaceName, keyspace);
+    Keyspace result = server.getKeyspaces().putIfAbsent(keyspaceName, keyspace);
+    if (result != null){
+      //TODO what if this changes partitioner etc?
+      result.getKeyspaceMetadata().setProperties(properties);
+    }
     persistMetadata();
   }
   

@@ -1,6 +1,5 @@
 package io.teknek.nibiru;
 
-import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 
