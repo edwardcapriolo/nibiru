@@ -107,7 +107,7 @@ public class MetaDataManager {
     persist(meta);
   }
   
-  public void createColumnFamily(String keyspaceName, String columnFamilyName, Map<String,Object> properties){
+  public void createOrUpdateColumnFamily(String keyspaceName, String columnFamilyName, Map<String,Object> properties){
     server.getKeyspaces().get(keyspaceName).createColumnFamily(columnFamilyName, properties);
     persistMetadata();
   }

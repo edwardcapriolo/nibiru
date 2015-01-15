@@ -28,8 +28,8 @@ public class TestUtil {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createOrUpdateKeyspace(DATA_KEYSPACE, null);
-    s.getMetaDataManager().createColumnFamily(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
-    s.getMetaDataManager().createColumnFamily(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
+    s.getMetaDataManager().createOrUpdateColumnFamily(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
+    s.getMetaDataManager().createOrUpdateColumnFamily(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
     return s;
   }
 

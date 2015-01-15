@@ -41,7 +41,7 @@ public class CommitLog {
     if (!getCommitLogDirectoryForColumnFamily(columnFamily).exists()){
       boolean mkdir = getCommitLogDirectoryForColumnFamily(columnFamily).mkdirs();
       if (!mkdir){
-        throw new RuntimeException("Could not create directory");
+        throw new RuntimeException("Could not create directory " + getCommitLogDirectoryForColumnFamily(columnFamily) );
       }
     }
     sstableFile = new File(getCommitLogDirectoryForColumnFamily(columnFamily),  tableId + "." + EXTENSION);

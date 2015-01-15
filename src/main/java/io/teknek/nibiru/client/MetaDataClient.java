@@ -33,4 +33,25 @@ public class MetaDataClient extends Client {
     }
   }
   
+  public void createOrUpdateColumnFamily(String keyspace, String columnFamily,  Map<String,Object> properties) throws ClientException {
+    Message m = new Message();
+    m.setKeyspace("system");
+    m.setColumnFamily(null);
+    m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
+    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
+            .put("type", MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY)
+            .put("keyspace", keyspace)
+            .put("columnfamily", columnFamily)
+            .put("properties", properties).build();
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
+  
+  
+  
+  
 }

@@ -91,6 +91,33 @@ public class MetaDataCoordinator {
         }
       }
       return new Response();
+    } else if (MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY.equals(message.getPayload().get("type"))){
+      metaDataManager.createOrUpdateColumnFamily((String) message.getPayload().get("keyspace"),
+              (String) message.getPayload().get("columnfamily"),
+              (Map<String,Object>) message.getPayload().get("properties"));
+      if (!message.getPayload().containsKey("reroute")){
+        message.getPayload().put("reroute", "");
+        List<Callable<Void>> calls = new ArrayList<>();
+        for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
+          final MetaDataClient c = clientForClusterMember(clusterMember);
+          Callable<Void> call = new Callable<Void>(){
+            public Void call() throws Exception {
+              c.createOrUpdateColumnFamily(
+                      (String) message.getPayload().get("keyspace"),
+                      (String) message.getPayload().get("columnfamily"),
+                      (Map<String,Object>) message.getPayload().get("properties"));
+              return null;
+            }};
+          calls.add(call); 
+        }
+        try {
+          List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
+          //todo return results to client
+        } catch (InterruptedException e) {
+
+        }
+      }
+      return new Response();
     } else {
       throw new IllegalArgumentException("could not process " + message);
     }
