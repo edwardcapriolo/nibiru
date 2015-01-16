@@ -35,9 +35,11 @@ public class TestTokenRouter {
     meta.setProperties(props);
     keyspace.setKeyspaceMetadata(meta);
     Partitioner p = new NaturalPartitioner();
-
-    List<Destination> routesTo = token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("a"));
     Assert.assertEquals("c", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("a")).get(0).getDestinationId());
+    Assert.assertEquals("c", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("aa")).get(0).getDestinationId());
+    Assert.assertEquals("h", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("h")).get(0).getDestinationId());
+    Assert.assertEquals("r", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("i")).get(0).getDestinationId());
+    Assert.assertEquals("c", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("z")).get(0).getDestinationId());
   }
   
   private ClusterMembership threeLiveNodes(){

@@ -21,6 +21,9 @@ public class TokenRouter implements Router {
     TreeMap<String, String> tokenMap = (TreeMap<String, String>) requestKeyspace
             .getKeyspaceMetadata().getProperties().get(TOKEN_MAP_KEY);
     String serverId = tokenMap.ceilingKey(token.getToken());
+    if (serverId == null){
+      serverId = tokenMap.firstKey();
+    }
     Destination d = new Destination();
     d.setDestinationId(serverId);
     List<Destination> x = Arrays.asList(d);
