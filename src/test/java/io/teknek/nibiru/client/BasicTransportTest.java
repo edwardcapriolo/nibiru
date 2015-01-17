@@ -30,17 +30,23 @@ public class BasicTransportTest {
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
     Val x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
     Assert.assertEquals("6", x.getValue());
-    ColumnFamilyClient cl = new ColumnFamilyClient("127.0.0.1", s.getConfiguration().getTransportPort());
-    Assert.assertEquals("6", cl.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age").getValue());
-    Assert.assertEquals("bunnyjack", cl.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name").getValue());
-    cl.delete(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", 2L);
-    Assert.assertEquals(null, cl.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name").getValue());
-    cl.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "weight", "6lbds", 2L);
-    Assert.assertEquals("6lbds", cl.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "weight").getValue());
-    cl.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "height", "7in", 10L);
-    Assert.assertEquals("7in", cl.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "height").getValue());
-    Response r = cl.post(new Message());
-    Assert.assertTrue(r.containsKey("exception"));
+    ColumnFamilyClient c = new ColumnFamilyClient("127.0.0.1", s.getConfiguration().getTransportPort());
+    Session session = c.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE)
+      .withColumnFamily(TestUtil.PETS_COLUMN_FAMILY)
+      .build();
+    Assert.assertEquals("6", session.get("jack", "age").getValue());
+    Assert.assertEquals("bunnyjack", session.get("jack", "name").getValue());
+    session.delete("jack", "name", 2L);
+    Assert.assertEquals(null, session.get("jack", "name").getValue());
+    session.put("jack", "weight", "6lbds", 2L);
+    Assert.assertEquals("6lbds", session.get("jack", "weight").getValue());
+    session.put("jack", "height", "7in", 10L);
+    Assert.assertEquals("7in", session.get("jack", "height").getValue());
+    {
+      Client cl = new Client("127.0.0.1", s.getConfiguration().getTransportPort());
+      Response r = cl.post(new Message());
+      Assert.assertTrue(r.containsKey("exception"));
+    }
     s.shutdown();
   }
   

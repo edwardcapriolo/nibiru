@@ -2,13 +2,8 @@ package io.teknek.nibiru.keyvalue;
 
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.client.ClientException;
-import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.KeyValueClient;
-import io.teknek.nibiru.transport.Message;
-import io.teknek.nibiru.transport.Response;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 

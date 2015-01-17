@@ -3,9 +3,7 @@ package io.teknek.nibiru.client;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpResponse;

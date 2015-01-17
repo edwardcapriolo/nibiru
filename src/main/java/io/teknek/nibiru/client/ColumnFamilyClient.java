@@ -7,22 +7,84 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.teknek.nibiru.Consistency;
+import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
-//TODO address concepts of consistency level
 public class ColumnFamilyClient extends Client {
 
-  private static ObjectMapper MAPPER = new ObjectMapper();
-  
   public ColumnFamilyClient(String host, int port) {
     super(host, port);
   }
 
+  public SessionBuilder createBuilder(){
+    return new SessionBuilder(this);
+  }
+}
 
-  public Val get(String keyspace, String columnFamily, String rowkey, String column) throws ClientException {
+class SessionBuilder {
+  private final ColumnFamilyClient client;
+  private String keyspace;
+  private String columnFamily;
+  private Consistency writeConsistency;
+  private Consistency readConsistency;
+  private long timeoutMillis;
+  
+  SessionBuilder(ColumnFamilyClient client){
+    this.client = client;
+    //writeConsistency = new Consistency().withLevel(ConsistencyLevel.N).withParamater("must-ack", 1);
+    writeConsistency = new Consistency().withLevel(ConsistencyLevel.IMPLIED);
+    readConsistency = new Consistency().withLevel(ConsistencyLevel.IMPLIED);
+    timeoutMillis = 10000;
+  }
+  
+  public SessionBuilder withKeyspace(String keyspace){
+    this.keyspace = keyspace;
+    return this;
+  }
+  
+  public SessionBuilder withColumnFamily(String columnFamily){
+    this.columnFamily = columnFamily;
+    return this;
+  }
+    
+  public SessionBuilder withWriteConsistency(ConsistencyLevel level, Map<String,Object> parameters){
+    writeConsistency = new Consistency().withLevel(level).withParameters(parameters);
+    return this;
+  }
+  
+  public SessionBuilder withReadConsistency(ConsistencyLevel level, Map<String,Object> parameters){
+    readConsistency = new Consistency().withLevel(level).withParameters(parameters);
+    return this;
+  }
+  
+  public Session build(){
+    return new Session(client, keyspace, columnFamily, writeConsistency, readConsistency, timeoutMillis);
+  }
+}
+
+class Session {
+  private final ColumnFamilyClient client;
+  private final String keyspace;
+  private final String columnFamily;
+  private final Consistency writeConsistency;
+  private final Consistency readConsistency;
+  private final long timeoutMillis;
+  private ObjectMapper MAPPER = new ObjectMapper();
+  
+  Session(ColumnFamilyClient client, String keyspace, String columnFamily, Consistency writeConsistency, Consistency readConsistency, long timeoutMillis){
+    this.client = client;
+    this.keyspace = keyspace;
+    this.columnFamily = columnFamily;
+    this.writeConsistency = writeConsistency;
+    this.readConsistency = readConsistency;
+    this.timeoutMillis = timeoutMillis;
+  }
+  
+  public Val get(String rowkey, String column) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setColumnFamily(columnFamily);
@@ -30,17 +92,18 @@ public class ColumnFamilyClient extends Client {
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "get")
             .put("rowkey", rowkey)
-            .put("column", column).build();
+            .put("column", column)
+            .build();
     m.setPayload(payload);
     try {
-      Response response = post(m);
+      Response response = client.post(m);
       return MAPPER.convertValue(response.get("payload"), Val.class);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
   }
-
-  public void delete(String keyspace, String columnFamily, String rowkey, String column, long time) throws ClientException {
+ 
+  public void delete(String rowkey, String column, long time) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setColumnFamily(columnFamily);
@@ -52,13 +115,13 @@ public class ColumnFamilyClient extends Client {
             .put("time", time).build();
     m.setPayload(payload);
     try {
-      Response response = post(m);
+      Response response = client.post(m);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
   }
 
-  public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl) throws ClientException{
+  public void put(String rowkey, String column, String value, long time, long ttl) throws ClientException{
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setColumnFamily(columnFamily);
@@ -72,13 +135,13 @@ public class ColumnFamilyClient extends Client {
             .put("ttl", ttl).build();
     m.setPayload(payload);
     try {
-      Response response = post(m);
+      Response response = client.post(m);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
   }
 
-  public void put(String keyspace, String columnFamily,String rowkey, String column, String value, long time) throws ClientException{
+  public void put(String rowkey, String column, String value, long time) throws ClientException{
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setColumnFamily(columnFamily);
@@ -91,9 +154,11 @@ public class ColumnFamilyClient extends Client {
             .put("time", time).build();
     m.setPayload(payload);
     try {
-      Response response = post(m);
+      Response response = client.post(m);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
   }
+  
 }
+
