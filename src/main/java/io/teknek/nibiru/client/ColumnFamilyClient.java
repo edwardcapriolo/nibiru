@@ -93,6 +93,8 @@ class Session {
             .put("type", "get")
             .put("rowkey", rowkey)
             .put("column", column)
+            .put("timeout", timeoutMillis)
+            .put("consistency", readConsistency)
             .build();
     m.setPayload(payload);
     try {
@@ -112,6 +114,8 @@ class Session {
             .put("type", "delete")
             .put("rowkey", rowkey)
             .put("column", column)
+            .put("timeout", timeoutMillis)
+            .put("consistency", writeConsistency)
             .put("time", time).build();
     m.setPayload(payload);
     try {
@@ -132,6 +136,8 @@ class Session {
             .put("column", column)
             .put("value", value)
             .put("time", time)
+            .put("timeout", timeoutMillis)
+            .put("consistency", writeConsistency)
             .put("ttl", ttl).build();
     m.setPayload(payload);
     try {
@@ -151,6 +157,8 @@ class Session {
             .put("rowkey", rowkey)
             .put("column", column)
             .put("value", value)
+            .put("timeout", timeoutMillis)
+            .put("consistency", writeConsistency)
             .put("time", time).build();
     m.setPayload(payload);
     try {

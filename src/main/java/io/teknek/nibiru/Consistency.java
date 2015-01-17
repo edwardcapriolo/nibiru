@@ -5,14 +5,14 @@ import java.util.Map;
 
 public class Consistency {
   private ConsistencyLevel level;
-  private Map<String,Object> params;
+  private Map<String,Object> parameters;
   
   public Consistency(){
-    params = new HashMap<>();
+    parameters = new HashMap<>();
   }
   
-  public Consistency(ConsistencyLevel level, Map<String,Object> params){
-    this.params = params;
+  public Consistency(ConsistencyLevel level, Map<String,Object> parameters){
+    this.parameters = parameters;
     this.level = level;
   }
 
@@ -24,16 +24,16 @@ public class Consistency {
     this.level = level;
   }
 
-  public Map<String, Object> getParams() {
-    return params;
+  public Map<String, Object> getParameters() {
+    return parameters;
   }
 
-  public void setParams(Map<String, Object> params) {
-    this.params = params;
+  public void setParameters(Map<String, Object> params) {
+    this.parameters = params;
   }
   
-  public Consistency withParamater(String name, Object object){
-    this.params.put(name, object);
+  public Consistency withParameter(String name, Object object){
+    this.parameters.put(name, object);
     return this;
   }
   
@@ -43,7 +43,7 @@ public class Consistency {
   }
 
   public Consistency withParameters(Map<String, Object> parameters) {
-    setParams(parameters);
+    setParameters(parameters);
     return this;
   }
 }
