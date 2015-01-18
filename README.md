@@ -6,13 +6,12 @@ Nibiru is a NoSql database designed for maximum plugablitily and configurability
 Motivation
 ======
 
-Many NoSql datastores have involved from nitch use cases. These has debates of 
-which solution is better based on semantics. From Nibiru's prospective the issue
-is that many NoSql solutions offer very little pluggable API interfaces. 
+There has been a recent proliferation in NoSql datastores. Many systems evolved around specific use cases. Many debate over design elements like consistency model or implementations of specific features.
 
-Nibiru wants to build API's throughout the codebase, not just stable client API. This means
-that it then should be easy to swap physical backends, or change routing semantics, by providing
-easy to hack at API.
+Nibiru takes a different approach by building API's throughout the codebase, not just stable client API. 
+
+Building around api should allow users to swap physical backends or change routing semantics, by providing
+easy to implemnt APIs.
 
 Implemented so far
 ======
