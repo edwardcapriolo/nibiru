@@ -20,22 +20,29 @@ public class EventualCoordinator {
   public EventualCoordinator(){
     
   }
-  
-  public Response handleMessage(Token token, Message message, List<Destination> destinations, long timeoutInMs, Consistency consistency){
-    Consistency c = null;
-    if (consistency == null){
-      c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
-    }
-    if (c.getLevel() == ConsistencyLevel.ALL){
-      List<Callable<Response>> calls = new ArrayList<Callable<Response>>();
-      for (Destination destination: destinations){
-        //id destination is
-      }
+
+  public Response handleMessage(Token token, Message message, List<Destination> destinations,
+          long timeoutInMs, Consistency consistency, Destination destinationLocal) {
+    boolean alreadyRerouted = false;
+    if (message.getPayload().containsKey("reroute")){
+      alreadyRerouted = true;
     }
     
+    Consistency c = null;
+    if (consistency == null) {
+      c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
+    }
+
+    if (c.getLevel() == ConsistencyLevel.ALL) {
+      List<Callable<Response>> calls = new ArrayList<Callable<Response>>();
+      for (Destination destination : destinations) {
+        // id destination is
+      }
+    }
+
     return null;
   }
-  
+
   public void init(){
     executor = Executors.newFixedThreadPool(1024);
   }
