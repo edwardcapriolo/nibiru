@@ -2,6 +2,8 @@ package io.teknek.nibiru.coordinator;
 
 import java.util.List;
 import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Consistency;
+import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
@@ -52,6 +54,11 @@ public class Coordinator {
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), t);
     long timeoutInMs = determineTimeout(columnFamily, message);
+    Consistency consistency = determinteConsistency(message);
+    if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
+
+    }
+    
     
     if (destinations.contains(destinationLocal)) {
       if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
@@ -72,6 +79,10 @@ public class Coordinator {
     } else {
       return columnFamily.getColumnFamilyMetadata().getOperationTimeoutInMs();
     }
+  }
+  
+  private static Consistency determinteConsistency(Message message){
+    return new Consistency().withLevel(ConsistencyLevel.IMPLIED);
   }
   
   private Response handleKeyValuePersonality(Message message, Keyspace ks, ColumnFamily cf){
