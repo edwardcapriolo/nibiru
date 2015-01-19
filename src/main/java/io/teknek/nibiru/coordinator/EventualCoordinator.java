@@ -22,17 +22,18 @@ public class EventualCoordinator {
   }
 
   public Response handleMessage(Token token, Message message, List<Destination> destinations,
-          long timeoutInMs, Consistency consistency, Destination destinationLocal, LocalAction action) {
+          long timeoutInMs, Consistency consistency, Destination destinationLocal, final LocalAction action) {
+    if (destinations.size() == 0 ){
+      throw new RuntimeException("No place to route message");
+    }
     if (destinations.size() == 1 && destinations.contains(destinationLocal)) {
       return action.handleReqest();
     }
-    boolean alreadyRerouted = false;
+    //TODO if the message is routed here but here is not the correct place
+    // we should route it again
     if (message.getPayload().containsKey("reroute")){
-      alreadyRerouted = true;
       return action.handleReqest();
-    }
-
-    
+    } 
     Consistency c = null;
     if (consistency == null) {
       c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
@@ -41,7 +42,16 @@ public class EventualCoordinator {
     if (c.getLevel() == ConsistencyLevel.ALL) {
       List<Callable<Response>> calls = new ArrayList<Callable<Response>>();
       for (Destination destination : destinations) {
-        // id destination is
+        if (destination.equals(destinationLocal)){
+          calls.add(
+                  new Callable<Response>(){
+                    public Response call() throws Exception {
+                      return action.handleReqest();
+                    }}
+                  );          
+        } else {
+          
+        }
       }
     }
 
