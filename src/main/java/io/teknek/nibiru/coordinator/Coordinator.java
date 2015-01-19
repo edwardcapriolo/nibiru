@@ -26,7 +26,7 @@ public class Coordinator {
     this.server = server;
     metaDataCoordinator = new MetaDataCoordinator(this, server.getConfiguration(),
             server.getMetaDataManager(), server.getClusterMembership());
-    eventualCoordinator = new EventualCoordinator();
+    eventualCoordinator = new EventualCoordinator(server.getClusterMembership());
   }
   
   public void init(){
