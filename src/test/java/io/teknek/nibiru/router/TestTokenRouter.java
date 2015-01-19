@@ -55,4 +55,31 @@ public class TestTokenRouter {
       return mock;
   }
   
+  @Test
+  public void testWithReplicationFactor(){
+    TokenRouter token = new TokenRouter();
+    Keyspace keyspace = new Keyspace(new Configuration());
+    KeyspaceMetaData meta = new KeyspaceMetaData();
+    TreeMap<String,String> tokenMap = new TreeMap<>();
+    tokenMap.put("c", "id1");
+    tokenMap.put("h", "id2");
+    tokenMap.put("r", "id3");
+    Map<String,Object> props = new HashMap<>();
+    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
+    props.put(TokenRouter.REPLICATION_FACTOR, 2);
+    meta.setProperties(props);
+    keyspace.setKeyspaceMetadata(meta);
+    Partitioner p = new NaturalPartitioner();
+    Assert.assertEquals(Arrays.asList(new Destination("c"), new Destination("h")),
+            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("a")));
+    Assert.assertEquals(Arrays.asList(new Destination("c"), new Destination("h")),
+            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("aa")));
+    Assert.assertEquals(Arrays.asList(new Destination("h"), new Destination("r")),
+            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("h")));
+    Assert.assertEquals(Arrays.asList(new Destination("r"), new Destination("c")),
+            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("i")));
+    Assert.assertEquals(Arrays.asList(new Destination("c"), new Destination("h")),
+            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("z")));
+  }
+  
 }

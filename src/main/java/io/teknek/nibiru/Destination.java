@@ -7,6 +7,10 @@ public class Destination {
     
   }
   
+  public Destination(String destinationId){
+    this.destinationId  = destinationId;
+  }
+  
   public String getDestinationId() {
     return destinationId;
   }
