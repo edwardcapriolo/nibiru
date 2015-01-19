@@ -22,11 +22,16 @@ public class EventualCoordinator {
   }
 
   public Response handleMessage(Token token, Message message, List<Destination> destinations,
-          long timeoutInMs, Consistency consistency, Destination destinationLocal) {
+          long timeoutInMs, Consistency consistency, Destination destinationLocal, LocalAction action) {
+    if (destinations.size() == 1 && destinations.contains(destinationLocal)) {
+      return action.handleReqest();
+    }
     boolean alreadyRerouted = false;
     if (message.getPayload().containsKey("reroute")){
       alreadyRerouted = true;
+      return action.handleReqest();
     }
+
     
     Consistency c = null;
     if (consistency == null) {
@@ -47,7 +52,7 @@ public class EventualCoordinator {
     executor = Executors.newFixedThreadPool(1024);
   }
   
-  public void destroy(){
+  public void shutdown(){
     executor.shutdown();
   }
 }
