@@ -21,17 +21,21 @@ import org.junit.Test;
 
 public class TestTokenRouter {
 
+  public static TreeMap<String,String> threeNodeRing(){
+    TreeMap<String,String> tokenMap = new TreeMap<>();
+    tokenMap.put("c", "id1");
+    tokenMap.put("h", "id2");
+    tokenMap.put("r", "id3");
+    return tokenMap;
+  }
+  
   @Test
   public void test(){
     TokenRouter token = new TokenRouter();
     Keyspace keyspace = new Keyspace(new Configuration());
     KeyspaceMetaData meta = new KeyspaceMetaData();
-    TreeMap<String,String> tokenMap = new TreeMap<>();
-    tokenMap.put("c", "id1");
-    tokenMap.put("h", "id2");
-    tokenMap.put("r", "id3");
     Map<String,Object> props = new HashMap<>();
-    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
+    props.put(TokenRouter.TOKEN_MAP_KEY, threeNodeRing());
     meta.setProperties(props);
     keyspace.setKeyspaceMetadata(meta);
     Partitioner p = new NaturalPartitioner();
@@ -60,12 +64,8 @@ public class TestTokenRouter {
     TokenRouter token = new TokenRouter();
     Keyspace keyspace = new Keyspace(new Configuration());
     KeyspaceMetaData meta = new KeyspaceMetaData();
-    TreeMap<String,String> tokenMap = new TreeMap<>();
-    tokenMap.put("c", "id1");
-    tokenMap.put("h", "id2");
-    tokenMap.put("r", "id3");
     Map<String,Object> props = new HashMap<>();
-    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
+    props.put(TokenRouter.TOKEN_MAP_KEY, threeNodeRing());
     props.put(TokenRouter.REPLICATION_FACTOR, 2);
     meta.setProperties(props);
     keyspace.setKeyspaceMetadata(meta);
