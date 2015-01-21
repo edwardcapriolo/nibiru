@@ -81,8 +81,10 @@ public class MetaDataCoordinator {
   @SuppressWarnings("unchecked")
   public Response handleSystemMessage(final Message message){
     if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
-      metaDataManager.createOrUpdateKeyspace((String)message.getPayload().get("keyspace"), 
-              (Map<String,Object>) message.getPayload().get("properties"));
+      metaDataManager.createOrUpdateKeyspace(
+              (String) message.getPayload().get("keyspace"), 
+              (Map<String,Object>) message.getPayload());
+      System.out.println(message.toString());
       if (!message.getPayload().containsKey("reroute")){
         message.getPayload().put("reroute", "");
         List<Callable<Void>> calls = new ArrayList<>();
@@ -90,17 +92,23 @@ public class MetaDataCoordinator {
           final MetaDataClient c = clientForClusterMember(clusterMember);
           Callable<Void> call = new Callable<Void>(){
             public Void call() throws Exception {
+              try {
               c.createOrUpdateKeyspace(
-                      (String)message.getPayload().get("keyspace"), 
-                      (Map<String,Object>) message.getPayload().get("properties")
+                      (String) message.getPayload().get("keyspace"), 
+                      //(Map<String,Object>) message.getPayload().get("properties")
+                      (Map<String,Object>) message.getPayload()
                       );
+             
+              } catch (RuntimeException ex){
+                ex.printStackTrace();
+              }
               return null;
             }};
           calls.add(call); 
         }
         try {
           List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
-          //todo return results to client
+          System.out.println(res);
         } catch (InterruptedException e) {
 
         }

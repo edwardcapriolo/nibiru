@@ -3,14 +3,23 @@ package io.teknek.nibiru.coordinator;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
+import io.teknek.nibiru.client.ClientException;
+import io.teknek.nibiru.client.ColumnFamilyClient;
+import io.teknek.nibiru.client.MetaDataClient;
+import io.teknek.nibiru.client.Session;
+
 import io.teknek.nibiru.cluster.ConfigurationClusterMembership;
 import io.teknek.nibiru.cluster.GossipClusterMembership;
+import io.teknek.nibiru.engine.DefaultColumnFamily;
+import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.router.TokenRouter;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,9 +46,10 @@ public class TestCoordinator {
   
   
   @Test
-  public void doIt() {
+  public void doIt() throws ClientException {
     Server[] s = new Server[5];
-    TemporaryFolder [] t = { node1Folder, node2Folder, node3Folder, node4Folder, node5Folder }; 
+    TemporaryFolder [] t = { node1Folder, node2Folder, node3Folder, node4Folder, node5Folder };
+    Configuration [] cs = new Configuration[5];
     Map<String, String> payload = new HashMap<>();
     for (int i = 0; i < s.length; i++) {
       Configuration conf = TestUtil.aBasicConfiguration(t[i]);
@@ -47,18 +57,41 @@ public class TestCoordinator {
       Map<String, Object> clusterProperties = new HashMap<>();
       clusterProperties.put(ConfigurationClusterMembership.HOSTS, payload);
       conf.setClusterMembershipProperties(clusterProperties);
-      conf.setTransportHost("127.0.0." + i);
+      conf.setTransportHost("127.0.0." + i+1);
       clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
-      s[i] = new Server(conf);
-      s[i].init();
-      payload.put("127.0.0." + i, s[i].getServerId().getU().toString());
+      cs[i] = conf;
+      
     }
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < s.length; i++) {
+      s[i] = new Server(cs[i]);
+      s[i].init();
+      payload.put("127.0.0." + i+1, s[i].getServerId().getU().toString());
       s[i].shutdown();
+    }
+    for (int i = 0; i < s.length; i++) {
+      s[i] = new Server(cs[i]);
       s[i].init();
     }
-    TokenRouter tr;
-    for (int i = 0; i < 3; i++) {
+    MetaDataClient c = new MetaDataClient(s[0].getConfiguration().getTransportHost(), s[0]
+            .getConfiguration().getTransportPort());
+    Map<String,Object> props = new HashMap<>();
+    TreeMap<String,String> tokenMap = new TreeMap<>();
+    tokenMap.put("c", s[0].getServerId().getU().toString());
+    tokenMap.put("e", s[1].getServerId().getU().toString());
+    tokenMap.put("j", s[2].getServerId().getU().toString());
+    tokenMap.put("k", s[3].getServerId().getU().toString());
+    tokenMap.put("m", s[4].getServerId().getU().toString());
+    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
+    props.put(TokenRouter.REPLICATION_FACTOR, 3);
+    c.createOrUpdateKeyspace("abc", props);
+    //Map <String,Object> x = new HashMap<String,Object>();
+    //x.put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
+    //c.createOrUpdateColumnFamily("abc", "def", x);
+//    ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
+//            .getConfiguration().getTransportPort());
+    //Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def").build();
+    //sb.put("a", "b", "c", 1);
+    for (int i = 0; i < s.length; i++) {
       s[i].shutdown();
     }
   }
