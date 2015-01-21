@@ -15,6 +15,7 @@
  */
 package io.teknek.nibiru;
 
+import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.metadata.XmlStorage;
 
 import java.io.File;
@@ -26,7 +27,7 @@ public class Configuration {
   private String metaDataStorageClass = XmlStorage.class.getName();
   private int transportPort = 7070;
   private String transportHost = "127.0.0.1";
-  private String clusterMembershipClass;
+  private String clusterMembershipClass = GossipClusterMembership.class.getName();
   private Map<String,Object> clusterMembershipProperties;
   
   public Configuration(){

@@ -46,7 +46,7 @@ public class Server {
     compactionManager = new CompactionManager(this);
     metaDataManager = new MetaDataManager(configuration, this);
     serverId = new ServerId(configuration);
-    clusterMembership = new GossipClusterMembership(configuration, serverId);
+    clusterMembership = ClusterMembership.createFrom(configuration, serverId);
     coordinator = new Coordinator(this);
     transport = new HttpJsonTransport(configuration, coordinator);
   }

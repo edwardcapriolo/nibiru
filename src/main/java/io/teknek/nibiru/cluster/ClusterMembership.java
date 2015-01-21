@@ -15,6 +15,8 @@
  */
 package io.teknek.nibiru.cluster;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import io.teknek.nibiru.Configuration;
@@ -35,4 +37,12 @@ public abstract class ClusterMembership {
   public abstract List<ClusterMember> getLiveMembers();
   public abstract List<ClusterMember> getDeadMembers();
   
+  public static ClusterMembership createFrom(Configuration configuration, ServerId serverId){
+    try {
+      Constructor<?> cons = Class.forName(configuration.getClusterMembershipClass()).getConstructor(Configuration.class, ServerId.class);
+      return (ClusterMembership) cons.newInstance(configuration, serverId);
+    } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

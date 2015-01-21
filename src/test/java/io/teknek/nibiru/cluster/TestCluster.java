@@ -8,7 +8,6 @@ import junit.framework.Assert;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
-import io.teknek.nibiru.ServerTest;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.MetaDataClient;
