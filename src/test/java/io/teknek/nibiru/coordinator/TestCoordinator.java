@@ -6,6 +6,7 @@ import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.cluster.ConfigurationClusterMembership;
 import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.personality.MetaPersonality;
+import io.teknek.nibiru.router.TokenRouter;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,12 +29,19 @@ public class TestCoordinator {
   @Rule
   public TemporaryFolder node3Folder = new TemporaryFolder();
   
+  @Rule
+  public TemporaryFolder node4Folder = new TemporaryFolder();
+  
+  @Rule
+  public TemporaryFolder node5Folder = new TemporaryFolder();
+  
+  
   @Test
   public void doIt() {
-    Server[] s = new Server[3];
-    TemporaryFolder [] t = { node1Folder, node2Folder, node3Folder }; 
+    Server[] s = new Server[5];
+    TemporaryFolder [] t = { node1Folder, node2Folder, node3Folder, node4Folder, node5Folder }; 
     Map<String, String> payload = new HashMap<>();
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < s.length; i++) {
       Configuration conf = TestUtil.aBasicConfiguration(t[i]);
       conf.setClusterMembershipClass(ConfigurationClusterMembership.class.getName());
       Map<String, Object> clusterProperties = new HashMap<>();
@@ -48,7 +56,10 @@ public class TestCoordinator {
     for (int i = 0; i < 3; i++) {
       s[i].shutdown();
       s[i].init();
-      
+    }
+    TokenRouter tr;
+    for (int i = 0; i < 3; i++) {
+      s[i].shutdown();
     }
   }
 }
