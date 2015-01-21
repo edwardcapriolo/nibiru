@@ -31,8 +31,8 @@ public class Keyspace {
   private ConcurrentMap<String,ColumnFamily> columnFamilies;
   
   public Keyspace(Configuration configuration){
-    columnFamilies = new ConcurrentHashMap<>();
     this.configuration = configuration;
+    columnFamilies = new ConcurrentHashMap<>();
   }
 
   public KeyspaceMetaData getKeyspaceMetadata() {

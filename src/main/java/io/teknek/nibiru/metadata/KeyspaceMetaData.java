@@ -24,11 +24,10 @@ import java.util.Map;
 
 
 public class KeyspaceMetaData {
+  public static final String PARTITIONER_CLASS = "partitioner_class";
+  public static final String ROUTER_CLASS = "router_class";
   private String name;
   private Map<String, Object> properties;
-  private String partitionerClass = NaturalPartitioner.class.getName();
-  private String routerClass = LocalRouter.class.getName();
-  //should the following be properties of the map?
   private transient Partitioner partitioner;
   private transient Router router;
   
@@ -39,9 +38,7 @@ public class KeyspaceMetaData {
   
   public KeyspaceMetaData(String name, Map<String,Object> properties){
     this.name = name;
-    this.partitioner = new NaturalPartitioner();
-    this.router = new LocalRouter();
-    this.properties = properties;
+    setProperties(properties);
   }
 
   public String getName() {
@@ -74,22 +71,29 @@ public class KeyspaceMetaData {
 
   public void setProperties(Map<String, Object> properties) {
     this.properties = properties;
+    if (properties.containsKey(PARTITIONER_CLASS)){
+      try {
+        partitioner = (Partitioner) Class.forName((String) properties.get(PARTITIONER_CLASS)).newInstance();
+      } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      partitioner = new NaturalPartitioner();
+    }
+    if (properties.containsKey(ROUTER_CLASS)){
+      try {
+        router = (Router) Class.forName((String) properties.get(ROUTER_CLASS)).newInstance();
+      } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      router = new LocalRouter();
+    }
   }
 
-  public String getPartitionerClass() {
-    return partitionerClass;
-  }
-
-  public void setPartitionerClass(String partitionerClass) {
-    this.partitionerClass = partitionerClass;
-  }
-
-  public String getRouterClass() {
-    return routerClass;
-  }
-
-  public void setRouterClass(String routerClass) {
-    this.routerClass = routerClass;
+  @Override
+  public String toString() {
+    return "KeyspaceMetaData [name=" + name + ", properties=" + properties + "]";
   }
 
 }

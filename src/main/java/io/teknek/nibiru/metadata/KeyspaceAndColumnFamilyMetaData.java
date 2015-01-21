@@ -47,5 +47,11 @@ public class KeyspaceAndColumnFamilyMetaData {
   public void setColumnFamilies(Map<String, ColumnFamilyMetaData> columnFamilies) {
     this.columnFamilies = columnFamilies;
   }
+
+  @Override
+  public String toString() {
+    return "KeyspaceAndColumnFamilyMetaData [keyspaceMetaData=" + keyspaceMetaData
+            + ", columnFamilies=" + columnFamilies + "]";
+  }
   
 }

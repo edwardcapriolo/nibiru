@@ -49,9 +49,10 @@ public class MetaDataManager {
     createKeyspaces();
   }
   
+  /*
   private void populatePartitioner(KeyspaceMetaData keyspaceMetaData){
     try {
-      Class<?> cfClass = Class.forName(keyspaceMetaData.getPartitionerClass());
+      Class<?> cfClass = Class.forName((String) keyspaceMetaData.getProperties().get(KeyspaceMetaData.PARTITIONER_CLASS));
       Constructor<?> cons = cfClass.getConstructor();
       Partitioner partitioner = (Partitioner) cons.newInstance();
       keyspaceMetaData.setPartitioner(partitioner);
@@ -62,7 +63,7 @@ public class MetaDataManager {
   
   private void populateRouter(KeyspaceMetaData keyspaceMetaData){
     try {
-      Class<?> cfClass = Class.forName(keyspaceMetaData.getRouterClass());
+      Class<?> cfClass = Class.forName((String) keyspaceMetaData.getProperties().get(KeyspaceMetaData.ROUTER_CLASS));
       Constructor<?> cons = cfClass.getConstructor();
       Router partitioner = (Router) cons.newInstance();
       keyspaceMetaData.setRouter(partitioner);
@@ -70,6 +71,7 @@ public class MetaDataManager {
       throw new RuntimeException(e);
     }
   }
+  */
   
   private void createKeyspaces(){
     Map<String,KeyspaceAndColumnFamilyMetaData> meta = read(); 
@@ -77,8 +79,6 @@ public class MetaDataManager {
       for (Entry<String, KeyspaceAndColumnFamilyMetaData> keyspaceEntry : meta.entrySet()){
         Keyspace k = new Keyspace(configuration);
         k.setKeyspaceMetadata(keyspaceEntry.getValue().getKeyspaceMetaData());
-        populatePartitioner(k.getKeyspaceMetadata());
-        populateRouter(k.getKeyspaceMetadata());
         for (Map.Entry<String, ColumnFamilyMetaData> columnFamilyEntry : keyspaceEntry.getValue().getColumnFamilies().entrySet()){
           ColumnFamily columnFamily = null;
           try {

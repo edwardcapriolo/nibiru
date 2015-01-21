@@ -5,6 +5,7 @@ import io.teknek.nibiru.keyvalue.InMemoryKeyValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.rules.TemporaryFolder;
@@ -27,7 +28,7 @@ public class TestUtil {
     Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
     Server s = new Server(configuration);
     s.init();
-    s.getMetaDataManager().createOrUpdateKeyspace(DATA_KEYSPACE, null);
+    s.getMetaDataManager().createOrUpdateKeyspace(DATA_KEYSPACE, new HashMap<String,Object>());
     s.getMetaDataManager().createOrUpdateColumnFamily(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
     s.getMetaDataManager().createOrUpdateColumnFamily(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
     return s;
