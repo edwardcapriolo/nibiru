@@ -53,11 +53,11 @@ public class MetaDataClient extends Client {
     m.setKeyspace("system");
     m.setColumnFamily(null);
     m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY)
-            .put("keyspace", keyspace)
-            .put("columnfamily", columnFamily)
-            .put("properties", properties).build();
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("type", MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY);
+    payload.put("keyspace", keyspace);
+    payload.put("columnfamily", columnFamily);
+    payload.putAll(properties);
     m.setPayload(payload);
     try {
       Response response = post(m);

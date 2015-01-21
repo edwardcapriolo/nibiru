@@ -84,7 +84,6 @@ public class MetaDataCoordinator {
       metaDataManager.createOrUpdateKeyspace(
               (String) message.getPayload().get("keyspace"), 
               (Map<String,Object>) message.getPayload());
-      System.out.println(message.toString());
       if (!message.getPayload().containsKey("reroute")){
         message.getPayload().put("reroute", "");
         List<Callable<Void>> calls = new ArrayList<>();
@@ -117,7 +116,7 @@ public class MetaDataCoordinator {
     } else if (MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY.equals(message.getPayload().get("type"))){
       metaDataManager.createOrUpdateColumnFamily((String) message.getPayload().get("keyspace"),
               (String) message.getPayload().get("columnfamily"),
-              (Map<String,Object>) message.getPayload().get("properties"));
+              (Map<String,Object>) message.getPayload());
       if (!message.getPayload().containsKey("reroute")){
         message.getPayload().put("reroute", "");
         List<Callable<Void>> calls = new ArrayList<>();
@@ -128,7 +127,7 @@ public class MetaDataCoordinator {
               c.createOrUpdateColumnFamily(
                       (String) message.getPayload().get("keyspace"),
                       (String) message.getPayload().get("columnfamily"),
-                      (Map<String,Object>) message.getPayload().get("properties"));
+                      (Map<String,Object>) message.getPayload());
               return null;
             }};
           calls.add(call); 

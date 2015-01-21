@@ -48,31 +48,7 @@ public class MetaDataManager {
     }
     createKeyspaces();
   }
-  
-  /*
-  private void populatePartitioner(KeyspaceMetaData keyspaceMetaData){
-    try {
-      Class<?> cfClass = Class.forName((String) keyspaceMetaData.getProperties().get(KeyspaceMetaData.PARTITIONER_CLASS));
-      Constructor<?> cons = cfClass.getConstructor();
-      Partitioner partitioner = (Partitioner) cons.newInstance();
-      keyspaceMetaData.setPartitioner(partitioner);
-    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
-  }
-  
-  private void populateRouter(KeyspaceMetaData keyspaceMetaData){
-    try {
-      Class<?> cfClass = Class.forName((String) keyspaceMetaData.getProperties().get(KeyspaceMetaData.ROUTER_CLASS));
-      Constructor<?> cons = cfClass.getConstructor();
-      Router partitioner = (Router) cons.newInstance();
-      keyspaceMetaData.setRouter(partitioner);
-    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
-  }
-  */
-  
+ 
   private void createKeyspaces(){
     Map<String,KeyspaceAndColumnFamilyMetaData> meta = read(); 
     if (!(meta == null)){
