@@ -17,6 +17,7 @@ package io.teknek.nibiru.router;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import io.teknek.nibiru.Destination;
@@ -34,8 +35,10 @@ public class TokenRouter implements Router {
   @Override
   public List<Destination> routesTo(Message message, ServerId local, Keyspace requestKeyspace,
           ClusterMembership clusterMembership, Token token) {
-    TreeMap<String, String> tokenMap = (TreeMap<String, String>) requestKeyspace
+    //TODO this is not efficient we should cache this or refactor
+    Map<String, String> tokenMap1 = (Map<String, String>) requestKeyspace
             .getKeyspaceMetadata().getProperties().get(TOKEN_MAP_KEY);
+    TreeMap<String,String> tokenMap = new TreeMap<String,String>(tokenMap1); 
     Integer replicationFactor = (Integer) requestKeyspace
             .getKeyspaceMetadata().getProperties().get(REPLICATION_FACTOR);
     int rf = 1;
@@ -47,18 +50,19 @@ public class TokenRouter implements Router {
               "Replication factor specified was larger than token map size");
     }
     List<Destination> destinations = new ArrayList<Destination>();
-    String key = token.getToken();
-    key = tokenMap.ceilingKey(key);
-    if (key == null){
-      key = tokenMap.firstKey();
+    
+    Map.Entry<String,String> ceilingEntry;
+    ceilingEntry = tokenMap.ceilingEntry(token.getToken());
+    if (ceilingEntry == null){
+      ceilingEntry = tokenMap.firstEntry();
     }
-    destinations.add(new Destination(key));
+    destinations.add(new Destination(ceilingEntry.getValue()));
     for (int i = 1; i < rf; i++) {
-      key = tokenMap.higherKey(key);
-      if (key == null) {
-        key = tokenMap.firstKey();
+      ceilingEntry = tokenMap.higherEntry(ceilingEntry.getKey());
+      if (ceilingEntry == null) {
+        ceilingEntry = tokenMap.firstEntry();
       }
-      destinations.add(new Destination(key));
+      destinations.add(new Destination(ceilingEntry.getValue()));
     }
     return destinations;
   }
