@@ -96,8 +96,7 @@ public class TestCoordinator {
     Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
             .withWriteConsistency(ConsistencyLevel.ALL, new HashMap()).build();
     sb.put("a", "b", "c", 1);
-    //System.out.println(sb.get("a", "b"));
-    //Assert.assertEquals("c", sb.get("a", "b").getValue());
+
     for (int i = 0; i < s.length; i++) {
       Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));
       Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetadata().getRouter().getClass().getName());
