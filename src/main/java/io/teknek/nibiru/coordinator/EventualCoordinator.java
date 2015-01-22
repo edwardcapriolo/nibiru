@@ -136,6 +136,7 @@ public class EventualCoordinator {
       List<Future<Response>> responses = null;
       try {
          responses = executor.invokeAll(calls, 10000, TimeUnit.MILLISECONDS);
+         
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

@@ -78,7 +78,7 @@ public class Coordinator {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       //return action.handleReqest();
       return eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal,action);
+              timeoutInMs, destinationLocal, action);
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) { 
       return handleKeyValuePersonality(message, keyspace, columnFamily);
     } else {
