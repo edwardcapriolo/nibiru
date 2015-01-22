@@ -73,12 +73,12 @@ public class Coordinator {
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
     long timeoutInMs = determineTimeout(columnFamily, message);
-    Consistency consistency = determinteConsistency(message);
+
     if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       //return action.handleReqest();
       return eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, consistency, destinationLocal,action);
+              timeoutInMs, destinationLocal,action);
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) { 
       return handleKeyValuePersonality(message, keyspace, columnFamily);
     } else {
@@ -94,11 +94,7 @@ public class Coordinator {
       return columnFamily.getColumnFamilyMetadata().getOperationTimeoutInMs();
     }
   }
-  
-  private static Consistency determinteConsistency(Message message){
-    return new Consistency().withLevel(ConsistencyLevel.IMPLIED);
-  }
-  
+    
   private Response handleKeyValuePersonality(Message message, Keyspace ks, ColumnFamily cf){
     if (cf instanceof KeyValuePersonality){
       KeyValuePersonality personality = (KeyValuePersonality) cf;

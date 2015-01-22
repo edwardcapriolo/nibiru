@@ -37,6 +37,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.codehaus.jackson.map.ObjectMapper;
+
 public class EventualCoordinator {
 
   private ExecutorService executor;
@@ -60,22 +62,24 @@ public class EventualCoordinator {
     for (ClusterMember cm : clusterMembership.getLiveMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
         ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), cm.getPort());
-        mapping.putIfAbsent(destination, client);
+        mapping.putIfAbsent(destination, cc);
         return cc;
       }
     }
     for (ClusterMember cm : clusterMembership.getDeadMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
         ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), cm.getPort());
-        mapping.putIfAbsent(destination, client);
+        mapping.putIfAbsent(destination, cc);
         return cc;
       }
     }
-    throw new RuntimeException("destination does not exist");
+    throw new RuntimeException(String.format(
+            "destination %s does not exist. Live members %s. Dead members %s", destination.getDestinationId(), 
+            clusterMembership.getLiveMembers(), clusterMembership.getDeadMembers()));
   }
 
   public Response handleMessage(Token token, final Message message, List<Destination> destinations,
-          long timeoutInMs, Consistency consistency, Destination destinationLocal, final LocalAction action) {
+          long timeoutInMs, Destination destinationLocal, final LocalAction action) {
     if (destinations.size() == 0 ){
       throw new RuntimeException("No place to route message");
     }
@@ -90,10 +94,14 @@ public class EventualCoordinator {
     if (!message.getPayload().containsKey("reroute")){
       message.getPayload().put("reroute", "");
     }
+ 
     Consistency c = null;
-    if (consistency == null) {
-      c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
+    if (message.getPayload().get("consistency") == null) {
+      message.getPayload().put("consistency",
+              new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1));
     }
+    ObjectMapper om = new ObjectMapper();
+    c = om.convertValue( message.getPayload().get("consistency"), Consistency.class);
 
     if (c.getLevel() == ConsistencyLevel.ALL) {
       List<Callable<Response>> calls = new ArrayList<Callable<Response>>();
@@ -102,14 +110,24 @@ public class EventualCoordinator {
           calls.add(
                   new Callable<Response>(){
                     public Response call() throws Exception {
+                      try {
                       return action.handleReqest();
+                      } catch (RuntimeException ex){
+                        ex.printStackTrace();
+                      }
+                      return null;
                     }}
                   );          
         } else {
           calls.add(
                   new Callable<Response>(){
                     public Response call() throws Exception {
-                      return clientForDestination(destination).post(message);
+                      try {
+                        return clientForDestination(destination).post(message);
+                      } catch (RuntimeException ex){
+                        ex.printStackTrace();
+                      }
+                      return null;
                     }    
                   }
                   );

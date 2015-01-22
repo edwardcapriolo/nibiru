@@ -1,6 +1,7 @@
 package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
@@ -12,6 +13,7 @@ import io.teknek.nibiru.cluster.ConfigurationClusterMembership;
 import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.router.TokenRouter;
@@ -20,6 +22,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
+import junit.framework.Assert;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,7 +64,6 @@ public class TestCoordinator {
       conf.setTransportHost("127.0.0." + i+1);
       clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
       cs[i] = conf;
-      
     }
     for (int i = 0; i < s.length; i++) {
       s[i] = new Server(cs[i]);
@@ -83,14 +86,23 @@ public class TestCoordinator {
     tokenMap.put("m", s[4].getServerId().getU().toString());
     props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
     props.put(TokenRouter.REPLICATION_FACTOR, 3);
+    props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
     c.createOrUpdateKeyspace("abc", props);
-    //Map <String,Object> x = new HashMap<String,Object>();
-    //x.put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-    //c.createOrUpdateColumnFamily("abc", "def", x);
-//    ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
-//            .getConfiguration().getTransportPort());
-    //Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def").build();
-    //sb.put("a", "b", "c", 1);
+    Map <String,Object> x = new HashMap<String,Object>();
+    x.put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
+    c.createOrUpdateColumnFamily("abc", "def", x);
+    ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
+            .getConfiguration().getTransportPort());
+    Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
+            .withWriteConsistency(ConsistencyLevel.ALL, new HashMap()).build();
+    sb.put("a", "b", "c", 1);
+    //System.out.println(sb.get("a", "b"));
+    //Assert.assertEquals("c", sb.get("a", "b").getValue());
+    for (int i = 0; i < s.length; i++) {
+      Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));
+      Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetadata().getRouter().getClass().getName());
+      Assert.assertTrue(s[i].getKeyspaces().get("abc").getColumnFamilies().containsKey("def"));
+    }
     for (int i = 0; i < s.length; i++) {
       s[i].shutdown();
     }
