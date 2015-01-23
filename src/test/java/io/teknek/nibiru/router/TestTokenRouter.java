@@ -29,6 +29,19 @@ public class TestTokenRouter {
     return tokenMap;
   }
   
+  private ClusterMembership threeLiveNodes(){
+    ClusterMembership mock = new ClusterMembership(null, null) {
+      public void init() {}
+      public void shutdown() {}
+      public List<ClusterMember> getLiveMembers() {
+       return Arrays.asList( new ClusterMember("127.0.0.1", 2000, 1, "id1"), 
+               new ClusterMember("127.0.0.2", 2000, 1, "id2"),
+               new ClusterMember("127.0.0.3", 2000, 1, "id3"));
+      }
+      public List<ClusterMember> getDeadMembers() { return null; }};
+      return mock;
+  }
+  
   @Test
   public void test(){
     TokenRouter token = new TokenRouter();
@@ -45,20 +58,7 @@ public class TestTokenRouter {
     Assert.assertEquals("id3", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("i")).get(0).getDestinationId());
     Assert.assertEquals("id1", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("z")).get(0).getDestinationId());
   }
-  
-  private ClusterMembership threeLiveNodes(){
-    ClusterMembership mock = new ClusterMembership(null, null) {
-      public void init() {}
-      public void shutdown() {}
-      public List<ClusterMember> getLiveMembers() {
-       return Arrays.asList( new ClusterMember("127.0.0.1", 2000, 1, "id1"), 
-               new ClusterMember("127.0.0.2", 2000, 1, "id2"),
-               new ClusterMember("127.0.0.3", 2000, 1, "id3"));
-      }
-      public List<ClusterMember> getDeadMembers() { return null; }};
-      return mock;
-  }
-  
+    
   @Test
   public void testWithReplicationFactor(){
     TokenRouter token = new TokenRouter();
