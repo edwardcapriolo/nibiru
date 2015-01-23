@@ -122,7 +122,7 @@ public class EventualCoordinator {
         futures.add(f);
       }
       long start = System.currentTimeMillis();
-      long deadline = start + (10L * 1000L) ;
+      long deadline = start + (1L * 1000L) ;
       List<Response> responses = new ArrayList<>();
       while (start <= deadline){
         Response r = null;

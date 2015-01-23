@@ -9,6 +9,7 @@ import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.client.Session;
+import io.teknek.nibiru.client.SessionBuilder;
 
 import io.teknek.nibiru.cluster.ConfigurationClusterMembership;
 import io.teknek.nibiru.cluster.GossipClusterMembership;
@@ -88,14 +89,14 @@ public class TestCoordinator {
       Map<String, Object> clusterProperties = new HashMap<>();
       clusterProperties.put(ConfigurationClusterMembership.HOSTS, payload);
       conf.setClusterMembershipProperties(clusterProperties);
-      conf.setTransportHost("127.0.0." + i+1);
+      conf.setTransportHost("127.0.0." + i + 1);
       clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
       cs[i] = conf;
     }
     for (int i = 0; i < s.length; i++) {
       s[i] = new Server(cs[i]);
       s[i].init();
-      payload.put("127.0.0." + i+1, s[i].getServerId().getU().toString());
+      payload.put("127.0.0." + i + 1, s[i].getServerId().getU().toString());
       s[i].shutdown();
     }
     for (int i = 0; i < s.length; i++) {
@@ -107,9 +108,17 @@ public class TestCoordinator {
             .getConfiguration().getTransportPort());
     Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
             .withWriteConsistency(ConsistencyLevel.ALL, new HashMap()).build();
+    
+    passIfAllAreUp(s, sb);
+    failIfSomeAreDown(s, sb);
+    for (int i = 0; i < s.length; i++) {
+      s[i].shutdown();
+    }
+  }
+  
+  public void passIfAllAreUp(Server [] s, Session sb) throws ClientException {
     Response r = sb.put("a", "b", "c", 1);
     Assert.assertFalse(r.containsKey("exception"));
-    
     int found = 0 ;
     for (int i = 0; i < s.length; i++) {
       ColumnFamilyPersonality c = (ColumnFamilyPersonality) s[i].getKeyspaces().get("abc").getColumnFamilies().get("def"); 
@@ -120,12 +129,13 @@ public class TestCoordinator {
       }
     }
     Assert.assertEquals(3, found);
-    
-    
-    
-    
-    for (int i = 0; i < s.length; i++) {
+  }
+  
+  public void failIfSomeAreDown(Server [] s, Session sb) throws ClientException {
+    for (int i = 2; i < s.length; i++) {
       s[i].shutdown();
+      Response r2 = sb.put("a", "b", "c", 1);
+      Assert.assertTrue(r2.containsKey("exception"));
     }
   }
 }
