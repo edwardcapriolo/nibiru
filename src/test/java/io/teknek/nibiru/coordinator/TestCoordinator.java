@@ -4,6 +4,7 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
+import io.teknek.nibiru.Val;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.MetaDataClient;
@@ -17,6 +18,7 @@ import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.router.TokenRouter;
+import io.teknek.nibiru.transport.Response;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -48,9 +50,34 @@ public class TestCoordinator {
   @Rule
   public TemporaryFolder node5Folder = new TemporaryFolder();
   
+  private void createMetaData(Server [] s) throws ClientException, InterruptedException {
+    MetaDataClient c = new MetaDataClient(s[0].getConfiguration().getTransportHost(), s[0]
+            .getConfiguration().getTransportPort());
+    Map<String,Object> props = new HashMap<>();
+    TreeMap<String,String> tokenMap = new TreeMap<>();
+    tokenMap.put("c", s[0].getServerId().getU().toString());
+    tokenMap.put("e", s[1].getServerId().getU().toString());
+    tokenMap.put("j", s[2].getServerId().getU().toString());
+    tokenMap.put("k", s[3].getServerId().getU().toString());
+    tokenMap.put("m", s[4].getServerId().getU().toString());
+    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
+    props.put(TokenRouter.REPLICATION_FACTOR, 3);
+    props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
+    c.createOrUpdateKeyspace("abc", props);
+    Map <String,Object> x = new HashMap<String,Object>();
+    x.put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
+    c.createOrUpdateColumnFamily("abc", "def", x);
+    Thread.sleep(10);
+    for (int i = 0; i < s.length; i++) {
+      Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));
+      Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetadata().getRouter().getClass().getName());
+      Assert.assertTrue(s[i].getKeyspaces().get("abc").getColumnFamilies().containsKey("def"));
+    }
+    
+  }
   
   @Test
-  public void doIt() throws ClientException {
+  public void doIt() throws ClientException, InterruptedException {
     Server[] s = new Server[5];
     TemporaryFolder [] t = { node1Folder, node2Folder, node3Folder, node4Folder, node5Folder };
     Configuration [] cs = new Configuration[5];
@@ -75,33 +102,28 @@ public class TestCoordinator {
       s[i] = new Server(cs[i]);
       s[i].init();
     }
-    MetaDataClient c = new MetaDataClient(s[0].getConfiguration().getTransportHost(), s[0]
-            .getConfiguration().getTransportPort());
-    Map<String,Object> props = new HashMap<>();
-    TreeMap<String,String> tokenMap = new TreeMap<>();
-    tokenMap.put("c", s[0].getServerId().getU().toString());
-    tokenMap.put("e", s[1].getServerId().getU().toString());
-    tokenMap.put("j", s[2].getServerId().getU().toString());
-    tokenMap.put("k", s[3].getServerId().getU().toString());
-    tokenMap.put("m", s[4].getServerId().getU().toString());
-    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
-    props.put(TokenRouter.REPLICATION_FACTOR, 3);
-    props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
-    c.createOrUpdateKeyspace("abc", props);
-    Map <String,Object> x = new HashMap<String,Object>();
-    x.put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-    c.createOrUpdateColumnFamily("abc", "def", x);
+    createMetaData(s);
     ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
             .getConfiguration().getTransportPort());
     Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
             .withWriteConsistency(ConsistencyLevel.ALL, new HashMap()).build();
-    sb.put("a", "b", "c", 1);
-
+    Response r = sb.put("a", "b", "c", 1);
+    Assert.assertFalse(r.containsKey("exception"));
+    
+    int found = 0 ;
     for (int i = 0; i < s.length; i++) {
-      Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));
-      Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetadata().getRouter().getClass().getName());
-      Assert.assertTrue(s[i].getKeyspaces().get("abc").getColumnFamilies().containsKey("def"));
+      ColumnFamilyPersonality c = (ColumnFamilyPersonality) s[i].getKeyspaces().get("abc").getColumnFamilies().get("def"); 
+      Val v = c.get("a", "b");
+      if (v != null){
+        Assert.assertEquals("c", c.get("a", "b").getValue());
+        found ++;
+      }
     }
+    Assert.assertEquals(3, found);
+    
+    
+    
+    
     for (int i = 0; i < s.length; i++) {
       s[i].shutdown();
     }

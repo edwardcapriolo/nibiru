@@ -27,15 +27,20 @@ import io.teknek.nibiru.transport.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.security.auth.login.Configuration;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -61,14 +66,14 @@ public class EventualCoordinator {
     }
     for (ClusterMember cm : clusterMembership.getLiveMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), cm.getPort());
+        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), 7070);
         mapping.putIfAbsent(destination, cc);
         return cc;
       }
     }
     for (ClusterMember cm : clusterMembership.getDeadMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), cm.getPort());
+        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), 7070);
         mapping.putIfAbsent(destination, cc);
         return cc;
       }
@@ -104,50 +109,45 @@ public class EventualCoordinator {
     c = om.convertValue( message.getPayload().get("consistency"), Consistency.class);
 
     if (c.getLevel() == ConsistencyLevel.ALL) {
-      List<Callable<Response>> calls = new ArrayList<Callable<Response>>();
+      ExecutorCompletionService<Response> ec = new ExecutorCompletionService<>(executor);  
+      final ArrayBlockingQueue<Response> results = new ArrayBlockingQueue<Response>(100);
+      ArrayBlockingQueue<Future<Response>> futures = new ArrayBlockingQueue<Future<Response>>(100);
       for (final Destination destination : destinations) {
+        Future<Response> f = null;
         if (destination.equals(destinationLocal)){
-          calls.add(
-                  new Callable<Response>(){
-                    public Response call() throws Exception {
-                      try {
-                      return action.handleReqest();
-                      } catch (RuntimeException ex){
-                        ex.printStackTrace();
-                      }
-                      return null;
-                    }}
-                  );          
+          f = ec.submit(new LocalActionCallable(results, action));
         } else {
-          calls.add(
-                  new Callable<Response>(){
-                    public Response call() throws Exception {
-                      try {
-                        return clientForDestination(destination).post(message);
-                      } catch (RuntimeException ex){
-                        ex.printStackTrace();
-                      }
-                      return null;
-                    }    
-                  }
-                  );
+          f = ec.submit(new RemoteMessageCallable(results, clientForDestination(destination), message));
         }
+        futures.add(f);
       }
-      List<Future<Response>> responses = null;
-      try {
-         responses = executor.invokeAll(calls, 10000, TimeUnit.MILLISECONDS);
-         
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+      long start = System.currentTimeMillis();
+      long deadline = start + (10L * 1000L) ;
+      List<Response> responses = new ArrayList<>();
+      while (start <= deadline){
+        Response r = null;
+        try {
+          r = ec.poll(deadline - start, TimeUnit.MILLISECONDS).get();
+          responses.add(r);
+        } catch (InterruptedException | ExecutionException e) {
+          e.printStackTrace();
+        }
+        if (r == null){
+          r = new Response();
+          r.put("exception", "coordinator timeout");
+          return r;
+        }
+        if (r.containsKey("exception")){
+          return r;
+        }
+        if (responses.size() == destinations.size()){
+          return new Response();
+        }
+        start = System.currentTimeMillis();
       }
-      
-      try {
-        return responses.get(0).get(1, TimeUnit.MILLISECONDS);
-      } catch (InterruptedException | ExecutionException | TimeoutException e) {
-        e.printStackTrace();
-      }
+          
     }
-
+    
     return null;
   }
   

@@ -94,7 +94,7 @@ public class Session {
     }
   }
 
-  public void put(String rowkey, String column, String value, long time) throws ClientException{
+  public Response put(String rowkey, String column, String value, long time) throws ClientException{
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setColumnFamily(columnFamily);
@@ -109,7 +109,7 @@ public class Session {
             .put("time", time).build();
     m.setPayload(payload);
     try {
-      Response response = client.post(m);
+      return client.post(m);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
