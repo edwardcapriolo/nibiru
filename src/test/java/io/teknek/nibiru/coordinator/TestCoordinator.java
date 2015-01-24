@@ -107,7 +107,8 @@ public class TestCoordinator {
     ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
             .getConfiguration().getTransportPort());
     Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
-            .withWriteConsistency(ConsistencyLevel.ALL, new HashMap()).build();
+            .withWriteConsistency(ConsistencyLevel.ALL, new HashMap())
+            .withReadConsistency(ConsistencyLevel.ALL, new HashMap()).build();
     
     passIfAllAreUp(s, sb);
     failIfSomeAreDown(s, sb);
@@ -118,6 +119,7 @@ public class TestCoordinator {
   
   public void passIfAllAreUp(Server [] s, Session sb) throws ClientException {
     Response r = sb.put("a", "b", "c", 1);
+    System.out.println(r);
     Assert.assertFalse(r.containsKey("exception"));
     int found = 0 ;
     for (int i = 0; i < s.length; i++) {
@@ -129,6 +131,7 @@ public class TestCoordinator {
       }
     }
     Assert.assertEquals(3, found);
+    Assert.assertEquals("c", sb.get("a", "b").getValue());
   }
   
   public void failIfSomeAreDown(Server [] s, Session sb) throws ClientException {

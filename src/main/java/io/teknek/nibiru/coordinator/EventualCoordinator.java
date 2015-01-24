@@ -19,6 +19,7 @@ import io.teknek.nibiru.Consistency;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Token;
+import io.teknek.nibiru.Val;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
@@ -28,20 +29,14 @@ import io.teknek.nibiru.transport.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import javax.security.auth.login.Configuration;
-
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class EventualCoordinator {
@@ -49,6 +44,7 @@ public class EventualCoordinator {
   private ExecutorService executor;
   private ConcurrentMap<Destination,ColumnFamilyClient> mapping;
   private final ClusterMembership clusterMembership;
+  private static final ObjectMapper OM = new ObjectMapper();
   
   public EventualCoordinator(ClusterMembership clusterMembership){
     this.clusterMembership = clusterMembership;
@@ -85,33 +81,30 @@ public class EventualCoordinator {
 
   public Response handleMessage(Token token, final Message message, List<Destination> destinations,
           long timeoutInMs, Destination destinationLocal, final LocalAction action) {
+    System.out.println(message);
     if (destinations.size() == 0 ){
       throw new RuntimeException("No place to route message");
     }
     if (destinations.size() == 1 && destinations.contains(destinationLocal)) {
       return action.handleReqest();
     }
-    //TODO if the message is routed here but here is not the correct place
-    // we should route it again
     if (message.getPayload().containsKey("reroute")){
       return action.handleReqest();
     } 
     if (!message.getPayload().containsKey("reroute")){
       message.getPayload().put("reroute", "");
     }
- 
     Consistency c = null;
     if (message.getPayload().get("consistency") == null) {
       message.getPayload().put("consistency",
               new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1));
+    } else {
+      c = OM.convertValue( message.getPayload().get("consistency"), Consistency.class);
     }
-    ObjectMapper om = new ObjectMapper();
-    c = om.convertValue( message.getPayload().get("consistency"), Consistency.class);
-
     if (c.getLevel() == ConsistencyLevel.ALL) {
       ExecutorCompletionService<Response> ec = new ExecutorCompletionService<>(executor);  
-      final ArrayBlockingQueue<Response> results = new ArrayBlockingQueue<Response>(100);
-      ArrayBlockingQueue<Future<Response>> futures = new ArrayBlockingQueue<Future<Response>>(100);
+      final ArrayBlockingQueue<Response> results = new ArrayBlockingQueue<Response>(destinations.size());
+      ArrayBlockingQueue<Future<Response>> futures = new ArrayBlockingQueue<Future<Response>>(destinations.size());
       for (final Destination destination : destinations) {
         Future<Response> f = null;
         if (destination.equals(destinationLocal)){
@@ -127,10 +120,14 @@ public class EventualCoordinator {
       while (start <= deadline){
         Response r = null;
         try {
-          r = ec.poll(deadline - start, TimeUnit.MILLISECONDS).get();
-          responses.add(r);
+          Future<Response> future = ec.poll(deadline - start, TimeUnit.MILLISECONDS);
+          r = future.get();
+          if (r != null){
+            responses.add(r);
+          }
         } catch (InterruptedException | ExecutionException e) {
           e.printStackTrace();
+          break;
         }
         if (r == null){
           r = new Response();
@@ -141,11 +138,34 @@ public class EventualCoordinator {
           return r;
         }
         if (responses.size() == destinations.size()){
-          return new Response();
+          break;
+          //return new Response();
         }
         start = System.currentTimeMillis();
       }
-          
+      if ("put".equals(message.getPayload().get("type"))){
+        if (responses.size() == destinations.size()){
+          return new Response();
+        } else {
+          Response ret = new Response();
+          ret.put("exception", "coordinator timeout");
+          return ret;
+        }
+      } else if ("get".equals(message.getPayload().get("type"))){
+        long highestTimestamp = Long.MIN_VALUE;
+        int highestIndex = Integer.MIN_VALUE;
+        for (int i = 0; i < responses.size(); i++) {
+          Val v = OM.convertValue(responses.get(i).get("payload"), Val.class);
+          if (v.getTime()>highestTimestamp){
+            highestTimestamp = v.getTime();
+            highestIndex = i;
+          }
+        }
+        return responses.get(highestIndex);
+      } else {
+      
+        throw new IllegalArgumentException("cant finish message " + message);
+      }
     }
     
     return null;
