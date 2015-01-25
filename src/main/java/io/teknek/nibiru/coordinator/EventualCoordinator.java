@@ -145,9 +145,49 @@ public class EventualCoordinator {
         start = System.currentTimeMillis();
       }
       return handleColumnFamilyPersonality(responses, message, destinations);
+    } else if (c.getLevel() == ConsistencyLevel.N) {
+      int wantedResults = (Integer) c.getParameters().get("n");
+      int sucessfulSoFar = 0;
+      while (start <= deadline) {
+        Response r = null;
+        try {
+          Future<Response> future = ec.poll(deadline - start, TimeUnit.MILLISECONDS);
+          r = future.get();
+          if (r != null){
+            responses.add(r);
+            sucessfulSoFar++;
+          }
+          if (sucessfulSoFar >= wantedResults) {
+            break;
+          }
+        } catch (InterruptedException | ExecutionException e) {
+          e.printStackTrace(); break;
+        }
+        start = System.currentTimeMillis();
+      } 
+      if ("put".equals(message.getPayload().get("type")) || "delete".equals(message.getPayload().get("type"))){
+        return new Response();
+      } else if ("get".equals(message.getPayload().get("type"))){
+        return highestTimestampResponse(responses);
+      } else {
+        throw new IllegalArgumentException("cant finish message " + message);
+      }
     }
     
     return null;
+  }
+  
+  private Response highestTimestampResponse(List<Response> responses){
+    long highestTimestamp = Long.MIN_VALUE;
+    int highestIndex = Integer.MIN_VALUE;
+    for (int i = 0; i < responses.size(); i++) {
+      Val v = OM.convertValue(responses.get(i).get("payload"), Val.class);
+      if (v.getTime() > highestTimestamp) {
+        highestTimestamp = v.getTime();
+        highestIndex = i;
+      }
+    }
+    return responses.get(highestIndex);
   }
   
   private Response handleColumnFamilyPersonality(List<Response> responses, Message message, List<Destination> destinations){
@@ -155,21 +195,10 @@ public class EventualCoordinator {
       if (responses.size() == destinations.size()){
         return new Response();
       } else {
-        Response ret = new Response();
-        ret.put("exception", "coordinator timeout");
-        return ret;
+        return new Response().withProperty("exception", "coordinator timeout");
       }
     } else if ("get".equals(message.getPayload().get("type"))){
-      long highestTimestamp = Long.MIN_VALUE;
-      int highestIndex = Integer.MIN_VALUE;
-      for (int i = 0; i < responses.size(); i++) {
-        Val v = OM.convertValue(responses.get(i).get("payload"), Val.class);
-        if (v.getTime() > highestTimestamp) {
-          highestTimestamp = v.getTime();
-          highestIndex = i;
-        }
-      }
-      return responses.get(highestIndex);
+      return highestTimestampResponse(responses);
     } else {
       throw new IllegalArgumentException("cant finish message " + message);
     }
