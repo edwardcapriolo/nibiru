@@ -147,7 +147,7 @@ public class EventualCoordinator {
         }
         start = System.currentTimeMillis();
       }
-      if ("put".equals(message.getPayload().get("type"))){
+      if ("put".equals(message.getPayload().get("type")) || "delete".equals(message.getPayload().get("type"))){
         if (responses.size() == destinations.size()){
           return new Response();
         } else {

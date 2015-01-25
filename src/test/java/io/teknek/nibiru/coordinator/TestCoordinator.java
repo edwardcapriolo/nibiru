@@ -137,8 +137,12 @@ public class TestCoordinator {
   public void failIfSomeAreDown(Server [] s, Session sb) throws ClientException {
     for (int i = 2; i < s.length; i++) {
       s[i].shutdown();
-      Response r2 = sb.put("a", "b", "c", 1);
-      Assert.assertTrue(r2.containsKey("exception"));
+      try {
+        sb.put("a", "b", "c", 1);
+      } catch (ClientException ex){
+        Assert.assertTrue(ex.getMessage().equals("coordinator timeout"));
+      }
+      
     }
   }
 }

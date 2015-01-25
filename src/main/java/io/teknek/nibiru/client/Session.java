@@ -46,13 +46,16 @@ public class Session {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
+      if (response.containsKey("exception")){
+        throw new ClientException((String) response.get("exception"));
+      }
       return MAPPER.convertValue(response.get("payload"), Val.class);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
   }
  
-  public void delete(String rowkey, String column, long time) throws ClientException {
+  public Response delete(String rowkey, String column, long time) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setColumnFamily(columnFamily);
@@ -67,12 +70,17 @@ public class Session {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
+      if (response.containsKey("exception")){
+        throw new ClientException((String) response.get("exception"));
+      } else {
+        return response;
+      }
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
   }
 
-  public void put(String rowkey, String column, String value, long time, long ttl) throws ClientException{
+  public Response put(String rowkey, String column, String value, long time, long ttl) throws ClientException{
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setColumnFamily(columnFamily);
@@ -89,6 +97,11 @@ public class Session {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
+      if (response.containsKey("exception")){
+        throw new ClientException((String) response.get("exception"));
+      } else {
+        return response;
+      }
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
@@ -109,7 +122,12 @@ public class Session {
             .put("time", time).build();
     m.setPayload(payload);
     try {
-      return client.post(m);
+      Response response = client.post(m);
+      if (response.containsKey("exception")){
+        throw new ClientException((String) response.get("exception"));
+      } else {
+        return response;
+      }
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }

@@ -42,7 +42,7 @@ public class Client {
   
   public Response post( Message request)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
-    HttpPost postRequest = new HttpPost("http://"+host+":"+port);
+    HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
     input.setContentType("application/json");
     postRequest.setEntity(input);
