@@ -17,8 +17,6 @@ package io.teknek.nibiru.coordinator;
 
 import java.util.List;
 import io.teknek.nibiru.ColumnFamily;
-import io.teknek.nibiru.Consistency;
-import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
@@ -41,7 +39,7 @@ public class Coordinator {
     this.server = server;
     metaDataCoordinator = new MetaDataCoordinator(this, server.getConfiguration(),
             server.getMetaDataManager(), server.getClusterMembership());
-    eventualCoordinator = new EventualCoordinator(server.getClusterMembership());
+    eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
   }
   
   public void init(){

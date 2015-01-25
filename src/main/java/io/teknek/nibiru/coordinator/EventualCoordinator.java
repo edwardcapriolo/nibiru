@@ -15,6 +15,7 @@
  */
 package io.teknek.nibiru.coordinator;
 
+import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Consistency;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Destination;
@@ -42,12 +43,15 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class EventualCoordinator {
 
   private ExecutorService executor;
+  private final Configuration configuration;
   private ConcurrentMap<Destination,ColumnFamilyClient> mapping;
   private final ClusterMembership clusterMembership;
   private static final ObjectMapper OM = new ObjectMapper();
   
-  public EventualCoordinator(ClusterMembership clusterMembership){
+  
+  public EventualCoordinator(ClusterMembership clusterMembership, Configuration configuration){
     this.clusterMembership = clusterMembership;
+    this.configuration = configuration;
   }
   
   public void init(){
@@ -62,14 +66,14 @@ public class EventualCoordinator {
     }
     for (ClusterMember cm : clusterMembership.getLiveMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), 7070);
+        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), configuration.getTransportPort());
         mapping.putIfAbsent(destination, cc);
         return cc;
       }
     }
     for (ClusterMember cm : clusterMembership.getDeadMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), 7070);
+        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), configuration.getTransportPort());
         mapping.putIfAbsent(destination, cc);
         return cc;
       }
@@ -81,8 +85,8 @@ public class EventualCoordinator {
 
   public Response handleMessage(Token token, final Message message, List<Destination> destinations,
           long timeoutInMs, Destination destinationLocal, final LocalAction action) {
-    System.out.println(message);
-    if (destinations.size() == 0 ){
+    //System.out.println(message);
+    if (destinations.size() == 0){
       throw new RuntimeException("No place to route message");
     }
     if (destinations.size() == 1 && destinations.contains(destinationLocal)) {
@@ -115,7 +119,7 @@ public class EventualCoordinator {
         futures.add(f);
       }
       long start = System.currentTimeMillis();
-      long deadline = start + (1L * 1000L) ;
+      long deadline = start + timeoutInMs;
       List<Response> responses = new ArrayList<>();
       while (start <= deadline){
         Response r = null;
