@@ -106,20 +106,28 @@ public class TestCoordinator {
     createMetaData(s);
     ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
             .getConfiguration().getTransportPort());
-    Session sb = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
+    Session clAll = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
             .withWriteConsistency(ConsistencyLevel.ALL, new HashMap())
             .withReadConsistency(ConsistencyLevel.ALL, new HashMap()).build();
-    
-    passIfAllAreUp(s, sb);
-    failIfSomeAreDown(s, sb);
+    Map one = new HashMap(); one.put("n", 1);
+    Session clOne = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
+            .withReadConsistency(ConsistencyLevel.N, one).withWriteConsistency(ConsistencyLevel.N, one).build();
+    passIfOneIsUp(s, clOne);
+    passIfAllAreUp(s, clAll);
+    failIfSomeAreDown(s, clAll);
     for (int i = 0; i < s.length; i++) {
       s[i].shutdown();
     }
   }
   
+  public void passIfOneIsUp(Server [] s, Session sb) throws ClientException {
+    Response r = sb.put("b", "b", "c", 1);
+    Assert.assertFalse(r.containsKey("exception"));
+    Assert.assertEquals("c", sb.get("b", "b").getValue());
+  }
+  
   public void passIfAllAreUp(Server [] s, Session sb) throws ClientException {
     Response r = sb.put("a", "b", "c", 1);
-    System.out.println(r);
     Assert.assertFalse(r.containsKey("exception"));
     int found = 0 ;
     for (int i = 0; i < s.length; i++) {
