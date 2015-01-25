@@ -85,7 +85,6 @@ public class EventualCoordinator {
 
   public Response handleMessage(Token token, final Message message, List<Destination> destinations,
           long timeoutInMs, Destination destinationLocal, final LocalAction action) {
-    //System.out.println(message);
     if (destinations.size() == 0){
       throw new RuntimeException("No place to route message");
     }
@@ -105,23 +104,24 @@ public class EventualCoordinator {
     } else {
       c = OM.convertValue( message.getPayload().get("consistency"), Consistency.class);
     }
-    if (c.getLevel() == ConsistencyLevel.ALL) {
-      ExecutorCompletionService<Response> ec = new ExecutorCompletionService<>(executor);  
-      final ArrayBlockingQueue<Response> results = new ArrayBlockingQueue<Response>(destinations.size());
-      ArrayBlockingQueue<Future<Response>> futures = new ArrayBlockingQueue<Future<Response>>(destinations.size());
-      for (final Destination destination : destinations) {
-        Future<Response> f = null;
-        if (destination.equals(destinationLocal)){
-          f = ec.submit(new LocalActionCallable(results, action));
-        } else {
-          f = ec.submit(new RemoteMessageCallable(results, clientForDestination(destination), message));
-        }
-        futures.add(f);
+    
+    ExecutorCompletionService<Response> ec = new ExecutorCompletionService<>(executor);
+    final ArrayBlockingQueue<Response> results = new ArrayBlockingQueue<Response>(destinations.size());
+    ArrayBlockingQueue<Future<Response>> futures = new ArrayBlockingQueue<Future<Response>>(destinations.size());
+    for (final Destination destination : destinations) {
+      Future<Response> f = null;
+      if (destination.equals(destinationLocal)) {
+        f = ec.submit(new LocalActionCallable(results, action));
+      } else {
+        f = ec.submit(new RemoteMessageCallable(results, clientForDestination(destination), message));
       }
-      long start = System.currentTimeMillis();
-      long deadline = start + timeoutInMs;
-      List<Response> responses = new ArrayList<>();
-      while (start <= deadline){
+      futures.add(f);
+    }
+    long start = System.currentTimeMillis();
+    long deadline = start + timeoutInMs;
+    List<Response> responses = new ArrayList<>();
+    if (c.getLevel() == ConsistencyLevel.ALL) {
+      while (start <= deadline) {
         Response r = null;
         try {
           Future<Response> future = ec.poll(deadline - start, TimeUnit.MILLISECONDS);
@@ -134,45 +134,45 @@ public class EventualCoordinator {
           break;
         }
         if (r == null){
-          r = new Response();
-          r.put("exception", "coordinator timeout");
-          return r;
+          return new Response().withProperty("exception", "coordinator timeout");
         }
         if (r.containsKey("exception")){
           return r;
         }
         if (responses.size() == destinations.size()){
           break;
-          //return new Response();
         }
         start = System.currentTimeMillis();
       }
-      if ("put".equals(message.getPayload().get("type")) || "delete".equals(message.getPayload().get("type"))){
-        if (responses.size() == destinations.size()){
-          return new Response();
-        } else {
-          Response ret = new Response();
-          ret.put("exception", "coordinator timeout");
-          return ret;
-        }
-      } else if ("get".equals(message.getPayload().get("type"))){
-        long highestTimestamp = Long.MIN_VALUE;
-        int highestIndex = Integer.MIN_VALUE;
-        for (int i = 0; i < responses.size(); i++) {
-          Val v = OM.convertValue(responses.get(i).get("payload"), Val.class);
-          if (v.getTime()>highestTimestamp){
-            highestTimestamp = v.getTime();
-            highestIndex = i;
-          }
-        }
-        return responses.get(highestIndex);
-      } else {
-      
-        throw new IllegalArgumentException("cant finish message " + message);
-      }
+      return handleColumnFamilyPersonality(responses, message, destinations);
     }
     
     return null;
+  }
+  
+  private Response handleColumnFamilyPersonality(List<Response> responses, Message message, List<Destination> destinations){
+    if ("put".equals(message.getPayload().get("type")) || "delete".equals(message.getPayload().get("type"))){
+      if (responses.size() == destinations.size()){
+        return new Response();
+      } else {
+        Response ret = new Response();
+        ret.put("exception", "coordinator timeout");
+        return ret;
+      }
+    } else if ("get".equals(message.getPayload().get("type"))){
+      long highestTimestamp = Long.MIN_VALUE;
+      int highestIndex = Integer.MIN_VALUE;
+      for (int i = 0; i < responses.size(); i++) {
+        Val v = OM.convertValue(responses.get(i).get("payload"), Val.class);
+        if (v.getTime() > highestTimestamp) {
+          highestTimestamp = v.getTime();
+          highestIndex = i;
+        }
+      }
+      return responses.get(highestIndex);
+    } else {
+      throw new IllegalArgumentException("cant finish message " + message);
+    }
   }
   
   public void shutdown(){
