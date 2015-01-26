@@ -21,6 +21,7 @@ import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
@@ -59,8 +60,8 @@ public class EventualCoordinator {
     mapping = new ConcurrentHashMap<>();
   }
   
-  private ColumnFamilyClient clientForDestination(Destination destination){
-    ColumnFamilyClient client = mapping.get(destination);
+  private Client clientForDestination(Destination destination){
+    Client client = mapping.get(destination);
     if (client != null) {
       return client;
     }
