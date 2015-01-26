@@ -12,25 +12,3 @@ Nibiru takes a different approach by building API's throughout the codebase, not
 
 Building around APIs should allow users to swap physical backends or change routing semantics, by choosing between available implementations or designing one.
 
-Implemented so far
-======
-
-Column Family Store:
-
-* Compaction
-* Indexes
-* Memory tables
-* SSTables
-
-Coming soon
-======
-In Memory (no persistence) column family storage
-
-Pondering
-=====
-
-Internode protocol
-Coordinator protocol
-Cluster Discovery (gossip)
-Cluster Discovery (zookeeper)
-
