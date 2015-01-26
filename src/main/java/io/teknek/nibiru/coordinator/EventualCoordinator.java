@@ -145,7 +145,11 @@ public class EventualCoordinator {
         }
         start = System.currentTimeMillis();
       }
-      return handleColumnFamilyPersonality(responses, message, destinations);
+      if (responses.size() == destinations.size()){
+        return handleColumnFamilyPersonality(responses, message, destinations);
+      } else {
+        return new Response().withProperty("exception", "coordinator timeout");
+      }
     } else if (c.getLevel() == ConsistencyLevel.N) {
       int wantedResults = (Integer) c.getParameters().get("n");
       int sucessfulSoFar = 0;
@@ -166,13 +170,7 @@ public class EventualCoordinator {
         }
         start = System.currentTimeMillis();
       } 
-      if ("put".equals(message.getPayload().get("type")) || "delete".equals(message.getPayload().get("type"))){
-        return new Response();
-      } else if ("get".equals(message.getPayload().get("type"))){
-        return highestTimestampResponse(responses);
-      } else {
-        throw new IllegalArgumentException("cant finish message " + message);
-      }
+      return handleColumnFamilyPersonality(responses, message, destinations);
     }
     
     return null;
@@ -191,14 +189,12 @@ public class EventualCoordinator {
     return responses.get(highestIndex);
   }
   
-  private Response handleColumnFamilyPersonality(List<Response> responses, Message message, List<Destination> destinations){
-    if ("put".equals(message.getPayload().get("type")) || "delete".equals(message.getPayload().get("type"))){
-      if (responses.size() == destinations.size()){
-        return new Response();
-      } else {
-        return new Response().withProperty("exception", "coordinator timeout");
-      }
-    } else if ("get".equals(message.getPayload().get("type"))){
+  private Response handleColumnFamilyPersonality(List<Response> responses, Message message,
+          List<Destination> destinations) {
+    if ("put".equals(message.getPayload().get("type"))
+            || "delete".equals(message.getPayload().get("type"))) {
+      return new Response();
+    } else if ("get".equals(message.getPayload().get("type"))) {
       return highestTimestampResponse(responses);
     } else {
       throw new IllegalArgumentException("cant finish message " + message);
