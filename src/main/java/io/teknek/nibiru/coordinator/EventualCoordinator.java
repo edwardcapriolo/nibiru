@@ -106,15 +106,15 @@ public class EventualCoordinator {
       c = OM.convertValue( message.getPayload().get("consistency"), Consistency.class);
     }
     
-    ExecutorCompletionService<Response> ec = new ExecutorCompletionService<>(executor);
+    ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
     final ArrayBlockingQueue<Response> results = new ArrayBlockingQueue<Response>(destinations.size());
     ArrayBlockingQueue<Future<Response>> futures = new ArrayBlockingQueue<Future<Response>>(destinations.size());
     for (final Destination destination : destinations) {
       Future<Response> f = null;
       if (destination.equals(destinationLocal)) {
-        f = ec.submit(new LocalActionCallable(results, action));
+        f = completionService.submit(new LocalActionCallable(results, action));
       } else {
-        f = ec.submit(new RemoteMessageCallable(results, clientForDestination(destination), message));
+        f = completionService.submit(new RemoteMessageCallable(results, clientForDestination(destination), message));
       }
       futures.add(f);
     }
@@ -125,7 +125,7 @@ public class EventualCoordinator {
       while (start <= deadline) {
         Response r = null;
         try {
-          Future<Response> future = ec.poll(deadline - start, TimeUnit.MILLISECONDS);
+          Future<Response> future = completionService.poll(deadline - start, TimeUnit.MILLISECONDS);
           r = future.get();
           if (r != null){
             responses.add(r);
@@ -152,7 +152,7 @@ public class EventualCoordinator {
       while (start <= deadline) {
         Response r = null;
         try {
-          Future<Response> future = ec.poll(deadline - start, TimeUnit.MILLISECONDS);
+          Future<Response> future = completionService.poll(deadline - start, TimeUnit.MILLISECONDS);
           r = future.get();
           if (r != null){
             responses.add(r);
