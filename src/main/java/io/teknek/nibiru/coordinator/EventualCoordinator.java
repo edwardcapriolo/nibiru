@@ -85,7 +85,7 @@ public class EventualCoordinator {
   }
 
   public Response handleMessage(Token token, final Message message, List<Destination> destinations,
-          long timeoutInMs, Destination destinationLocal, final LocalAction action) {
+          long timeoutInMs, Destination destinationLocal, final LocalAction action, ResultMerger merger) {
     if (destinations.size() == 0){
       throw new RuntimeException("No place to route message");
     }
@@ -146,7 +146,7 @@ public class EventualCoordinator {
         start = System.currentTimeMillis();
       }
       if (responses.size() == destinations.size()){
-        return handleColumnFamilyPersonality(responses, message, destinations);
+        return merger.merge(responses, message);
       } else {
         return new Response().withProperty("exception", "coordinator timeout");
       }
@@ -170,37 +170,13 @@ public class EventualCoordinator {
         }
         start = System.currentTimeMillis();
       } 
-      return handleColumnFamilyPersonality(responses, message, destinations);
+      return merger.merge(responses, message);
     }
     
     return null;
   }
   
-  private Response highestTimestampResponse(List<Response> responses){
-    long highestTimestamp = Long.MIN_VALUE;
-    int highestIndex = Integer.MIN_VALUE;
-    for (int i = 0; i < responses.size(); i++) {
-      Val v = OM.convertValue(responses.get(i).get("payload"), Val.class);
-      if (v.getTime() > highestTimestamp) {
-        highestTimestamp = v.getTime();
-        highestIndex = i;
-      }
-    }
-    return responses.get(highestIndex);
-  }
-  
-  private Response handleColumnFamilyPersonality(List<Response> responses, Message message,
-          List<Destination> destinations) {
-    if ("put".equals(message.getPayload().get("type"))
-            || "delete".equals(message.getPayload().get("type"))) {
-      return new Response();
-    } else if ("get".equals(message.getPayload().get("type"))) {
-      return highestTimestampResponse(responses);
-    } else {
-      throw new IllegalArgumentException("cant finish message " + message);
-    }
-  }
-  
+
   public void shutdown(){
     executor.shutdown();
   }

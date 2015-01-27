@@ -112,8 +112,9 @@ public class TestCoordinator {
     Map one = new HashMap(); one.put("n", 1);
     Session clOne = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
             .withReadConsistency(ConsistencyLevel.N, one).withWriteConsistency(ConsistencyLevel.N, one).build();
-    passIfOneIsUp(s, clOne);
+    
     passIfAllAreUp(s, clAll);
+    passIfOneIsUp(s, clOne);
     failIfSomeAreDown(s, clAll);
     for (int i = 0; i < s.length; i++) {
       s[i].shutdown();
@@ -147,6 +148,7 @@ public class TestCoordinator {
       s[i].shutdown();
       try {
         sb.put("a", "b", "c", 1);
+
       } catch (ClientException ex){
         Assert.assertTrue(ex.getMessage().equals("coordinator timeout"));
       }

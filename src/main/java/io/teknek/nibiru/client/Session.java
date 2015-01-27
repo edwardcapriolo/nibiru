@@ -46,6 +46,9 @@ public class Session {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
+      if (response == null){
+        throw new ClientException("Protocol error: response was null");
+      }
       if (response.containsKey("exception")){
         throw new ClientException((String) response.get("exception"));
       }
@@ -70,6 +73,9 @@ public class Session {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
+      if (response == null){
+        throw new ClientException("Protocol error: response was null");
+      }
       if (response.containsKey("exception")){
         throw new ClientException((String) response.get("exception"));
       } else {
@@ -97,6 +103,9 @@ public class Session {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
+      if (response == null){
+        throw new ClientException("Protocol error: response was null");
+      }
       if (response.containsKey("exception")){
         throw new ClientException((String) response.get("exception"));
       } else {
@@ -123,6 +132,9 @@ public class Session {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
+      if (response == null){
+        throw new ClientException("Protocol error: response was null");
+      }
       if (response.containsKey("exception")){
         throw new ClientException((String) response.get("exception"));
       } else {
