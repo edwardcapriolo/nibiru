@@ -20,7 +20,6 @@ import io.teknek.nibiru.Consistency;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.cluster.ClusterMember;
