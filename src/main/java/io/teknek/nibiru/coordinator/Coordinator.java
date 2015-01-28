@@ -74,7 +74,7 @@ public class Coordinator {
 
     if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
-      ResultMerger merger = new ColumnFamilyResultMerger();
+      ResultMerger merger = new HighestTimestampResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger);
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) { 

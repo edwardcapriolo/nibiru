@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-public class ColumnFamilyResultMerger implements ResultMerger {
+public class HighestTimestampResultMerger implements ResultMerger {
 
   private static ObjectMapper OM = new ObjectMapper();
   
