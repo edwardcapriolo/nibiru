@@ -38,7 +38,7 @@ public class Coordinator {
   public Coordinator(Server server) {
     this.server = server;
     metaDataCoordinator = new MetaDataCoordinator(this, server.getConfiguration(),
-            server.getMetaDataManager(), server.getClusterMembership());
+            server.getMetaDataManager(), server.getClusterMembership(), server.getServerId());
     eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
   }
   

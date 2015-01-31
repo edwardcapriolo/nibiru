@@ -22,6 +22,8 @@ public interface MetaPersonality {
   public static final String CREATE_OR_UPDATE_KEYSPACE = "CREATE_OR_UPDATE_KEYSPACE";
   public static final String CREATE_OR_UPDATE_COLUMN_FAMILY = "CREATE_OR_UPDATE_COLUMN_FAMILY";
   public static final String META_PERSONALITY = "META_PERSONALITY";
+  public static final String LIST_LIVE_MEMBERS = "LIST_LIVE_MEMBERS";
+  public static final String LIST_DEAD_MEMBERS = "LIST_DEAD_MEMBERS";
   
   void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties);
 }

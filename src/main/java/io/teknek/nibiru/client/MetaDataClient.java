@@ -15,12 +15,15 @@
  */
 package io.teknek.nibiru.client;
 
+import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,6 +34,26 @@ public class MetaDataClient extends Client {
     super(host, port);
   }
 
+  public List<ClusterMember> getLiveMembers() throws ClientException {
+    Message m = new Message();
+    m.setKeyspace("system");
+    m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
+    Map<String,Object> payload = new HashMap<>();
+    payload.put("type", MetaPersonality.LIST_LIVE_MEMBERS);
+    m.setPayload(payload);
+    try {
+      Response response = post(m); 
+      List<Map> payloadAsMap = (List<Map>) response.get("payload");
+      List<ClusterMember> res = new ArrayList<>(payloadAsMap.size());
+      for (Map entry : payloadAsMap){
+        res.add(MAPPER.convertValue(entry, ClusterMember.class));
+      }
+      return res;
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
+  
   public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties) throws ClientException {
     Message m = new Message();
     m.setKeyspace("system");

@@ -3,6 +3,8 @@ package io.teknek.nibiru.cluster;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import junit.framework.Assert;
 
@@ -17,6 +19,8 @@ import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import com.google.common.collect.Sets;
 
 public class TestCluster {
 
@@ -74,8 +78,13 @@ public class TestCluster {
     Thread.sleep(1000);
     for (Server server : s){
       Assert.assertNotNull(server.getKeyspaces().get("abc").getColumnFamilies().get("def"));
-      
+      Set<String> livingHosts = new TreeSet<>();
+      for (ClusterMember cm : c.getLiveMembers()){
+        livingHosts.add(cm.getHost());
+      }
+      Assert.assertEquals(Sets.newHashSet("127.0.0.1", "127.0.0.2", "127.0.0.3"), livingHosts);
     }
+    
     for (Server server : s){
      server.shutdown();
     }

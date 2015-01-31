@@ -18,6 +18,7 @@ package io.teknek.nibiru.coordinator;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.Server;
+import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
@@ -44,15 +45,17 @@ public class MetaDataCoordinator {
   private final Configuration configuration;
   private final MetaDataManager metaDataManager;
   private final ClusterMembership clusterMembership;
+  private final ServerId serverId;
   private ExecutorService metaExecutor;
   private ConcurrentMap<ClusterMember,MetaDataClient> clients;
   
   public MetaDataCoordinator(Coordinator c, Configuration configuration,
-          MetaDataManager metaDataManager, ClusterMembership clusterMembership) {
+          MetaDataManager metaDataManager, ClusterMembership clusterMembership, ServerId serverId) {
     this.coordinator = c;
     this.configuration = configuration;
     this.metaDataManager = metaDataManager;
     this.clusterMembership = clusterMembership;
+    this.serverId = serverId;
   }
   
   public void init(){
@@ -80,7 +83,17 @@ public class MetaDataCoordinator {
   
   @SuppressWarnings("unchecked")
   public Response handleSystemMessage(final Message message){
-    if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
+    if (MetaPersonality.LIST_LIVE_MEMBERS.equals(message.getPayload().get("type"))){
+      List<ClusterMember> copy = new ArrayList<>();
+      copy.addAll(clusterMembership.getLiveMembers());
+      ClusterMember me = new ClusterMember();
+      me.setHeatbeat(0);
+      me.setHost(configuration.getTransportHost());
+      me.setPort(1);//TODO 
+      me.setId(serverId.getU().toString());
+      copy.add(me);
+      return new Response().withProperty("payload", copy);
+    } else if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
       metaDataManager.createOrUpdateKeyspace(
               (String) message.getPayload().get("keyspace"), 
               (Map<String,Object>) message.getPayload());

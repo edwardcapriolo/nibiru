@@ -29,7 +29,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 public class Client {
 
-  private ObjectMapper MAPPER = new ObjectMapper();
+  protected ObjectMapper MAPPER = new ObjectMapper();
   private DefaultHttpClient httpClient = new DefaultHttpClient();
   
   private String host;
