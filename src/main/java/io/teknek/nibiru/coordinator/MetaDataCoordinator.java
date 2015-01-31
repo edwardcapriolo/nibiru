@@ -17,7 +17,6 @@ package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.MetaDataManager;
-import io.teknek.nibiru.Server;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
@@ -37,7 +36,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-/**evenually this will have to be plugable per keyspace. For now code serparation */
 public class MetaDataCoordinator {
 
   @SuppressWarnings("unused")
@@ -84,15 +82,7 @@ public class MetaDataCoordinator {
   @SuppressWarnings("unchecked")
   public Response handleSystemMessage(final Message message){
     if (MetaPersonality.LIST_LIVE_MEMBERS.equals(message.getPayload().get("type"))){
-      List<ClusterMember> copy = new ArrayList<>();
-      copy.addAll(clusterMembership.getLiveMembers());
-      ClusterMember me = new ClusterMember();
-      me.setHeatbeat(0);
-      me.setHost(configuration.getTransportHost());
-      me.setPort(1);//TODO 
-      me.setId(serverId.getU().toString());
-      copy.add(me);
-      return new Response().withProperty("payload", copy);
+      return handleListLiveMembersMessage(message);
     } else if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
       metaDataManager.createOrUpdateKeyspace(
               (String) message.getPayload().get("keyspace"), 
@@ -158,4 +148,16 @@ public class MetaDataCoordinator {
     }
     
   }
+  private Response handleListLiveMembersMessage(final Message message){
+    List<ClusterMember> copy = new ArrayList<>();
+    copy.addAll(clusterMembership.getLiveMembers());
+    ClusterMember me = new ClusterMember();
+    me.setHeatbeat(0);
+    me.setHost(configuration.getTransportHost());
+    me.setPort(1);//TODO 
+    me.setId(serverId.getU().toString());
+    copy.add(me);
+    return new Response().withProperty("payload", copy);
+  }
+  
 }
