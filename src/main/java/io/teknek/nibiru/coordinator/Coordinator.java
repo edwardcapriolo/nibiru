@@ -77,8 +77,12 @@ public class Coordinator {
       ResultMerger merger = new HighestTimestampResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger);
-    } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) { 
-      return handleKeyValuePersonality(message, keyspace, columnFamily);
+    } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) {
+      LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
+      ResultMerger merger = new MajorityValueResultMerger();
+      return eventualCoordinator.handleMessage(token, message, destinations, 
+              timeoutInMs, destinationLocal, action, merger);
+      //return handleKeyValuePersonality(message, keyspace, columnFamily);
     } else {
       throw new UnsupportedOperationException(message.getRequestPersonality());
     }
@@ -93,6 +97,7 @@ public class Coordinator {
     }
   }
     
+  /*
   private Response handleKeyValuePersonality(Message message, Keyspace ks, ColumnFamily cf){
     if (cf instanceof KeyValuePersonality){
       KeyValuePersonality personality = (KeyValuePersonality) cf;
@@ -111,5 +116,5 @@ public class Coordinator {
     }
     return null;
   }
-  
+  */
 }
