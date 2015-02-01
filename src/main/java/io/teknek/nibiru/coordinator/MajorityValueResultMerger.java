@@ -22,7 +22,7 @@ public class MajorityValueResultMerger implements ResultMerger {
       }
     }
     int highest = 0;
-    String value = "";
+    String value = null;
     for (Map.Entry<String, Integer> e : count.entrySet()){
       if (e.getValue() > highest){
         highest = e.getValue();

@@ -1,5 +1,6 @@
 package io.teknek.nibiru.keyvalue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import junit.framework.Assert;
@@ -47,6 +48,7 @@ public class TestMajorityMerger {
             new Response().withProperty("payload", "a")
             ), null).get("payload")); 
     
+    Assert.assertEquals(null, mm.merge(new ArrayList<Response>(), null).get("payload"));
   }
  
 }
