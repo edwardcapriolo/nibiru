@@ -117,62 +117,74 @@ public class EventualCoordinator {
     }
     long start = System.currentTimeMillis();
     long deadline = start + timeoutInMs;
-    List<Response> responses = new ArrayList<>();
     if (c.getLevel() == ConsistencyLevel.ALL) {
-      while (start <= deadline) {
-        Response r = null;
-        try {
-          Future<Response> future = completionService.poll(deadline - start, TimeUnit.MILLISECONDS);
-          r = future.get();
-          if (r != null){
-            responses.add(r);
-          }
-        } catch (InterruptedException | ExecutionException e) {
-          return new Response().withProperty("exception", "coordinator timeout");
-        }
-        if (r == null){
-          return new Response().withProperty("exception", "coordinator timeout");
-        }
-        if (r.containsKey("exception")){
-          return r;
-        }
-        if (responses.size() == destinations.size()){
-          break;
-        }
-        start = System.currentTimeMillis();
-      }
-      if (responses.size() == destinations.size()){
-        return merger.merge(responses, message);
-      } else {
-        return new Response().withProperty("exception", "coordinator timeout");
-      }
+      return handleAll(start, deadline, completionService, destinations, merger, message);
     } else if (c.getLevel() == ConsistencyLevel.N) {
-      int wantedResults = (Integer) c.getParameters().get("n");
-      int sucessfulSoFar = 0;
-      while (start <= deadline) {
-        Response r = null;
-        try {
-          Future<Response> future = completionService.poll(deadline - start, TimeUnit.MILLISECONDS);
-          r = future.get();
-          if (r != null){
-            responses.add(r);
-            sucessfulSoFar++;
-          }
-          if (sucessfulSoFar >= wantedResults) {
-            break;
-          }
-        } catch (InterruptedException | ExecutionException e) {
-          continue;
-        }
-        start = System.currentTimeMillis();
-      } 
-      return merger.merge(responses, message);
+      return this.handleN(start, deadline, completionService, destinations, merger, message, c);
+    } else {
+      return new Response().withProperty("exception", "unsupported consistency level");
     }
-    
-    return null;
   }
   
+  private Response handleN(long start, long deadline,
+          ExecutorCompletionService<Response> completionService, List<Destination> destinations,
+          ResultMerger merger, Message message, Consistency c) {
+    List<Response> responses = new ArrayList<>();
+    int wantedResults = (Integer) c.getParameters().get("n");
+    int sucessfulSoFar = 0;
+    while (start <= deadline) {
+      Response r = null;
+      try {
+        Future<Response> future = completionService.poll(deadline - start, TimeUnit.MILLISECONDS);
+        r = future.get();
+        if (r != null){
+          responses.add(r);
+          sucessfulSoFar++;
+        }
+        if (sucessfulSoFar >= wantedResults) {
+          break;
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        continue;
+      }
+      start = System.currentTimeMillis();
+    } 
+    return merger.merge(responses, message);
+  }
 
+  private Response handleAll(long start, long deadline,
+          ExecutorCompletionService<Response> completionService, List<Destination> destinations,
+          ResultMerger merger, Message message) {
+    List<Response> responses = new ArrayList<>();
+    while (start <= deadline) {
+      Response r = null;
+      try {
+        Future<Response> future = completionService.poll(deadline - start, TimeUnit.MILLISECONDS);
+        r = future.get();
+        if (r != null) {
+          responses.add(r);
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        return new Response().withProperty("exception", "coordinator timeout");
+      }
+      if (r == null) {
+        return new Response().withProperty("exception", "coordinator timeout");
+      }
+      if (r.containsKey("exception")) {
+        return r;
+      }
+      if (responses.size() == destinations.size()) {
+        break;
+      }
+      start = System.currentTimeMillis();
+    }
+    if (responses.size() == destinations.size()) {
+      return merger.merge(responses, message);
+    } else {
+      return new Response().withProperty("exception", "coordinator timeout");
+    }
+  }
+  
   public void shutdown(){
     executor.shutdown();
   }

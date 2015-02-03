@@ -11,7 +11,7 @@ public class RemoteMessageCallable extends CompletableCallable implements Callab
   private final Client client;
   private final Message message;
   
-  public RemoteMessageCallable(Client client, Message message ){
+  public RemoteMessageCallable(Client client, Message message){
     this.client = client;
     this.message = message;
   }
