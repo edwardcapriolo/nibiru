@@ -29,7 +29,6 @@ import io.teknek.nibiru.transport.Response;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -106,16 +105,15 @@ public class EventualCoordinator {
     }
     
     ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
-    final ArrayBlockingQueue<Response> results = new ArrayBlockingQueue<Response>(destinations.size());
-    ArrayBlockingQueue<Future<Response>> futures = new ArrayBlockingQueue<Future<Response>>(destinations.size());
+    List<RemoteMessageCallable> remote = new ArrayList<>();
     for (final Destination destination : destinations) {
-      Future<Response> f = null;
       if (destination.equals(destinationLocal)) {
-        f = completionService.submit(new LocalActionCallable(results, action));
+        completionService.submit(new LocalActionCallable(action));
       } else {
-        f = completionService.submit(new RemoteMessageCallable(results, clientForDestination(destination), message));
+        RemoteMessageCallable r = new RemoteMessageCallable(clientForDestination(destination), message);
+        remote.add(r);
+        completionService.submit(r);
       }
-      futures.add(f);
     }
     long start = System.currentTimeMillis();
     long deadline = start + timeoutInMs;
@@ -130,8 +128,7 @@ public class EventualCoordinator {
             responses.add(r);
           }
         } catch (InterruptedException | ExecutionException e) {
-          e.printStackTrace();
-          break;
+          return new Response().withProperty("exception", "coordinator timeout");
         }
         if (r == null){
           return new Response().withProperty("exception", "coordinator timeout");
@@ -165,7 +162,7 @@ public class EventualCoordinator {
             break;
           }
         } catch (InterruptedException | ExecutionException e) {
-          e.printStackTrace(); break;
+          continue;
         }
         start = System.currentTimeMillis();
       } 
