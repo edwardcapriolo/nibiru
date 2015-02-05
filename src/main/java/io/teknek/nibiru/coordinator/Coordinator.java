@@ -48,10 +48,10 @@ public class Coordinator {
     destinationLocal.setDestinationId(server.getServerId().getU().toString());
     metaDataCoordinator.init();
     eventualCoordinator.init();
-    hinter = getHinter();
+    hinter = createHinter();
   }
   
-  public Hinter getHinter(){
+  private Hinter createHinter(){
     ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
     ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
     return new Hinter(pers);  
@@ -84,7 +84,7 @@ public class Coordinator {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       ResultMerger merger = new HighestTimestampResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal, action, merger, getHinter(message, columnFamily));
+              timeoutInMs, destinationLocal, action, merger, getHinterForMessage(message, columnFamily));
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) {
       LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
       ResultMerger merger = new MajorityValueResultMerger();
@@ -96,7 +96,7 @@ public class Coordinator {
 
   }
   
-  private Hinter getHinter(Message message, ColumnFamily columnFamily){
+  private Hinter getHinterForMessage(Message message, ColumnFamily columnFamily){
     String type = (String) message.getPayload().get("type");
     if (!columnFamily.getColumnFamilyMetadata().isEnableHints()){
       return null;
@@ -108,6 +108,10 @@ public class Coordinator {
     }
   }
   
+  public Hinter getHinter() {
+    return hinter;
+  }
+
   private static long determineTimeout(ColumnFamily columnFamily, Message message){
     if (message.getPayload().containsKey("timeout")){
       return ((Number) message.getPayload().get("timeout")).longValue();
