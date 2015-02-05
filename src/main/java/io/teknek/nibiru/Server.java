@@ -16,7 +16,6 @@
 package io.teknek.nibiru;
 
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.coordinator.Coordinator;
 import io.teknek.nibiru.engine.CompactionManager;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;

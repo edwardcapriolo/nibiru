@@ -19,6 +19,7 @@ import java.util.Map;
 
 public class ColumnFamilyMetaData {
   public static final String IMPLEMENTING_CLASS = "implementing_class"; 
+  
   private String name;
   private String implementingClass;
   
@@ -31,6 +32,7 @@ public class ColumnFamilyMetaData {
   private long indexInterval = 1000;
   private boolean inMemoryColumnFamily = false;
   private long operationTimeoutInMs = 5000;
+  private boolean enableHints = true;
   
   public ColumnFamilyMetaData(){
     
@@ -131,5 +133,15 @@ public class ColumnFamilyMetaData {
   public void setOperationTimeoutInMs(long operationTimeoutInMs) {
     this.operationTimeoutInMs = operationTimeoutInMs;
   }
+
+  public boolean isEnableHints() {
+    return enableHints;
+  }
+
+  public void setEnableHints(boolean enableHints) {
+    this.enableHints = enableHints;
+  }
+  
+  
   
 }

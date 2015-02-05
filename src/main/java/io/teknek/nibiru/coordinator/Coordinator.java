@@ -76,17 +76,31 @@ public class Coordinator {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       ResultMerger merger = new HighestTimestampResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal, action, merger);
+              timeoutInMs, destinationLocal, action, merger, getHinter(message, columnFamily));
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) {
       LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
       ResultMerger merger = new MajorityValueResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal, action, merger);
-      //return handleKeyValuePersonality(message, keyspace, columnFamily);
+              timeoutInMs, destinationLocal, action, merger, null);
     } else {
       throw new UnsupportedOperationException(message.getRequestPersonality());
     }
 
+  }
+  
+  private Hinter getHinter(Message message, ColumnFamily columnFamily){
+    String type = (String) message.getPayload().get("type");
+    if (!columnFamily.getColumnFamilyMetadata().isEnableHints()){
+      return null;
+    }
+    if (type.equals("put") || type.equals("delete") ){
+      ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
+      System.out.println(cf);
+      ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
+      return new Hinter(pers);
+    } else {
+      return null;
+    }
   }
   
   private static long determineTimeout(ColumnFamily columnFamily, Message message){

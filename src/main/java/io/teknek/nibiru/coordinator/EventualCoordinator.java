@@ -29,6 +29,7 @@ import io.teknek.nibiru.transport.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -46,6 +47,7 @@ public class EventualCoordinator {
   private ConcurrentMap<Destination,ColumnFamilyClient> mapping;
   private final ClusterMembership clusterMembership;
   private static final ObjectMapper OM = new ObjectMapper();
+  private ExecutorService lastChance;
   
   
   public EventualCoordinator(ClusterMembership clusterMembership, Configuration configuration){
@@ -56,6 +58,7 @@ public class EventualCoordinator {
   public void init(){
     executor = Executors.newFixedThreadPool(1024);
     mapping = new ConcurrentHashMap<>();
+    lastChance = Executors.newFixedThreadPool(1024);
   }
   
   private Client clientForDestination(Destination destination){
@@ -83,7 +86,7 @@ public class EventualCoordinator {
   }
 
   public Response handleMessage(Token token, final Message message, List<Destination> destinations,
-          long timeoutInMs, Destination destinationLocal, final LocalAction action, ResultMerger merger) {
+          long timeoutInMs, Destination destinationLocal, final LocalAction action, ResultMerger merger, Hinter hinter) {
     if (destinations.size() == 0){
       throw new RuntimeException("No place to route message");
     }
@@ -106,23 +109,60 @@ public class EventualCoordinator {
     
     ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
     List<RemoteMessageCallable> remote = new ArrayList<>();
+    List<Future<Response>> remoteFutures = new ArrayList<>();
     for (final Destination destination : destinations) {
       if (destination.equals(destinationLocal)) {
         completionService.submit(new LocalActionCallable(action));
       } else {
-        RemoteMessageCallable r = new RemoteMessageCallable(clientForDestination(destination), message);
+        RemoteMessageCallable r = new RemoteMessageCallable(clientForDestination(destination), message, destination);
         remote.add(r);
-        completionService.submit(r);
+        remoteFutures.add(completionService.submit(r));
       }
     }
     long start = System.currentTimeMillis();
     long deadline = start + timeoutInMs;
     if (c.getLevel() == ConsistencyLevel.ALL) {
-      return handleAll(start, deadline, completionService, destinations, merger, message);
+      Response response = handleAll(start, deadline, completionService, destinations, merger, message);
+      if (hinter != null) {
+        maybeSendHints(remote, remoteFutures, start, deadline, hinter);
+      }
+      return response;
     } else if (c.getLevel() == ConsistencyLevel.N) {
-      return this.handleN(start, deadline, completionService, destinations, merger, message, c);
+      Response response = handleN(start, deadline, completionService, destinations, merger, message, c);
+      if (hinter != null) {
+        maybeSendHints(remote, remoteFutures, start, deadline, hinter);
+      }
+      return response;
     } else {
       return new Response().withProperty("exception", "unsupported consistency level");
+    }
+  }
+  
+  private void maybeSendHints(List<RemoteMessageCallable> remotes,
+          List<Future<Response>> remoteFutures, long start, long deadline, final Hinter hinter) {
+    for (int i = 0; i < remotes.size(); i++) {
+      final RemoteMessageCallable remote = remotes.get(i);
+      final Future<Response> future = remoteFutures.get(i);
+      if (!remote.isComplete() && future.isDone()) {
+        hinter.hint(remote.getMessage(), remote.getDestination());
+      }
+      if (!remote.isComplete() && !future.isDone()){
+        final long remaining = deadline - System.currentTimeMillis();
+        if (remaining <= 0){
+          hinter.hint(remote.getMessage(), remote.getDestination());
+        } else {
+          lastChance.submit(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+              future.get(remaining, TimeUnit.MILLISECONDS);
+              if (!remote.isComplete()){
+                hinter.hint(remote.getMessage(), remote.getDestination());
+              }
+              return null;
+            }
+          });
+        }
+      }
     }
   }
   

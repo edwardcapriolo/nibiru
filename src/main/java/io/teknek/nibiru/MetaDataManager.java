@@ -22,12 +22,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceAndColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.metadata.MetaDataStorage;
-import io.teknek.nibiru.partitioner.Partitioner;
-import io.teknek.nibiru.router.Router;
+import io.teknek.nibiru.partitioner.NaturalPartitioner;
+import io.teknek.nibiru.personality.ColumnFamilyPersonality;
+import io.teknek.nibiru.router.LocalRouter;
 
 public class MetaDataManager {
 
@@ -49,8 +51,25 @@ public class MetaDataManager {
     createKeyspaces();
   }
  
+  private void addSystemKeyspace(){
+    Keyspace system = new Keyspace(configuration);
+    KeyspaceMetaData ksmd = new KeyspaceMetaData();
+    ksmd.setName("system");
+    ksmd.setPartitioner( new NaturalPartitioner());
+    ksmd.setRouter(new LocalRouter());
+    system.setKeyspaceMetadata(ksmd);
+    {
+      Map<String,Object> properties = new HashMap<>();
+      properties.put("implementing_class", DefaultColumnFamily.class.getName());
+      system.createColumnFamily("hints", properties);
+    }
+    server.getKeyspaces().put("system", system);
+  }
+
+  
   private void createKeyspaces(){
-    Map<String,KeyspaceAndColumnFamilyMetaData> meta = read(); 
+    Map<String,KeyspaceAndColumnFamilyMetaData> meta = read();
+    addSystemKeyspace();
     if (!(meta == null)){
       for (Entry<String, KeyspaceAndColumnFamilyMetaData> keyspaceEntry : meta.entrySet()){
         Keyspace k = new Keyspace(configuration);
