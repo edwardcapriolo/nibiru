@@ -142,25 +142,9 @@ public class Server {
   public ClusterMembership getClusterMembership() {
     return clusterMembership;
   }
-  
-  
-}
-/*
- *   public ConcurrentNavigableMap<String, Val> slice(String keyspace, String columnFamily, String rowkey, String startColumn, String endColumn){
-    Keyspace ks = keyspaces.get(keyspace);
-    return ks.getColumnFamilies().get(columnFamily).slice(rowkey, startColumn, endColumn);
-  } */
 
-/*
-public void fake_put(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
-
-   * Keyspace ks = keyspaces.get(keyspace);
-   * if (ks.getCoordinator().localOnly(rowKey)){
-   *   ks.getColumnFamilies().get(columnFamily)
-   *    .put(rowkey, column, value, time, 0L);
-   * } else {
-   *   ks.getCoordinator().blocledProxiedAction(keyspace, columnFamily, rowkey, column, value, time);
-   * }
-  
+  public Coordinator getCoordinator() {
+    return coordinator;
+  }
+    
 }
-    */

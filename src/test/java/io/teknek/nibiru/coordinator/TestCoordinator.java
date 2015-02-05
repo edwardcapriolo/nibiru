@@ -130,17 +130,20 @@ public class TestCoordinator {
   public void passIfAllAreUp(Server [] s, Session sb) throws ClientException {
     Response r = sb.put("a", "b", "c", 1);
     Assert.assertFalse(r.containsKey("exception"));
-    int found = 0 ;
+    int found = 0;
     for (int i = 0; i < s.length; i++) {
-      ColumnFamilyPersonality c = (ColumnFamilyPersonality) s[i].getKeyspaces().get("abc").getColumnFamilies().get("def"); 
+      ColumnFamilyPersonality c = (ColumnFamilyPersonality) s[i].getKeyspaces().get("abc")
+              .getColumnFamilies().get("def"); 
       Val v = c.get("a", "b");
       if (v != null){
         Assert.assertEquals("c", c.get("a", "b").getValue());
         found ++;
       }
+      Assert.assertEquals(0, s[i].getCoordinator().getHinter().getHintsAdded());
     }
     Assert.assertEquals(3, found);
     Assert.assertEquals("c", sb.get("a", "b").getValue());
+    
   }
   
   public void failIfSomeAreDown(Server [] s, Session sb) throws ClientException {
@@ -148,11 +151,10 @@ public class TestCoordinator {
       s[i].shutdown();
       try {
         sb.put("a", "b", "c", 1);
-
+        Assert.assertEquals(1, s[i].getCoordinator().getHinter().getHintsAdded());
       } catch (ClientException ex){
         Assert.assertTrue(ex.getMessage().equals("coordinator timeout"));
       }
-      
     }
   }
 }

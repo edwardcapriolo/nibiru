@@ -34,6 +34,7 @@ public class Coordinator {
   private final MetaDataCoordinator metaDataCoordinator;
   //TODO. this needs to be a per column family value
   private final EventualCoordinator eventualCoordinator;
+  private Hinter hinter;
   
   public Coordinator(Server server) {
     this.server = server;
@@ -47,6 +48,13 @@ public class Coordinator {
     destinationLocal.setDestinationId(server.getServerId().getU().toString());
     metaDataCoordinator.init();
     eventualCoordinator.init();
+    hinter = getHinter();
+  }
+  
+  public Hinter getHinter(){
+    ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
+    ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
+    return new Hinter(pers);  
   }
   
   public void shutdown(){
@@ -94,9 +102,7 @@ public class Coordinator {
       return null;
     }
     if (type.equals("put") || type.equals("delete") ){
-      ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
-      ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
-      return new Hinter(pers);
+      return hinter;
     } else {
       return null;
     }

@@ -12,7 +12,7 @@ import io.teknek.nibiru.transport.Message;
 
 public class Hinter {
 
-  private static final AtomicLong HINTS = new AtomicLong();
+  private final AtomicLong hintsAdded = new AtomicLong();
   private final ColumnFamilyPersonality hintsColumnFamily;
   private ObjectMapper OM = new ObjectMapper();
   
@@ -24,9 +24,15 @@ public class Hinter {
     try {
       hintsColumnFamily.put(destination.getDestinationId(), UUID.randomUUID().toString(),
               OM.writeValueAsString(m), System.currentTimeMillis() * 1000L);
-      HINTS.getAndIncrement();
+      hintsAdded.getAndIncrement();
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
+
+  public long getHintsAdded() {
+    return hintsAdded.get();
+  }
+  
+  
 }
