@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import io.teknek.nibiru.Destination;

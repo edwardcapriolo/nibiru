@@ -95,7 +95,6 @@ public class Coordinator {
     }
     if (type.equals("put") || type.equals("delete") ){
       ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
-      System.out.println(cf);
       ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
       return new Hinter(pers);
     } else {
@@ -110,25 +109,5 @@ public class Coordinator {
       return columnFamily.getColumnFamilyMetadata().getOperationTimeoutInMs();
     }
   }
-    
-  /*
-  private Response handleKeyValuePersonality(Message message, Keyspace ks, ColumnFamily cf){
-    if (cf instanceof KeyValuePersonality){
-      KeyValuePersonality personality = (KeyValuePersonality) cf;
-      if (message.getPayload().get("type").equals("get")){
-        String s = personality.get((String) message.getPayload().get("rowkey"));
-        Response r = new Response();
-        r.put("payload", s);
-        return r;
-      } else if (message.getPayload().get("type").equals("put")){
-        personality.put((String) message.getPayload().get("rowkey"), 
-                (String) message.getPayload().get("value"));
-        return new Response();
-      } else {
-        throw new RuntimeException("Does not support this type of message");
-      }
-    }
-    return null;
-  }
-  */
+
 }

@@ -28,7 +28,6 @@ import io.teknek.nibiru.metadata.KeyspaceAndColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.metadata.MetaDataStorage;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
-import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.router.LocalRouter;
 
 public class MetaDataManager {

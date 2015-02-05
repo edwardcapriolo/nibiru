@@ -29,11 +29,7 @@ public class RemoteMessageCallable extends CompletableCallable implements Callab
       r = new Response();
       r.put("exception", ex.getMessage());
       ex.printStackTrace();
-    } finally {
-      if (complete == false){
-        System.out.println ("making a hint for " + message);
-      }
-    }
+    } 
     return r;
   }
 
