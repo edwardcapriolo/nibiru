@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
  
@@ -189,7 +190,7 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     try {
       memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     } catch (IOException e) {
-      throw new RuntimeException (e);
+      throw new RuntimeException(e);
     }
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
@@ -234,6 +235,19 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     return memtableFlusher;
   }
   
+  public ConcurrentNavigableMap<String, Val>  slice(String rowkey, String start, String end){
+    Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
+    ConcurrentNavigableMap<String, Val> fromMemtable = memtable.get().slice(t, start, end);
+    for (SsTable table: this.sstable){
+      try {
+        Map<String,Val> each = table.slice(t, start, end);
+        
+      } catch (IOException e) {
+        throw new RuntimeException (e);
+      }
+    }
+    return null;
+  }
 }
 /*
  *   public ConcurrentNavigableMap<String, Val>  slice(String rowkey, String start, String end){

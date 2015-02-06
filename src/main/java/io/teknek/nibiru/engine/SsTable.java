@@ -21,9 +21,10 @@ import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 
 import java.io.IOException;
+import java.util.SortedMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class SsTable implements Comparable<SsTable>{
+public class SsTable implements Comparable<SsTable> {
 
   private KeyCache keyCache;
   private static AtomicLong ID = new AtomicLong();
@@ -62,6 +63,10 @@ public class SsTable implements Comparable<SsTable>{
     return ssTableReader.get(row, column);
   }
 
+  public SortedMap<String, Val> slice(Token row, String start, String end) throws IOException {
+    return ssTableReader.slice(row, start, end);
+  }
+  
   @Override
   public int compareTo(SsTable o) {
     if (o == this){
