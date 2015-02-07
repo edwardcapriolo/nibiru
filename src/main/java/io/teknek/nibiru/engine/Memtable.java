@@ -23,6 +23,8 @@ import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -94,15 +96,14 @@ public class Memtable implements Comparable<Memtable>{
 
   }
   
-  public ConcurrentNavigableMap<String,Val> slice(Token rowkey, String start, String end){
-    ConcurrentSkipListMap<String, Val> row = data.get(rowkey);
+  public SortedMap<String,Val> slice(Token rowkey, String start, String end){
+    SortedMap<String, Val> row = data.get(rowkey);
     if (row == null){
-      return null;
+      return new TreeMap<String,Val>();
     }
     Val tomb = row.get("");
     if (tomb == null){
-      ConcurrentNavigableMap<String, Val> ret = data.get(rowkey).subMap(start, end);
-      return ret;
+      return data.get(rowkey).subMap(start, end);
     } else {
       ConcurrentNavigableMap<String, Val> ret = data.get(rowkey).subMap(start, end);
       ConcurrentNavigableMap<String, Val> copy = new ConcurrentSkipListMap<String, Val> ();

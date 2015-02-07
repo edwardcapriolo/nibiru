@@ -34,5 +34,4 @@ public class Hinter {
     return hintsAdded.get();
   }
   
-  
 }

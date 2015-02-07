@@ -15,6 +15,8 @@
  */
 package io.teknek.nibiru.coordinator;
 
+import java.util.SortedMap;
+
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Val;
@@ -43,6 +45,13 @@ public class LocalColumnFamilyAction extends LocalAction {
       Response r = new Response();
       r.put("payload", v);
       return r;
+    } else if (message.getPayload().get("type").equals("slice")){
+      SortedMap<String,Val> res = personality.slice(
+              (String) message.getPayload().get("rowkey"),
+              (String) message.getPayload().get("start"),
+              (String) message.getPayload().get("end") 
+              );
+      return new Response().withProperty("payload", res);
     } else if (message.getPayload().get("type").equals("put")) {
       Long l = ((Long) message.getPayload().get("ttl"));
       if (l == null){

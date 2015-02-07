@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
  
@@ -235,18 +234,27 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     return memtableFlusher;
   }
   
-  public ConcurrentNavigableMap<String, Val>  slice(String rowkey, String start, String end){
+  public SortedMap<String, Val>  slice(String rowkey, String start, String end){
     Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
-    ConcurrentNavigableMap<String, Val> fromMemtable = memtable.get().slice(t, start, end);
+    SortedMap<String, Val> fromMemtable = memtable.get().slice(t, start, end);
     for (SsTable table: this.sstable){
       try {
-        Map<String,Val> each = table.slice(t, start, end);
-        
+        Map<String,Val> fromSs = table.slice(t, start, end);
+        for (Map.Entry<String, Val> each: fromSs.entrySet()){
+          if (!fromMemtable.containsKey(each.getKey())){
+            fromMemtable.put(each.getKey(), each.getValue());
+          } else {
+            Val current = fromMemtable.get(each.getKey());
+            if (each.getValue().getTime() > current.getTime()){
+              fromMemtable.put(each.getKey(), each.getValue());
+            }
+          }
+        }
       } catch (IOException e) {
         throw new RuntimeException (e);
       }
     }
-    return null;
+    return fromMemtable;
   }
 }
 /*
