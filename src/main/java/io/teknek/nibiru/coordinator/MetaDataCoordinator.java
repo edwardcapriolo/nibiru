@@ -110,7 +110,6 @@ public class MetaDataCoordinator {
         }
         try {
           List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
-          System.out.println(res);
         } catch (InterruptedException e) {
 
         }

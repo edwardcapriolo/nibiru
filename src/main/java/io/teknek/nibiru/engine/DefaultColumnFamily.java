@@ -189,7 +189,7 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     try {
       memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     } catch (IOException e) {
-      throw new RuntimeException (e);
+      throw new RuntimeException(e);
     }
     memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
@@ -234,6 +234,28 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     return memtableFlusher;
   }
   
+  public SortedMap<String, Val>  slice(String rowkey, String start, String end){
+    Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
+    SortedMap<String, Val> fromMemtable = memtable.get().slice(t, start, end);
+    for (SsTable table: this.sstable){
+      try {
+        Map<String,Val> fromSs = table.slice(t, start, end);
+        for (Map.Entry<String, Val> each: fromSs.entrySet()){
+          if (!fromMemtable.containsKey(each.getKey())){
+            fromMemtable.put(each.getKey(), each.getValue());
+          } else {
+            Val current = fromMemtable.get(each.getKey());
+            if (each.getValue().getTime() > current.getTime()){
+              fromMemtable.put(each.getKey(), each.getValue());
+            }
+          }
+        }
+      } catch (IOException e) {
+        throw new RuntimeException (e);
+      }
+    }
+    return fromMemtable;
+  }
 }
 /*
  *   public ConcurrentNavigableMap<String, Val>  slice(String rowkey, String start, String end){

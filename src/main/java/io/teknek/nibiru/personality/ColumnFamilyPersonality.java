@@ -15,6 +15,8 @@
  */
 package io.teknek.nibiru.personality;
 
+import java.util.SortedMap;
+
 import io.teknek.nibiru.Val;
 
 public interface ColumnFamilyPersonality {
@@ -28,4 +30,6 @@ public interface ColumnFamilyPersonality {
   public abstract void put(String rowkey, String column, String value, long time, long ttl);
 
   public abstract void put(String rowkey, String column, String value, long time);
+  
+  public abstract SortedMap<String,Val> slice(String rowkey, String start, String end);
 }

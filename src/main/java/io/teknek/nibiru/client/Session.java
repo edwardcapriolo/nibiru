@@ -8,8 +8,10 @@ import io.teknek.nibiru.transport.Response;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.SortedMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -57,6 +59,36 @@ public class Session {
       throw new ClientException(e);
     }
   }
+  
+  public SortedMap<String,Val> slice(String rowkey, String start, String end) throws ClientException {
+    Message m = new Message();
+    m.setKeyspace(keyspace);
+    m.setColumnFamily(columnFamily);
+    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
+            .put("type", "slice")
+            .put("rowkey", rowkey)
+            .put("start", start)
+            .put("end", end)
+            .put("timeout", timeoutMillis)
+            .put("consistency", readConsistency)
+            .build();
+    m.setPayload(payload);
+    try {
+      Response response = client.post(m);
+      if (response == null){
+        throw new ClientException("Protocol error: response was null");
+      }
+      if (response.containsKey("exception")){
+        throw new ClientException((String) response.get("exception"));
+      }
+      TypeReference tr = new TypeReference<SortedMap<String,Val>>(){};
+      return MAPPER.convertValue(response.get("payload"), tr);
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
+  
  
   public Response delete(String rowkey, String column, long time) throws ClientException {
     Message m = new Message();

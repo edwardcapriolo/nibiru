@@ -34,6 +34,7 @@ public class Coordinator {
   private final MetaDataCoordinator metaDataCoordinator;
   //TODO. this needs to be a per column family value
   private final EventualCoordinator eventualCoordinator;
+  private Hinter hinter;
   
   public Coordinator(Server server) {
     this.server = server;
@@ -47,6 +48,13 @@ public class Coordinator {
     destinationLocal.setDestinationId(server.getServerId().getU().toString());
     metaDataCoordinator.init();
     eventualCoordinator.init();
+    hinter = createHinter();
+  }
+  
+  private Hinter createHinter(){
+    ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
+    ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
+    return new Hinter(pers);  
   }
   
   public void shutdown(){
@@ -76,19 +84,34 @@ public class Coordinator {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       ResultMerger merger = new HighestTimestampResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal, action, merger);
+              timeoutInMs, destinationLocal, action, merger, getHinterForMessage(message, columnFamily));
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) {
       LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
       ResultMerger merger = new MajorityValueResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal, action, merger);
-      //return handleKeyValuePersonality(message, keyspace, columnFamily);
+              timeoutInMs, destinationLocal, action, merger, null);
     } else {
       throw new UnsupportedOperationException(message.getRequestPersonality());
     }
 
   }
   
+  private Hinter getHinterForMessage(Message message, ColumnFamily columnFamily){
+    String type = (String) message.getPayload().get("type");
+    if (!columnFamily.getColumnFamilyMetadata().isEnableHints()){
+      return null;
+    }
+    if (type.equals("put") || type.equals("delete") ){
+      return hinter;
+    } else {
+      return null;
+    }
+  }
+  
+  public Hinter getHinter() {
+    return hinter;
+  }
+
   private static long determineTimeout(ColumnFamily columnFamily, Message message){
     if (message.getPayload().containsKey("timeout")){
       return ((Number) message.getPayload().get("timeout")).longValue();
@@ -96,25 +119,5 @@ public class Coordinator {
       return columnFamily.getColumnFamilyMetadata().getOperationTimeoutInMs();
     }
   }
-    
-  /*
-  private Response handleKeyValuePersonality(Message message, Keyspace ks, ColumnFamily cf){
-    if (cf instanceof KeyValuePersonality){
-      KeyValuePersonality personality = (KeyValuePersonality) cf;
-      if (message.getPayload().get("type").equals("get")){
-        String s = personality.get((String) message.getPayload().get("rowkey"));
-        Response r = new Response();
-        r.put("payload", s);
-        return r;
-      } else if (message.getPayload().get("type").equals("put")){
-        personality.put((String) message.getPayload().get("rowkey"), 
-                (String) message.getPayload().get("value"));
-        return new Response();
-      } else {
-        throw new RuntimeException("Does not support this type of message");
-      }
-    }
-    return null;
-  }
-  */
+
 }

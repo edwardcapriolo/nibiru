@@ -201,4 +201,48 @@ public class SsTableReader {
     return null;
   }
   
+  //TODO this can be more efficient
+  public SortedMap<String,Val> slice(Token searchToken, String start, String end) throws IOException {
+    boolean mightContain = bloomFilter.mightContain(searchToken);
+    if (!mightContain) {
+      return null;
+    }
+    BufferGroup bgIndex = new BufferGroup();
+    bgIndex.channel = indexChannel;
+    bgIndex.mbb = (MappedByteBuffer) indexBuffer.duplicate();
+    IndexReader index = new IndexReader(bgIndex);
+    
+    BufferGroup bg = new BufferGroup();
+    bg.channel = ssChannel; 
+    bg.mbb = (MappedByteBuffer) ssBuffer.duplicate();
+    long startOffset = keyCache.get(searchToken.getRowkey());
+    if (startOffset == -1){
+      startOffset = index.findStartOffset(searchToken.getToken());
+    }
+    bg.setStartOffset((int)startOffset);
+
+    do {
+      if (bg.dst[bg.currentIndex] == END_ROW){
+        bg.advanceIndex();
+      }
+      long startOfRow = bg.mbb.position() - bg.blockSize  + bg.currentIndex;
+      readHeader(bg);
+      StringBuilder token = readToken(bg);
+      if (token.toString().equals(searchToken.getToken())){
+        StringBuilder rowkey = readRowkey(bg);
+        if (rowkey.toString().equals(searchToken.getRowkey())){
+          keyCache.put(searchToken.getRowkey(), startOfRow);
+          SortedMap<String,Val> columns = readColumns(bg);
+          return columns.subMap(start, end);
+        } else {
+          ignoreColumns(bg);
+        }
+      } else {
+        skipRowkey(bg);
+        ignoreColumns(bg);
+      }
+    } while (bg.currentIndex < bg.dst.length - 1 || bg.mbb.position()  < ssChannel.size());
+    
+    return null;
+  }
 }

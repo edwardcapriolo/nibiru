@@ -2,6 +2,7 @@ package io.teknek.nibiru.client;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.SortedMap;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
@@ -42,6 +43,12 @@ public class BasicTransportTest {
     Assert.assertEquals("6lbds", session.get("jack", "weight").getValue());
     session.put("jack", "height", "7in", 10L);
     Assert.assertEquals("7in", session.get("jack", "height").getValue());
+    SortedMap<String,Val> slice = session.slice("jack", "a", "z");
+    System.out.println(slice);
+    Assert.assertEquals("6", slice.get(slice.firstKey()).getValue());
+    Assert.assertEquals("7in", slice.get("height").getValue());
+    Assert.assertEquals("6lbds", slice.get("weight").getValue());
+    
     {
       Client cl = new Client("127.0.0.1", s.getConfiguration().getTransportPort());
       Response r = cl.post(new Message());
