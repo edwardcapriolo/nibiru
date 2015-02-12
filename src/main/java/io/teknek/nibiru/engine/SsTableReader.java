@@ -152,7 +152,7 @@ public class SsTableReader {
       } else if (name.charAt(0)=='T'){
         result.put(new RowTombstoneKey(), v);
       } else {
-        throw new IllegalArgumentException("can not handle" + name);
+        throw new IllegalArgumentException("can not handle " + name);
       }
       
     } while (bg.dst[bg.currentIndex] != END_ROW);

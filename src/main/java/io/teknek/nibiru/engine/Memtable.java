@@ -102,6 +102,7 @@ public class Memtable implements Comparable<Memtable>{
     if (row == null){
       return new TreeMap<AtomKey,Val>();
     }
+    ///
     Val tomb = row.get(new RowTombstoneKey());
     if (tomb == null){
       return data.get(rowkey).subMap(new ColumnKey(start), new ColumnKey(end));
@@ -121,7 +122,7 @@ public class Memtable implements Comparable<Memtable>{
     //put(row, "", null, time, 0L);
     ConcurrentSkipListMap<AtomKey, Val> cols = data.get(row);
     if (cols != null) {
-      cols.put(new RowTombstoneKey(), null);
+      cols.put(new RowTombstoneKey(), new Val(null,time, System.currentTimeMillis(), 0L));
     }
     for (Map.Entry<AtomKey, Val> col : cols.entrySet()){
       if (col.getValue().getTime() < time){

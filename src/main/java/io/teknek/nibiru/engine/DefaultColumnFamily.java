@@ -188,7 +188,7 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
   
   public void put(String rowkey, String column, String value, long time, long ttl){
     try {
-      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), new ColumnKey(column), value, time, ttl);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
