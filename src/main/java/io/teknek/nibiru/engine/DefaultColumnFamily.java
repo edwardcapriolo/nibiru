@@ -29,6 +29,8 @@ import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 

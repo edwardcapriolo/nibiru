@@ -3,6 +3,7 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.Memtable;
+import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.partitioner.Md5Partitioner;

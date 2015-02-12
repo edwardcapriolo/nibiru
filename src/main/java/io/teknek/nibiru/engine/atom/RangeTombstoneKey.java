@@ -1,34 +1,6 @@
-package io.teknek.nibiru.engine;
+package io.teknek.nibiru.engine.atom;
 
-public abstract class AtomKey implements Comparable<AtomKey> {
-
-  public abstract byte [] externalize();
-}
-
-/**
- * We want the row tombstone to sit in the front of the row
- * @author edward
- *
- */
-class RowTombstoneKey extends AtomKey {
-
-  @Override
-  public int compareTo(AtomKey o) {
-    if (o instanceof RowTombstoneKey){
-      return 0;
-    }
-    return -1;
-  }
-
-  @Override
-  public byte[] externalize() {
-
-    return "T".getBytes();
-  }
-  
-}
-
-class RangeTombstoneKey extends AtomKey {
+public class RangeTombstoneKey extends AtomKey {
 
   private final String startRange;
   private final String endRange;

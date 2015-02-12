@@ -1,4 +1,4 @@
-package io.teknek.nibiru.engine;
+package io.teknek.nibiru.engine.atom;
 
 public class ColumnKey extends AtomKey {
 

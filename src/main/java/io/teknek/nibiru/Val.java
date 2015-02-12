@@ -20,6 +20,7 @@ public class Val {
   private long time;
   private long createTime;
   private long ttl;
+  private boolean isTombstone;
   
   //serialization
   private Val(){}

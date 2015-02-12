@@ -18,7 +18,7 @@ package io.teknek.nibiru.personality;
 import java.util.SortedMap;
 
 import io.teknek.nibiru.Val;
-import io.teknek.nibiru.engine.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomKey;
 
 public interface ColumnFamilyPersonality {
 
