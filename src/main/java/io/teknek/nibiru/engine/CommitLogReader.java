@@ -69,8 +69,8 @@ public class CommitLogReader {
     return t;
   }
   
-  public SortedMap<String,Val>  readColumns() throws IOException {
-    SortedMap<String,Val> columns = SsTableReader.readColumns(bg);
+  public SortedMap<AtomKey,Val>  readColumns() throws IOException {
+    SortedMap<AtomKey,Val> columns = SsTableReader.readColumns(bg);
     return columns;
   }
   

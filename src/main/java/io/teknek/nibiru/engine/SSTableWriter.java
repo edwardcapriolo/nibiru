@@ -28,7 +28,7 @@ public class SSTableWriter {
   public void flushToDisk(String id, ColumnFamily columnFamily, Memtable m) throws IOException{
     SsTableStreamWriter w = new SsTableStreamWriter(id, columnFamily);
     w.open();
-    for (Entry<Token, ConcurrentSkipListMap<String, Val>> i : m.getData().entrySet()){
+    for (Entry<Token, ConcurrentSkipListMap<AtomKey, Val>> i : m.getData().entrySet()){
       w.write(i.getKey(), i.getValue());
     }
     w.close();

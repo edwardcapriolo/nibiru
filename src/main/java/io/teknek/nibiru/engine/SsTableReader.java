@@ -131,8 +131,8 @@ public class SsTableReader {
     return create;
   }
 
-  static SortedMap<String,Val> readColumns(BufferGroup bg) throws IOException {
-    SortedMap<String,Val> result = new TreeMap<>();
+  static SortedMap<AtomKey,Val> readColumns(BufferGroup bg) throws IOException {
+    SortedMap<AtomKey,Val> result = new TreeMap<>();
     do {
       if (bg.dst[bg.currentIndex] == END_COLUMN){
         bg.advanceIndex();
@@ -146,7 +146,15 @@ public class SsTableReader {
               Long.parseLong(time.toString()),
               Long.parseLong(create.toString()),
               Long.parseLong(ttl.toString()));
-      result.put(name.toString(), v);
+      
+      if (name.charAt(0)=='C'){
+        result.put(new ColumnKey(name.substring(1)), v);
+      } else if (name.charAt(0)=='T'){
+        result.put(new RowTombstoneKey(), v);
+      } else {
+        throw new IllegalArgumentException("can not handle" + name);
+      }
+      
     } while (bg.dst[bg.currentIndex] != END_ROW);
     return result;
   }
@@ -187,8 +195,8 @@ public class SsTableReader {
         StringBuilder rowkey = readRowkey(bg);
         if (rowkey.toString().equals(searchToken.getRowkey())){
           keyCache.put(searchToken.getRowkey(), startOfRow);
-          SortedMap<String,Val> columns = readColumns(bg);
-          return columns.get(column);
+          SortedMap<AtomKey,Val> columns = readColumns(bg);
+          return columns.get(new ColumnKey(column));
         } else {
           ignoreColumns(bg);
         }
@@ -202,7 +210,7 @@ public class SsTableReader {
   }
   
   //TODO this can be more efficient
-  public SortedMap<String,Val> slice(Token searchToken, String start, String end) throws IOException {
+  public SortedMap<AtomKey, Val> slice(Token searchToken, String start, String end) throws IOException {
     boolean mightContain = bloomFilter.mightContain(searchToken);
     if (!mightContain) {
       return null;
@@ -232,8 +240,8 @@ public class SsTableReader {
         StringBuilder rowkey = readRowkey(bg);
         if (rowkey.toString().equals(searchToken.getRowkey())){
           keyCache.put(searchToken.getRowkey(), startOfRow);
-          SortedMap<String,Val> columns = readColumns(bg);
-          return columns.subMap(start, end);
+          SortedMap<AtomKey,Val> columns = readColumns(bg);
+          return columns.subMap(new ColumnKey(start), new ColumnKey(end));
         } else {
           ignoreColumns(bg);
         }

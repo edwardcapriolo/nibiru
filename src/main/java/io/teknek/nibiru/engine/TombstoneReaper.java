@@ -48,8 +48,8 @@ public class TombstoneReaper implements Runnable {
   //VisibleForTesting
   public void processColumnFamily(ColumnFamily columnFamily, long currentTimeMillis){
     long graceMillis = columnFamily.getColumnFamilyMetadata().getTombstoneGraceMillis();
-    for (Entry<Token, ConcurrentSkipListMap<String, Val>> entry : ((DefaultColumnFamily) columnFamily).getMemtable().getData().entrySet()){
-      for (Map.Entry<String, Val> innerEntry : entry.getValue().entrySet()){
+    for (Entry<Token, ConcurrentSkipListMap<AtomKey, Val>> entry : ((DefaultColumnFamily) columnFamily).getMemtable().getData().entrySet()){
+      for (Entry<AtomKey, Val> innerEntry : entry.getValue().entrySet()){
         if (innerEntry.getValue().getValue() == null){
           if (innerEntry.getValue().getCreateTime() + graceMillis < currentTimeMillis){
             entry.getValue().remove(innerEntry.getKey());

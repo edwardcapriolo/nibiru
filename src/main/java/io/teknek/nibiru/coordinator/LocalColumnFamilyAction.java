@@ -15,11 +15,15 @@
  */
 package io.teknek.nibiru.coordinator;
 
+import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.engine.AtomKey;
+import io.teknek.nibiru.engine.ColumnKey;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -46,12 +50,17 @@ public class LocalColumnFamilyAction extends LocalAction {
       r.put("payload", v);
       return r;
     } else if (message.getPayload().get("type").equals("slice")){
-      SortedMap<String,Val> res = personality.slice(
+      SortedMap<AtomKey,Val> res = personality.slice(
               (String) message.getPayload().get("rowkey"),
               (String) message.getPayload().get("start"),
               (String) message.getPayload().get("end") 
               );
-      return new Response().withProperty("payload", res);
+      SortedMap<String,Val> res2 = new TreeMap<>();
+      //TODO bug here
+      for (Map.Entry<AtomKey, Val> column: res.entrySet() ){
+        res2.put(((ColumnKey) column.getKey()).getColumn(), column.getValue());
+      }
+      return new Response().withProperty("payload", res2);
     } else if (message.getPayload().get("type").equals("put")) {
       Long l = ((Long) message.getPayload().get("ttl"));
       if (l == null){

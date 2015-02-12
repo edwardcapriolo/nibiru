@@ -63,7 +63,7 @@ public class SsTable implements Comparable<SsTable> {
     return ssTableReader.get(row, column);
   }
 
-  public SortedMap<String, Val> slice(Token row, String start, String end) throws IOException {
+  public SortedMap<AtomKey, Val> slice(Token row, String start, String end) throws IOException {
     return ssTableReader.slice(row, start, end);
   }
   

@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -79,10 +80,10 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     r.open();
     Token t;
     while ((t = r.getNextToken()) != null){
-      SortedMap<String,Val> x = r.readColumns();
-      for (Map.Entry<String,Val> col: x.entrySet()){
+      SortedMap<AtomKey,Val> x = r.readColumns();
+      for (Map.Entry<AtomKey,Val> col: x.entrySet()){
         //note this changes the create time which could effect ttl. Need new constructor.
-        memtable.get().put(t, col.getKey(), col.getValue().getValue(), col.getValue().getTime(), col.getValue().getTtl());
+        memtable.get().put(t, ((ColumnKey) col.getKey()).getColumn(), col.getValue().getValue(), col.getValue().getTime(), col.getValue().getTtl());
       }
     }
     r.close();
@@ -234,13 +235,14 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     return memtableFlusher;
   }
   
-  public SortedMap<String, Val>  slice(String rowkey, String start, String end){
+  //todo sstable should return Columney
+  public SortedMap<AtomKey, Val>  slice(String rowkey, String start, String end){
     Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
-    SortedMap<String, Val> fromMemtable = memtable.get().slice(t, start, end);
+    SortedMap<AtomKey, Val> fromMemtable = memtable.get().slice(t, start, end);
     for (SsTable table: this.sstable){
       try {
-        Map<String,Val> fromSs = table.slice(t, start, end);
-        for (Map.Entry<String, Val> each: fromSs.entrySet()){
+        Map<AtomKey, Val> fromSs = table.slice(t, start, end);
+        for (Entry<AtomKey, Val> each: fromSs.entrySet()){
           if (!fromMemtable.containsKey(each.getKey())){
             fromMemtable.put(each.getKey(), each.getValue());
           } else {

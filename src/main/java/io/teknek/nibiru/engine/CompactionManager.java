@@ -90,10 +90,10 @@ public class CompactionManager implements Runnable{
     }
     while (!allNull(currentTokens)){
       Token lowestToken = lowestToken(currentTokens);
-      SortedMap<String,Val> allColumns = new TreeMap<>();
+      SortedMap<AtomKey,Val> allColumns = new TreeMap<>();
       for (int i = 0; i < currentTokens.length; i++) {
         if (currentTokens[i] != null && currentTokens[i].equals(lowestToken)) {
-          SortedMap<String, Val> columns = readers[i].readColumns();
+          SortedMap<AtomKey, Val> columns = readers[i].readColumns();
           merge(allColumns, columns);
         }
       }
@@ -114,8 +114,8 @@ public class CompactionManager implements Runnable{
     }
   }
   
-  private static void merge(SortedMap<String,Val> allColumns, SortedMap<String,Val> otherColumns){
-    for (Map.Entry<String,Val> column: otherColumns.entrySet()){
+  private static void merge(SortedMap<AtomKey,Val> allColumns, SortedMap<AtomKey,Val> otherColumns){
+    for (Map.Entry<AtomKey,Val> column: otherColumns.entrySet()){
       Val existing = allColumns.get(column.getKey());
       if (existing == null) {
         allColumns.put(column.getKey(), column.getValue());
