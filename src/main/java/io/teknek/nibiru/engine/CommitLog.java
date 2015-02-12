@@ -63,9 +63,9 @@ public class CommitLog {
     ssOutputStream = new CountingBufferedOutputStream(new FileOutputStream(sstableFile));
   }
   
-  public synchronized void write(Token rowkey, String column, String value, long stamp, long ttl)
+  public synchronized void write(Token rowkey, AtomKey column, String value, long stamp, long ttl)
           throws IOException {
-    Map<String, Val> columns = new HashMap<>();
+    Map<AtomKey, Val> columns = new HashMap<>();
     Val v = new Val(value, stamp, System.currentTimeMillis(), ttl);
     columns.put(column, v);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
@@ -74,13 +74,13 @@ public class CommitLog {
     ssOutputStream.writeAndCount(rowkey.getRowkey().getBytes());
     ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
     boolean writeJoin = false;
-    for (Entry<String, Val> j : columns.entrySet()) {
+    for (Entry<AtomKey, Val> j : columns.entrySet()) {
       if (!writeJoin) {
         writeJoin = true;
       } else {
         ssOutputStream.writeAndCount(SsTableReader.END_COLUMN);
       }
-      ssOutputStream.writeAndCount(j.getKey().getBytes());
+      ssOutputStream.writeAndCount(j.getKey().externalize());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
       ssOutputStream.writeAndCount(String.valueOf(j.getValue().getCreateTime()).getBytes());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);

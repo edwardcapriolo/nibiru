@@ -54,7 +54,7 @@ public class SsTableStreamWriter {
     indexWriter.open();
   }
   
-  public void write(Token t, Map<String,Val> columns) throws IOException {
+  public void write(Token t, Map<AtomKey,Val> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
     bloomFilter.put(t);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
@@ -64,13 +64,13 @@ public class SsTableStreamWriter {
     ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
     indexWriter.handleRow(startOfRecord, t.getToken());
     boolean writeJoin = false;
-    for (Entry<String, Val> j : columns.entrySet()){
+    for (Entry<AtomKey, Val> j : columns.entrySet()){
       if (!writeJoin){
         writeJoin = true;
       } else {
         ssOutputStream.writeAndCount(SsTableReader.END_COLUMN);
       }
-      ssOutputStream.writeAndCount(j.getKey().getBytes());
+      ssOutputStream.writeAndCount(j.getKey().externalize());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
       ssOutputStream.writeAndCount(String.valueOf(j.getValue().getCreateTime()).getBytes());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);

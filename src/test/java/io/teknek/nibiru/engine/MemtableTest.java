@@ -51,8 +51,8 @@ public class MemtableTest {
     Assert.assertEquals("d", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "c", "d", 1, 0L);
     Map expected  = new TreeMap();
-    expected.put("column2", new Val("d",2, System.currentTimeMillis(), 0));
-    expected.put("c", new Val("d",1, System.currentTimeMillis(), 0));
+    expected.put(new ColumnKey("column2"), new Val("d",2, System.currentTimeMillis(), 0));
+    expected.put(new ColumnKey("c"), new Val("d",1, System.currentTimeMillis(), 0));
     Assert.assertEquals(expected, m.slice(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "a", "z"));
     
   }
@@ -104,7 +104,7 @@ public class MemtableTest {
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3", "d", 4L, 0L);
     m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), 3);
     Map result = new HashMap();
-    result.put("column3", new Val("d", 4, System.currentTimeMillis(), 0));
+    result.put(new ColumnKey("column3"), new Val("d", 4, System.currentTimeMillis(), 0));
     Assert.assertEquals( result, m.slice(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "a", "z"));
   }
 }

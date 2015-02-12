@@ -23,6 +23,7 @@ import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Memtable implements Comparable<Memtable>{
 
-  private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String,Val>> data;
+  private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey,Val>> data;
   private TimeSource timeSource;
   private final ColumnFamily columnFamily;
   private final long myId;
@@ -51,19 +52,20 @@ public class Memtable implements Comparable<Memtable>{
   }
   
   public void put(Token rowkey, String column, String value, long stamp, long ttl) {
-    ConcurrentSkipListMap<String,Val> newMap = new ConcurrentSkipListMap<>();
-    ConcurrentSkipListMap<String,Val> foundRow = data.putIfAbsent(rowkey, newMap);
+    ConcurrentSkipListMap<AtomKey,Val> newMap = new ConcurrentSkipListMap<>();
+    ConcurrentSkipListMap<AtomKey,Val> foundRow = data.putIfAbsent(rowkey, newMap);
+    newMap.put(new ColumnKey(column), new Val(value, stamp, timeSource.getTimeInMillis(), ttl));
     if (foundRow == null) {
-      newMap.put(column, new Val(value, stamp, timeSource.getTimeInMillis(), ttl));
+      //nothing
     } else {
       Val v = new Val(value, stamp, timeSource.getTimeInMillis(), ttl);
       while (true){
-        Val foundColumn = foundRow.putIfAbsent(column, v);
+        Val foundColumn = foundRow.putIfAbsent(new ColumnKey(column), v);
         if (foundColumn == null){
           break;
         }
         if (foundColumn.getTime() < stamp){
-          boolean result = foundRow.replace(column, foundColumn, v);
+          boolean result = foundRow.replace(new ColumnKey(column), foundColumn, v);
           if (result) {
             break;
           }
@@ -75,39 +77,39 @@ public class Memtable implements Comparable<Memtable>{
   }
   
   public Val get(Token row, String column) {
-    Map<String, Val> r = data.get(row);
+    ConcurrentSkipListMap<AtomKey, Val> r = data.get(row);
     if (r == null) {
       return null;
     }
-    Val tomb = r.get("");
+    Val tomb = r.get(new RowTombstoneKey());
     if (tomb == null) {
-      return r.get(column);
-    } else {
-      Val g = r.get(column);
-      if (g == null) {
-        return null;
-      }
-      if (tomb.getTime() >= g.getTime()) {
-        return null;
-      } else {
-        return g;
-      }
+      return r.get(new ColumnKey(column));
+    } 
+    Val g = r.get(new ColumnKey(column));
+    if (g == null) {
+      return null;
     }
-
+    if (tomb.getTime() >= g.getTime()) {
+      return null;
+    } else {
+      return g;
+    }
+   
   }
   
-  public SortedMap<String,Val> slice(Token rowkey, String start, String end){
-    SortedMap<String, Val> row = data.get(rowkey);
+  public SortedMap<AtomKey,Val> slice(Token rowkey, String start, String end){
+    SortedMap<AtomKey, Val> row = data.get(rowkey);
     if (row == null){
-      return new TreeMap<String,Val>();
+      return new TreeMap<AtomKey,Val>();
     }
-    Val tomb = row.get("");
+    ///
+    Val tomb = row.get(new RowTombstoneKey());
     if (tomb == null){
-      return data.get(rowkey).subMap(start, end);
-    } else {
-      ConcurrentNavigableMap<String, Val> ret = data.get(rowkey).subMap(start, end);
-      ConcurrentNavigableMap<String, Val> copy = new ConcurrentSkipListMap<String, Val> ();
-      for (Map.Entry<String, Val> entry : ret.entrySet()){
+      return data.get(rowkey).subMap(new ColumnKey(start), new ColumnKey(end));
+    } else { 
+      ConcurrentNavigableMap<AtomKey, Val> ret = data.get(rowkey).subMap(new ColumnKey(start), new ColumnKey(end));
+      ConcurrentNavigableMap<AtomKey, Val> copy = new ConcurrentSkipListMap<AtomKey, Val> ();
+      for (Map.Entry<AtomKey, Val> entry : ret.entrySet()){
         if (tomb.getTime() < entry.getValue().getTime()){
           copy.put(entry.getKey(), entry.getValue());
         }
@@ -117,9 +119,12 @@ public class Memtable implements Comparable<Memtable>{
   }
   
   public void delete(Token row, long time){
-    put(row, "", null, time, 0L);
-    ConcurrentSkipListMap<String, Val> cols = data.get(row);
-    for (Map.Entry<String, Val> col : cols.entrySet()){
+    //put(row, "", null, time, 0L);
+    ConcurrentSkipListMap<AtomKey, Val> cols = data.get(row);
+    if (cols != null) {
+      cols.put(new RowTombstoneKey(), new Val(null,time, System.currentTimeMillis(), 0L));
+    }
+    for (Map.Entry<AtomKey, Val> col : cols.entrySet()){
       if (col.getValue().getTime() < time){
         cols.remove(col.getKey());
       }
@@ -133,7 +138,7 @@ public class Memtable implements Comparable<Memtable>{
     put(rowkey, column, null, time, 0L);
   }
 
-  public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<String, Val>> getData() {
+  public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, Val>> getData() {
     return data;
   }
 
