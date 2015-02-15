@@ -5,11 +5,13 @@ import java.util.UUID;
 
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
+import io.teknek.nibiru.engine.atom.AtomValue;
 
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import io.teknek.nibiru.engine.atom.*;
 
 
 public class ServerTest {
@@ -23,8 +25,8 @@ public class ServerTest {
     s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
-    Val x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
-    Assert.assertEquals("6", x.getValue());
+    AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
+    Assert.assertEquals("6", ((ColumnValue) x).getValue());
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "ziggy", "name", "ziggyrabbit", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "ziggy", "age", "8", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "dotty", "age", "4", 1);
@@ -32,7 +34,7 @@ public class ServerTest {
     Assert.assertEquals(2, ((DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY))
             .getMemtableFlusher().getFlushCount());
     x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
-    Assert.assertEquals("6", x.getValue());
+    Assert.assertEquals("6", ((ColumnValue) x).getValue());
     s.shutdown();
   }
   
@@ -46,15 +48,15 @@ public class ServerTest {
       s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
       Thread.sleep(1);
     }
-    Val x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "8", "age");
+    AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "8", "age");
     Thread.sleep(1000);
     Assert.assertEquals(4, ((DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY))
             .getMemtableFlusher().getFlushCount());
     Assert.assertEquals(1, s.getCompactionManager().getNumberOfCompactions());
-    Assert.assertEquals("4", x.getValue());
+    Assert.assertEquals("4", ((ColumnValue) x).getValue());
     for (int i = 0; i < 9; i++) {
-      Val y = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age");
-      Assert.assertEquals("4", y.getValue());
+      AtomValue y = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age");
+      Assert.assertEquals("4", ((ColumnValue) y).getValue());
     }
     s.shutdown();
   }
@@ -88,11 +90,11 @@ public class ServerTest {
       s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
       Thread.sleep(1);
     }
-    Val x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "0", "age");
-    Assert.assertEquals("4", x.getValue());
+    AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "0", "age");
+    Assert.assertEquals("4", ((ColumnValue) x).getValue());
     {
-      Val y = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "2", "age");
-      Assert.assertEquals("4", y.getValue());
+      AtomValue y = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "2", "age");
+      Assert.assertEquals("4", ((ColumnValue) x).getValue());
     }
     Thread.sleep(1000);
     s.shutdown();
@@ -101,8 +103,8 @@ public class ServerTest {
       Server j = new Server(configuration);
       j.init();
       Assert.assertNotNull(j.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY));
-      Val y = j.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "2", "age");
-      Assert.assertEquals("4", y.getValue());
+      AtomValue y = j.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "2", "age");
+      Assert.assertEquals("4", ((ColumnValue) x).getValue());
       j.shutdown();
     }
     s.shutdown();

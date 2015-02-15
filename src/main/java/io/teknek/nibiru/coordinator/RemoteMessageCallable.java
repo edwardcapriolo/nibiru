@@ -28,7 +28,6 @@ public class RemoteMessageCallable extends CompletableCallable implements Callab
     } catch (RuntimeException ex){
       r = new Response();
       r.put("exception", ex.getMessage());
-      ex.printStackTrace();
     } 
     return r;
   }

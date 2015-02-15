@@ -20,6 +20,8 @@ import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 
 import java.io.IOException;
 import java.util.Map;
@@ -90,10 +92,10 @@ public class CompactionManager implements Runnable{
     }
     while (!allNull(currentTokens)){
       Token lowestToken = lowestToken(currentTokens);
-      SortedMap<AtomKey,Val> allColumns = new TreeMap<>();
+      SortedMap<AtomKey,AtomValue> allColumns = new TreeMap<>();
       for (int i = 0; i < currentTokens.length; i++) {
         if (currentTokens[i] != null && currentTokens[i].equals(lowestToken)) {
-          SortedMap<AtomKey, Val> columns = readers[i].readColumns();
+          SortedMap<AtomKey, AtomValue> columns = readers[i].readColumns();
           merge(allColumns, columns);
         }
       }
@@ -114,9 +116,10 @@ public class CompactionManager implements Runnable{
     }
   }
   
-  private static void merge(SortedMap<AtomKey,Val> allColumns, SortedMap<AtomKey,Val> otherColumns){
-    for (Map.Entry<AtomKey,Val> column: otherColumns.entrySet()){
-      Val existing = allColumns.get(column.getKey());
+  private static void merge(SortedMap<AtomKey,AtomValue> allColumns, SortedMap<AtomKey,AtomValue> otherColumns){
+    //TODO better compare rulese
+    for (Map.Entry<AtomKey,AtomValue> column: otherColumns.entrySet()){
+      AtomValue existing = allColumns.get(column.getKey());
       if (existing == null) {
         allColumns.put(column.getKey(), column.getValue());
       } else if (existing.getTime() < column.getValue().getTime()){

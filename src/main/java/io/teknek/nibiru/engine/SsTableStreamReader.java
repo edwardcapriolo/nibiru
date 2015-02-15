@@ -16,7 +16,8 @@
 package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
+import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.io.BufferGroup;
 
 import java.io.IOException;
@@ -46,8 +47,8 @@ public class SsTableStreamReader {
     return t;
   }
   
-  public SortedMap<AtomKey,Val>  readColumns() throws IOException {
-    SortedMap<AtomKey,Val> columns = SsTableReader.readColumns(bg);
+  public SortedMap<AtomKey,AtomValue>  readColumns() throws IOException {
+    SortedMap<AtomKey, AtomValue> columns = SsTableReader.readColumns(bg);
     return columns;
   }
   

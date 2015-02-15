@@ -23,14 +23,18 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.HttpParams;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class Client {
 
   protected ObjectMapper MAPPER = new ObjectMapper();
-  private DefaultHttpClient httpClient = new DefaultHttpClient();
+  private DefaultHttpClient client = new DefaultHttpClient();
+  private ClientConnectionManager mgr;
   
   private String host;
   private int port;
@@ -38,6 +42,13 @@ public class Client {
   public Client(String host, int port){
     this.host = host;
     this.port = port;
+    
+    client = new DefaultHttpClient();
+    mgr = client.getConnectionManager();
+    HttpParams params = client.getParams();
+    client = new DefaultHttpClient(new ThreadSafeClientConnManager(params,
+            mgr.getSchemeRegistry()), params);
+    
   }
   
   public Response post( Message request)
@@ -46,15 +57,20 @@ public class Client {
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
     input.setContentType("application/json");
     postRequest.setEntity(input);
-    HttpResponse response = httpClient.execute(postRequest);
+    HttpResponse response = client.execute(postRequest);
     if (response.getStatusLine().getStatusCode() != 200) {
       throw new RuntimeException("Failed : HTTP error code : "
               + response.getStatusLine().getStatusCode());
+      
     }
     Response r = MAPPER.readValue(response.getEntity().getContent(), Response.class);
     response.getEntity().getContent().close();
+    
     return r;
   }
   
+  public void shutdown(){
+    mgr.shutdown();
+  }
 }
 

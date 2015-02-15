@@ -2,6 +2,7 @@ package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Keyspace;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import java.io.File;
@@ -22,13 +23,14 @@ public class SSTableTest {
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
   
+  
   @Test
   public void aTest() throws IOException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
-    Assert.assertEquals("c", m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
+    Assert.assertEquals("c", ((ColumnValue)m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2")).getValue());
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3", "e", 2, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1", "e", 2, 0L);
@@ -38,9 +40,9 @@ public class SSTableTest {
     s.open("1", ks1.getConfiguration());
     long x = System.currentTimeMillis();
     for (int i = 0 ; i < 50000 ; i++) {
-      Assert.assertEquals("d", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2").getValue());
-      Assert.assertEquals("e", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3").getValue());
-      Assert.assertEquals("e", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1").getValue());
+      Assert.assertEquals("d", ((ColumnValue) s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2")).getValue());
+      Assert.assertEquals("e", ((ColumnValue)s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3")).getValue());
+      Assert.assertEquals("e", ((ColumnValue)s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row2"), "column1")).getValue());
     }
     System.out.println((System.currentTimeMillis() - x));
     
@@ -74,28 +76,28 @@ public class SSTableTest {
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("00001"), "column2").getValue());
+        Assert.assertEquals("c", ((ColumnValue)s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("00001"), "column2")).getValue());
       }
       System.out.println("index match " + (System.currentTimeMillis() - x));
     }
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("08999"), "column2").getValue());
+        Assert.assertEquals("c", ((ColumnValue)s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("08999"), "column2")).getValue());
       }
       System.out.println("far from index " +(System.currentTimeMillis() - x));
     }
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("00001"), "column2").getValue());
+        Assert.assertEquals("c", ((ColumnValue)s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("00001"), "column2")).getValue());
       }
       System.out.println("index match " + (System.currentTimeMillis() - x));
     }
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals("c", s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("08999"), "column2").getValue());
+        Assert.assertEquals("c", ((ColumnValue)s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("08999"), "column2")).getValue());
       }
       System.out.println("far from index " +(System.currentTimeMillis() - x));
     }

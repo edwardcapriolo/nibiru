@@ -1,6 +1,7 @@
 package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Keyspace;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import java.io.IOException;
@@ -46,6 +47,6 @@ public class TestCompactionManager {
     CompactionManager.compact(new SsTable[] { s, s2 }, "3");
     SsTable ss = new SsTable(ks1.getColumnFamilies().get("abc"));
     ss.open("3", ks1.getConfiguration());
-    Assert.assertEquals("e", ss.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3").getValue());
+    Assert.assertEquals("e", ((ColumnValue) ss.get(   ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3")).getValue());
   }
 }
