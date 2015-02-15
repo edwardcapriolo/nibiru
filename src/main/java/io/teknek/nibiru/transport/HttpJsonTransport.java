@@ -16,6 +16,8 @@
 package io.teknek.nibiru.transport;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.ServletException;
@@ -26,12 +28,20 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.coordinator.Coordinator;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConnection;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.ServerConnector;
+/*
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.HttpConnection;
 import org.mortbay.jetty.Request;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.AbstractHandler;
 import org.mortbay.jetty.nio.SelectChannelConnector;
+*/
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class HttpJsonTransport {
  
@@ -47,11 +57,12 @@ public class HttpJsonTransport {
   }
   
   public void init(){
-    SelectChannelConnector s = new SelectChannelConnector();
+    server = new Server();
+    ServerConnector s = new ServerConnector(server);
     s.setHost(configuration.getTransportHost());
     s.setPort(configuration.getTransportPort());
-    server = new Server();
-    server.addConnector(s);   
+    server.addConnector(s);
+    server.setDumpBeforeStop(true);
     server.setHandler(getHandler());
     try {
       server.start();
@@ -64,14 +75,18 @@ public class HttpJsonTransport {
   public void shutdown() {
     try {
       server.stop();
+      
       RUNNING.set(false);
     } catch (Exception e) {
+      e.printStackTrace();
       throw new RuntimeException(e);
     }
   }
 
   private Handler getHandler(){
+
     AbstractHandler handler = new AbstractHandler() {
+      /*
       public void handle(String target, HttpServletRequest request, HttpServletResponse response,
               int dispatch) throws IOException, ServletException {
         Request baseRequest = request instanceof Request ? (Request) request : HttpConnection
@@ -91,6 +106,27 @@ public class HttpJsonTransport {
         }
         response.getOutputStream().close();
         baseRequest.setHandled(true);
+      }
+      */
+      @Override
+      public void handle(String target, Request request, HttpServletRequest servletRequest,
+              HttpServletResponse response) throws IOException, ServletException {
+        String url = request.getRequestURI();
+        Message message = MAPPER.readValue(request.getInputStream(), Message.class);
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json;charset=utf-8");
+        try {
+          MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
+        } catch (RuntimeException ex){
+          Response r = new Response();
+          r.put("exception", ex.getMessage());
+          System.err.println(message);
+          ex.printStackTrace();
+          MAPPER.writeValue(response.getOutputStream(), r);
+        }
+        response.getOutputStream().close();
+        request.setHandled(true);
+        
       }
     };
     return handler;

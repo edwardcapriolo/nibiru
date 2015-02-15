@@ -29,6 +29,7 @@ import io.teknek.nibiru.transport.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -227,5 +228,9 @@ public class EventualCoordinator {
   
   public void shutdown(){
     executor.shutdown();
+    lastChance.shutdown();
+    for ( Entry<Destination, ColumnFamilyClient> i : mapping.entrySet()){
+      i.getValue().shutdown();
+    }
   }
 }

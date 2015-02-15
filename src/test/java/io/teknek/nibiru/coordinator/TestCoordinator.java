@@ -118,9 +118,9 @@ public class TestCoordinator {
     passIfAllAreUp(s, clAll);
     passIfOneIsUp(s, clOne);
     failIfSomeAreDown(s, clAll);
-    for (int i = 0; i < s.length; i++) {
-      s[i].shutdown();
-    }
+    s[0].shutdown();
+    s[1].shutdown();
+    
   }
   
   public void passIfOneIsUp(Server [] s, Session sb) throws ClientException {
