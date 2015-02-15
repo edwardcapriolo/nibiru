@@ -26,6 +26,7 @@ import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
 
 public class SsTableStreamWriter {
@@ -55,7 +56,7 @@ public class SsTableStreamWriter {
     indexWriter.open();
   }
   
-  public void write(Token t, Map<AtomKey,Val> columns) throws IOException {
+  public void write(Token t, Map<AtomKey,AtomValue> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
     bloomFilter.put(t);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
@@ -65,7 +66,7 @@ public class SsTableStreamWriter {
     ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
     indexWriter.handleRow(startOfRecord, t.getToken());
     boolean writeJoin = false;
-    for (Entry<AtomKey, Val> j : columns.entrySet()){
+    for (Entry<AtomKey, AtomValue> j : columns.entrySet()){
       if (!writeJoin){
         writeJoin = true;
       } else {
@@ -73,13 +74,7 @@ public class SsTableStreamWriter {
       }
       ssOutputStream.writeAndCount(j.getKey().externalize());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getCreateTime()).getBytes());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTime()).getBytes());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTtl()).getBytes());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getValue()).getBytes());
+      j.getValue().externalize(ssOutputStream);
     }
     ssOutputStream.writeAndCount(SsTableReader.END_ROW);
   }

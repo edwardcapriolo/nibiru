@@ -14,6 +14,8 @@ import io.teknek.nibiru.client.SessionBuilder;
 import io.teknek.nibiru.cluster.ConfigurationClusterMembership;
 import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
+import io.teknek.nibiru.engine.atom.AtomValue;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
@@ -134,9 +136,9 @@ public class TestCoordinator {
     for (int i = 0; i < s.length; i++) {
       ColumnFamilyPersonality c = (ColumnFamilyPersonality) s[i].getKeyspaces().get("abc")
               .getColumnFamilies().get("def"); 
-      Val v = c.get("a", "b");
+      AtomValue v = c.get("a", "b");
       if (v != null){
-        Assert.assertEquals("c", c.get("a", "b").getValue());
+        Assert.assertEquals("c", ((ColumnValue) c.get("a", "b")).getValue());
         found ++;
       }
       Assert.assertEquals(0, s[i].getCoordinator().getHinter().getHintsAdded());

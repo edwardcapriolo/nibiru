@@ -23,6 +23,7 @@ import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.Message;
@@ -43,21 +44,21 @@ public class LocalColumnFamilyAction extends LocalAction {
     }
     ColumnFamilyPersonality personality = (ColumnFamilyPersonality) this.columnFamily;
     if (message.getPayload().get("type").equals("get")){
-      Val v = personality.get(
+      AtomValue v = personality.get(
               (String) message.getPayload().get("rowkey"),
               (String) message.getPayload().get("column"));
       Response r = new Response();
       r.put("payload", v);
       return r;
     } else if (message.getPayload().get("type").equals("slice")){
-      SortedMap<AtomKey,Val> res = personality.slice(
+      SortedMap<AtomKey,AtomValue> res = personality.slice(
               (String) message.getPayload().get("rowkey"),
               (String) message.getPayload().get("start"),
               (String) message.getPayload().get("end") 
               );
-      SortedMap<String,Val> res2 = new TreeMap<>();
+      SortedMap<String,AtomValue> res2 = new TreeMap<>();
       //TODO bug here
-      for (Map.Entry<AtomKey, Val> column: res.entrySet() ){
+      for (Map.Entry<AtomKey, AtomValue> column: res.entrySet() ){
         res2.put(((ColumnKey) column.getKey()).getColumn(), column.getValue());
       }
       return new Response().withProperty("payload", res2);

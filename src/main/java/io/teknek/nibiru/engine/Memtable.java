@@ -22,8 +22,11 @@ import io.teknek.nibiru.TimeSourceImpl;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
+import io.teknek.nibiru.engine.atom.TombstoneValue;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,7 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Memtable implements Comparable<Memtable>{
 
-  private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey,Val>> data;
+  private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey,AtomValue>> data;
   private TimeSource timeSource;
   private final ColumnFamily columnFamily;
   private final long myId;
@@ -53,84 +56,120 @@ public class Memtable implements Comparable<Memtable>{
   public int size(){
     return data.size();
   }
-  
+
   public void put(Token rowkey, String column, String value, long stamp, long ttl) {
-    ConcurrentSkipListMap<AtomKey,Val> newMap = new ConcurrentSkipListMap<>();
-    ConcurrentSkipListMap<AtomKey,Val> foundRow = data.putIfAbsent(rowkey, newMap);
-    newMap.put(new ColumnKey(column), new Val(value, stamp, timeSource.getTimeInMillis(), ttl));
+    ConcurrentSkipListMap<AtomKey, AtomValue> newMap = new ConcurrentSkipListMap<>();
+    newMap.put(new ColumnKey(column), new ColumnValue(value, stamp, timeSource.getTimeInMillis(),
+            ttl));
+    ConcurrentSkipListMap<AtomKey, AtomValue> foundRow = data.putIfAbsent(rowkey, newMap);
     if (foundRow == null) {
-      //nothing
-    } else {
-      Val v = new Val(value, stamp, timeSource.getTimeInMillis(), ttl);
-      while (true){
-        Val foundColumn = foundRow.putIfAbsent(new ColumnKey(column), v);
-        if (foundColumn == null){
-          break;
-        }
-        if (foundColumn.getTime() < stamp){
-          boolean result = foundRow.replace(new ColumnKey(column), foundColumn, v);
-          if (result) {
-            break;
+      return;
+    }
+    ColumnValue v = new ColumnValue(value, stamp, timeSource.getTimeInMillis(), ttl);
+    while (true) {
+      AtomValue foundColumn = foundRow.putIfAbsent(new ColumnKey(column), v);
+      if (foundColumn == null) {
+        return;
+      }
+      if (foundColumn instanceof TombstoneValue) {
+        TombstoneValue tomb = (TombstoneValue) foundColumn;
+        if (tomb.getTime() < v.getTime()) {
+          boolean res = foundRow.replace(new ColumnKey(column), foundColumn, v);
+          if (res) {
+            return;
           }
+        }
+      }
+      
+      if (foundColumn instanceof ColumnValue) {
+        ColumnValue orig = (ColumnValue) foundColumn;
+        if (orig.getTime() < v.getTime()) {
+          boolean res = foundRow.replace(new ColumnKey(column), foundColumn, v);
+          if (res) {
+            return;
+          }
+        }
+      }
+      
+
+    }
+
+  }
+  
+  /**
+   * 
+   * @param row
+   * @param column
+   * @return 
+   *   null if row does not exist
+   *   TombstoneValue if row has row tombstone >= column
+   *   null if colun does not exist
+   */
+  public AtomValue get(Token row, String column) {
+    ConcurrentSkipListMap<AtomKey, AtomValue> rowkeyAndColumns = data.get(row);
+    if (rowkeyAndColumns == null) {
+      return null;
+    } else {
+      TombstoneValue tomb = (TombstoneValue) rowkeyAndColumns.get(new RowTombstoneKey());
+      if (tomb == null) {
+        return rowkeyAndColumns.get(new ColumnKey(column));
+      } else { 
+        ColumnValue foundColumn = (ColumnValue) rowkeyAndColumns.get(new ColumnKey(column));
+        if (foundColumn == null) {
+          return null;
         } else {
-          break;
+          if (tomb.getTime() >= foundColumn.getTime()) {
+            return tomb;
+          } else {
+            return foundColumn;
+          }
         }
       }
     }
   }
   
-  public Val get(Token row, String column) {
-    ConcurrentSkipListMap<AtomKey, Val> r = data.get(row);
-    if (r == null) {
-      return null;
-    }
-    Val tomb = r.get(new RowTombstoneKey());
-    if (tomb == null) {
-      return r.get(new ColumnKey(column));
-    } 
-    Val g = r.get(new ColumnKey(column));
-    if (g == null) {
-      return null;
-    }
-    if (tomb.getTime() >= g.getTime()) {
-      return null;
-    } else {
-      return g;
-    }
-   
-  }
-  
-  public SortedMap<AtomKey,Val> slice(Token rowkey, String start, String end){
-    SortedMap<AtomKey, Val> row = data.get(rowkey);
+  public SortedMap<AtomKey,AtomValue> slice(Token rowkey, String start, String end){
+    SortedMap<AtomKey, AtomValue> row = data.get(rowkey);
     if (row == null){
-      return new TreeMap<AtomKey,Val>();
+      return new TreeMap<AtomKey,AtomValue>();
     }
-    ///
-    Val tomb = row.get(new RowTombstoneKey());
+    TombstoneValue tomb = (TombstoneValue) row.get(new RowTombstoneKey());
     if (tomb == null){
       return data.get(rowkey).subMap(new ColumnKey(start), new ColumnKey(end));
-    } else { 
-      ConcurrentNavigableMap<AtomKey, Val> ret = data.get(rowkey).subMap(new ColumnKey(start), new ColumnKey(end));
-      ConcurrentNavigableMap<AtomKey, Val> copy = new ConcurrentSkipListMap<AtomKey, Val> ();
-      for (Map.Entry<AtomKey, Val> entry : ret.entrySet()){
-        if (tomb.getTime() < entry.getValue().getTime()){
+    }
+    ConcurrentNavigableMap<AtomKey, AtomValue> copy = new ConcurrentSkipListMap<AtomKey,AtomValue> ();
+    copy.put(new RowTombstoneKey(), tomb);
+    ConcurrentNavigableMap<AtomKey, AtomValue> ret = data.get(rowkey).subMap(new ColumnKey(start), new ColumnKey(end));
+    for (Entry<AtomKey, AtomValue> entry : ret.entrySet()){
+      if (entry.getValue() instanceof TombstoneValue){
+        TombstoneValue tv = (TombstoneValue) entry.getValue();
+        if (tv.getTime() > tomb.getTime()){
           copy.put(entry.getKey(), entry.getValue());
         }
+      } else if (entry.getValue() instanceof ColumnValue){
+        ColumnValue v = (ColumnValue) entry.getValue();
+        if (v.getTime() > tomb.getTime()){
+          copy.put(entry.getKey(), entry.getValue());
+        }
+      } else {
+        throw new RuntimeException("do not know what X is");
       }
-      return copy;
     }
+    return copy;
   }
   
   public void delete(Token row, long time){
     //put(row, "", null, time, 0L);
-    ConcurrentSkipListMap<AtomKey, Val> cols = data.get(row);
+    ConcurrentSkipListMap<AtomKey, AtomValue> cols = data.get(row);
     if (cols != null) {
-      cols.put(new RowTombstoneKey(), new Val(null,time, System.currentTimeMillis(), 0L));
+      cols.put(new RowTombstoneKey(), new TombstoneValue(time));
     }
-    for (Map.Entry<AtomKey, Val> col : cols.entrySet()){
+    for (Map.Entry<AtomKey, AtomValue> col : cols.entrySet()){
+      /*
+       * TODO
       if (col.getValue().getTime() < time){
         cols.remove(col.getKey());
-      }
+      }*/
     }
   }
   
@@ -141,7 +180,7 @@ public class Memtable implements Comparable<Memtable>{
     put(rowkey, column, null, time, 0L);
   }
 
-  public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, Val>> getData() {
+  public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> getData() {
     return data;
   }
 

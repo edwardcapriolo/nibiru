@@ -30,7 +30,10 @@ import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
+import io.teknek.nibiru.engine.atom.ColumnValue;
+import io.teknek.nibiru.engine.atom.TombstoneValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
@@ -82,10 +85,14 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     r.open();
     Token t;
     while ((t = r.getNextToken()) != null){
-      SortedMap<AtomKey,Val> x = r.readColumns();
-      for (Map.Entry<AtomKey,Val> col: x.entrySet()){
+      SortedMap<AtomKey, AtomValue> x = r.readColumns();
+      for (Entry<AtomKey, AtomValue> col: x.entrySet()){
         //note this changes the create time which could effect ttl. Need new constructor.
-        memtable.get().put(t, ((ColumnKey) col.getKey()).getColumn(), col.getValue().getValue(), col.getValue().getTime(), col.getValue().getTtl());
+        //TODO broken
+        /*
+        memtable.get().put(t, ((ColumnKey) col.getKey()).getColumn(), col.getValue().getValue(), 
+                col.getValue().getTime(), col.getValue().getTtl());
+                */
       }
     }
     r.close();
@@ -123,63 +130,50 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     this.memtable.set(memtable);
   }
   
-  public Val get(String rowkey, String column){
-    Val v = memtable.get().get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+  public AtomValue applyRules(AtomValue lastValue, AtomValue thisValue){
+    if (thisValue == null){
+      return lastValue;
+    }
+    if (thisValue != null && lastValue == null){
+      return thisValue;
+    }
+    if (thisValue instanceof TombstoneValue && 
+            thisValue.getTime() >= lastValue.getTime()){
+      return thisValue;
+    }
+    if (thisValue instanceof ColumnValue && 
+            lastValue instanceof TombstoneValue && 
+            thisValue.getTime() > lastValue.getTime()){
+      return thisValue;
+    }
+    if (thisValue.getTime() == lastValue.getTime() 
+            && thisValue instanceof ColumnValue 
+            && lastValue instanceof ColumnValue){
+      if ( ((ColumnValue) thisValue).getValue().compareTo(((ColumnValue) lastValue).getValue() ) > 0){
+        return thisValue;  
+      }
+    }
+    
+    throw new IllegalArgumentException ( "comparing " + thisValue + " " + lastValue);
+  }
+  
+  public AtomValue get(String rowkey, String column){
+    AtomValue lastValue = memtable.get().get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
     for (Memtable m: memtableFlusher.getMemtables()){
-      Val x = m.get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
-      if (x == null){
-        continue;
-      }
-      if (v == null){
-        v = x;
-        continue;
-      }
-      if (x.getTime() > v.getTime()){
-        v = x;
-      } else if (x.getTime() == v.getTime() && "".equals(x.getValue())){
-        v = null;
-      } else if (x.getTime() == v.getTime()){
-        int compare = x.getValue().compareTo(v.getValue());
-        if (compare == 0){
-          //v is unchanged          
-        } else if (compare > 0){
-          v = x;
-        } else if (compare < 0){
-          //v is unchanged
-        }
-      }
+      AtomValue thisValue = m.get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+      lastValue = applyRules(lastValue, thisValue);
     }
     Token token = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
     for (SsTable sstable: this.getSstable()){
-      Val x = null;
+      AtomValue thisValue = null;
       try {
-        x = sstable.get(token, column);
+        thisValue = sstable.get(token, column);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      if (x == null){
-        continue;
-      }
-      if (v == null){
-        v = x;
-        continue;
-      }
-      if (x.getTime() > v.getTime()){
-        v = x;
-      } else if (x.getTime() == v.getTime() && "".equals(x.getValue())){
-        v = null;
-      } else if (x.getTime() == v.getTime()){
-        int compare = x.getValue().compareTo(v.getValue());
-        if (compare == 0){
-          //v is unchanged          
-        } else if (compare > 0){
-          v = x;
-        } else if (compare < 0){
-          //v is unchanged
-        }
-      }
+      lastValue = applyRules(lastValue, thisValue);
     }
-    return v;
+    return lastValue;
   }
   
   public void delete(String rowkey, String column, long time){
@@ -237,18 +231,18 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     return memtableFlusher;
   }
   
-  //todo sstable should return Columney
-  public SortedMap<AtomKey, Val>  slice(String rowkey, String start, String end){
+  public SortedMap<AtomKey, AtomValue>  slice(String rowkey, String start, String end){
     Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
-    SortedMap<AtomKey, Val> fromMemtable = memtable.get().slice(t, start, end);
+    SortedMap<AtomKey, AtomValue> fromMemtable = memtable.get().slice(t, start, end);
     for (SsTable table: this.sstable){
       try {
-        Map<AtomKey, Val> fromSs = table.slice(t, start, end);
-        for (Entry<AtomKey, Val> each: fromSs.entrySet()){
+        Map<AtomKey, AtomValue> fromSs = table.slice(t, start, end);
+        for (Entry<AtomKey, AtomValue> each: fromSs.entrySet()){
           if (!fromMemtable.containsKey(each.getKey())){
             fromMemtable.put(each.getKey(), each.getValue());
           } else {
-            Val current = fromMemtable.get(each.getKey());
+            //TODO use better rules that consider tombstones
+            AtomValue current = fromMemtable.get(each.getKey());
             if (each.getValue().getTime() > current.getTime()){
               fromMemtable.put(each.getKey(), each.getValue());
             }
@@ -261,9 +255,3 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     return fromMemtable;
   }
 }
-/*
- *   public ConcurrentNavigableMap<String, Val>  slice(String rowkey, String start, String end){
-    return memtable.get().slice(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), start, end);
-    //also search flushed memtables
-    //also search sstables
-  } */

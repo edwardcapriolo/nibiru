@@ -20,6 +20,7 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 
 import java.io.IOException;
 import java.util.SortedMap;
@@ -60,11 +61,11 @@ public class SsTable implements Comparable<SsTable> {
    * If column is tombstoned return column tombstone
    * In other words always return known data
    */
-  public Val get(Token row, String column) throws IOException{
+  public AtomValue get(Token row, String column) throws IOException{
     return ssTableReader.get(row, column);
   }
 
-  public SortedMap<AtomKey, Val> slice(Token row, String start, String end) throws IOException {
+  public SortedMap<AtomKey, AtomValue> slice(Token row, String start, String end) throws IOException {
     return ssTableReader.slice(row, start, end);
   }
   

@@ -18,8 +18,11 @@ package io.teknek.nibiru.engine;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
+import io.teknek.nibiru.engine.atom.TombstoneValue;
 import io.teknek.nibiru.io.BufferGroup;
 
 import java.io.File;
@@ -134,25 +137,37 @@ public class SsTableReader {
     return create;
   }
 
-  static SortedMap<AtomKey,Val> readColumns(BufferGroup bg) throws IOException {
-    SortedMap<AtomKey,Val> result = new TreeMap<>();
+  static SortedMap<AtomKey,AtomValue> readColumns(BufferGroup bg) throws IOException {
+    SortedMap<AtomKey,AtomValue> result = new TreeMap<>();
     do {
       if (bg.dst[bg.currentIndex] == END_COLUMN){
         bg.advanceIndex();
       }
       StringBuilder name = readColumn(bg);
-      StringBuilder create = readColumn(bg);
-      StringBuilder time = readColumn(bg);
-      StringBuilder ttl = readColumn(bg);
-      StringBuilder value = endColumn(bg);
-      Val v = new Val(value.toString(),
-              Long.parseLong(time.toString()),
-              Long.parseLong(create.toString()),
-              Long.parseLong(ttl.toString()));
-      
-      if (name.charAt(0)=='C'){
-        result.put(new ColumnKey(name.substring(1)), v);
+      if (name.charAt(0)== 'C'){
+        byte typeOfValue = bg.dst[bg.currentIndex]; 
+        bg.advanceIndex();
+        if (typeOfValue == 'C'){
+          StringBuilder create = readColumn(bg);
+          StringBuilder time = readColumn(bg);
+          StringBuilder ttl = readColumn(bg);
+          StringBuilder value = endColumn(bg);
+          ColumnValue v = new ColumnValue();
+          v.setValue(value.toString());
+          v.setTime(Long.parseLong(time.toString()));
+          v.setTtl(Long.parseLong(ttl.toString()));
+          v.setCreateTime(Long.parseLong(create.toString()));
+          result.put(new ColumnKey(name.substring(1)), v);
+        } else if (typeOfValue == 'T'){
+          StringBuilder delete = readColumn(bg);
+          TombstoneValue v = new TombstoneValue(Long.parseLong(delete.toString()));
+          result.put(new RowTombstoneKey(), v);
+        } else {
+          throw new RuntimeException("corrupt data");
+        }
       } else if (name.charAt(0)=='T'){
+        StringBuilder delete = readColumn(bg);
+        TombstoneValue v = new TombstoneValue(Long.parseLong(delete.toString()));
         result.put(new RowTombstoneKey(), v);
       } else {
         throw new IllegalArgumentException("can not handle " + name);
@@ -168,7 +183,7 @@ public class SsTableReader {
     } while (bg.dst[bg.currentIndex] != END_ROW);
   }
 
-  public Val get(Token searchToken, String column) throws IOException {
+  public AtomValue get(Token searchToken, String column) throws IOException {
     boolean mightContain = bloomFilter.mightContain(searchToken);
     if (!mightContain) {
       return null;
@@ -198,7 +213,7 @@ public class SsTableReader {
         StringBuilder rowkey = readRowkey(bg);
         if (rowkey.toString().equals(searchToken.getRowkey())){
           keyCache.put(searchToken.getRowkey(), startOfRow);
-          SortedMap<AtomKey,Val> columns = readColumns(bg);
+          SortedMap<AtomKey,AtomValue> columns = readColumns(bg);
           return columns.get(new ColumnKey(column));
         } else {
           ignoreColumns(bg);
@@ -213,7 +228,7 @@ public class SsTableReader {
   }
   
   //TODO this can be more efficient
-  public SortedMap<AtomKey, Val> slice(Token searchToken, String start, String end) throws IOException {
+  public SortedMap<AtomKey, AtomValue> slice(Token searchToken, String start, String end) throws IOException {
     boolean mightContain = bloomFilter.mightContain(searchToken);
     if (!mightContain) {
       return null;
@@ -243,7 +258,7 @@ public class SsTableReader {
         StringBuilder rowkey = readRowkey(bg);
         if (rowkey.toString().equals(searchToken.getRowkey())){
           keyCache.put(searchToken.getRowkey(), startOfRow);
-          SortedMap<AtomKey,Val> columns = readColumns(bg);
+          SortedMap<AtomKey,AtomValue> columns = readColumns(bg);
           return columns.subMap(new ColumnKey(start), new ColumnKey(end));
         } else {
           ignoreColumns(bg);

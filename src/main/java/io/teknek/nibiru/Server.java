@@ -18,6 +18,7 @@ package io.teknek.nibiru;
 import io.teknek.nibiru.cluster.ClusterMembership;
 import io.teknek.nibiru.coordinator.Coordinator;
 import io.teknek.nibiru.engine.CompactionManager;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.HttpJsonTransport;
 
@@ -96,7 +97,7 @@ public class Server {
     }
   }
   
-  public Val get(String keyspace, String columnFamily, String rowkey, String column){
+  public AtomValue get(String keyspace, String columnFamily, String rowkey, String column){
     Keyspace ks = keyspaces.get(keyspace);
     if (ks == null){
       throw new RuntimeException(keyspace + " is not found");

@@ -17,10 +17,9 @@ package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -49,13 +48,14 @@ public class TombstoneReaper implements Runnable {
   //VisibleForTesting
   public void processColumnFamily(ColumnFamily columnFamily, long currentTimeMillis){
     long graceMillis = columnFamily.getColumnFamilyMetadata().getTombstoneGraceMillis();
-    for (Entry<Token, ConcurrentSkipListMap<AtomKey, Val>> entry : ((DefaultColumnFamily) columnFamily).getMemtable().getData().entrySet()){
-      for (Entry<AtomKey, Val> innerEntry : entry.getValue().entrySet()){
+    for (Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> entry : ((DefaultColumnFamily) columnFamily).getMemtable().getData().entrySet()){
+      for (Entry<AtomKey, AtomValue> innerEntry : entry.getValue().entrySet()){
+        /*
         if (innerEntry.getValue().getValue() == null){
           if (innerEntry.getValue().getCreateTime() + graceMillis < currentTimeMillis){
             entry.getValue().remove(innerEntry.getKey());
           }
-        }
+        }*/
       }
     }
   }

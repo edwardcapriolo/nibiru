@@ -19,6 +19,7 @@ import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
 
 import java.io.IOException;
 import java.util.Map.Entry;
@@ -29,7 +30,7 @@ public class SSTableWriter {
   public void flushToDisk(String id, ColumnFamily columnFamily, Memtable m) throws IOException{
     SsTableStreamWriter w = new SsTableStreamWriter(id, columnFamily);
     w.open();
-    for (Entry<Token, ConcurrentSkipListMap<AtomKey, Val>> i : m.getData().entrySet()){
+    for (Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> i : m.getData().entrySet()){
       w.write(i.getKey(), i.getValue());
     }
     w.close();

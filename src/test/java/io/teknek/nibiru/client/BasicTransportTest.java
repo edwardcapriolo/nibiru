@@ -8,6 +8,8 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.engine.atom.AtomValue;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -29,8 +31,8 @@ public class BasicTransportTest {
     Server s = TestUtil.aBasicServer(testFolder);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
-    Val x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
-    Assert.assertEquals("6", x.getValue());
+    AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
+    Assert.assertEquals("6", ((ColumnValue) x).getValue());
     ColumnFamilyClient c = new ColumnFamilyClient("127.0.0.1", s.getConfiguration().getTransportPort());
     Session session = c.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE)
       .withColumnFamily(TestUtil.PETS_COLUMN_FAMILY)
