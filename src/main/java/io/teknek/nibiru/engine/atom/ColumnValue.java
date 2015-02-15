@@ -67,4 +67,10 @@ public class ColumnValue extends AtomValue {
     this.ttl = ttl;
   }
 
+  @Override
+  public String toString() {
+    return "ColumnValue [value=" + value + ", createTime=" + createTime + ", ttl=" + ttl + "]";
+  }
+
+  
 }

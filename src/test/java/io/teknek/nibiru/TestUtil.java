@@ -1,12 +1,16 @@
 package io.teknek.nibiru;
 
 import io.teknek.nibiru.engine.DefaultColumnFamily;
+import io.teknek.nibiru.engine.atom.AtomValue;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.keyvalue.InMemoryKeyValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import junit.framework.Assert;
 
 import org.junit.rules.TemporaryFolder;
 
@@ -43,4 +47,12 @@ public class TestUtil {
     return configuration;
   }
 
+  public static void compareColumnValue(AtomValue v1, AtomValue v2){
+    ColumnValue v3 = (ColumnValue) v1;
+    ColumnValue v4 = (ColumnValue) v2;
+    Assert.assertEquals(v3.getTime(), v4.getTime());
+    //Assert.assertEquals(v3.getCreateTime(), v4.getCreateTime());
+    Assert.assertEquals(v3.getTtl(), v4.getTtl());
+    Assert.assertEquals(v3.getValue(), v4.getValue());
+  }
 }
