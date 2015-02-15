@@ -73,30 +73,7 @@ public class HttpJsonTransport {
   }
 
   private Handler getHandler(){
-
     AbstractHandler handler = new AbstractHandler() {
-      /*
-      public void handle(String target, HttpServletRequest request, HttpServletResponse response,
-              int dispatch) throws IOException, ServletException {
-        Request baseRequest = request instanceof Request ? (Request) request : HttpConnection
-                .getCurrentConnection().getRequest();
-        String url = baseRequest.getRequestURI();
-        Message message = MAPPER.readValue(baseRequest.getInputStream(), Message.class);
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType("application/json;charset=utf-8");
-        try {
-          MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
-        } catch (RuntimeException ex){
-          Response r = new Response();
-          r.put("exception", ex.getMessage());
-          System.err.println(message);
-          ex.printStackTrace();
-          MAPPER.writeValue(response.getOutputStream(), r);
-        }
-        response.getOutputStream().close();
-        baseRequest.setHandled(true);
-      }
-      */
       @Override
       public void handle(String target, Request request, HttpServletRequest servletRequest,
               HttpServletResponse response) throws IOException, ServletException {
