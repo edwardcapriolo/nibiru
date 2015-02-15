@@ -19,8 +19,9 @@ import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.TimeSource;
 import io.teknek.nibiru.TimeSourceImpl;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
 
 import java.io.File;
@@ -66,8 +67,8 @@ public class CommitLog {
   
   public synchronized void write(Token rowkey, AtomKey column, String value, long stamp, long ttl)
           throws IOException {
-    Map<AtomKey, Val> columns = new HashMap<>();
-    Val v = new Val(value, stamp, System.currentTimeMillis(), ttl);
+    Map<AtomKey, AtomValue> columns = new HashMap<>();
+    ColumnValue v = new ColumnValue(value, stamp, System.currentTimeMillis(), ttl);
     columns.put(column, v);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
     ssOutputStream.writeAndCount(rowkey.getToken().getBytes());
@@ -75,7 +76,7 @@ public class CommitLog {
     ssOutputStream.writeAndCount(rowkey.getRowkey().getBytes());
     ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
     boolean writeJoin = false;
-    for (Entry<AtomKey, Val> j : columns.entrySet()) {
+    for (Entry<AtomKey, AtomValue> j : columns.entrySet()) {
       if (!writeJoin) {
         writeJoin = true;
       } else {
@@ -83,13 +84,7 @@ public class CommitLog {
       }
       ssOutputStream.writeAndCount(j.getKey().externalize());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getCreateTime()).getBytes());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTime()).getBytes());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getTtl()).getBytes());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(String.valueOf(j.getValue().getValue()).getBytes());
+      j.getValue().externalize(ssOutputStream);
     }
     ssOutputStream.writeAndCount(SsTableReader.END_ROW);
     

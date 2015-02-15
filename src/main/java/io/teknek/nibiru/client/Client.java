@@ -50,9 +50,11 @@ public class Client {
     if (response.getStatusLine().getStatusCode() != 200) {
       throw new RuntimeException("Failed : HTTP error code : "
               + response.getStatusLine().getStatusCode());
+      
     }
     Response r = MAPPER.readValue(response.getEntity().getContent(), Response.class);
     response.getEntity().getContent().close();
+    
     return r;
   }
   

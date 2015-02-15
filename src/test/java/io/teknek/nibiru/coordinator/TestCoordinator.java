@@ -155,7 +155,7 @@ public class TestCoordinator {
         sb.put("a", "b", "c", 1);
         Assert.assertEquals(1, s[i].getCoordinator().getHinter().getHintsAdded());
       } catch (ClientException ex){
-        Assert.assertTrue(ex.getMessage().equals("coordinator timeout"));
+        Assert.assertEquals("coordinator timeout", ex.getMessage());
       }
     }
   }

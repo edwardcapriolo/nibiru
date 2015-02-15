@@ -163,7 +163,7 @@ public class SsTableReader {
           TombstoneValue v = new TombstoneValue(Long.parseLong(delete.toString()));
           result.put(new RowTombstoneKey(), v);
         } else {
-          throw new RuntimeException("corrupt data");
+          throw new RuntimeException("corrupt data" + ((char) typeOfValue));
         }
       } else if (name.charAt(0)=='T'){
         StringBuilder delete = readColumn(bg);
