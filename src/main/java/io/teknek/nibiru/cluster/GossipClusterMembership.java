@@ -56,7 +56,7 @@ public class GossipClusterMembership extends ClusterMembership{
       startupMembers.add(g);
     }
     try {
-      gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU().toString(), LogLevel.DEBUG, startupMembers, settings);
+      gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU().toString(), LogLevel.DEBUG, startupMembers, settings, null);
     } catch (UnknownHostException | InterruptedException e) {
       throw new RuntimeException(e);
     }
