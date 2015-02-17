@@ -159,18 +159,25 @@ public class Memtable implements Comparable<Memtable>{
   }
   
   public void delete(Token row, long time){
-    //put(row, "", null, time, 0L);
+    ConcurrentSkipListMap<AtomKey, AtomValue> delete = new ConcurrentSkipListMap<AtomKey, AtomValue>(); 
+    delete.put(new RowTombstoneKey(), new TombstoneValue(time));
+    ConcurrentSkipListMap<AtomKey, AtomValue> returned = data.putIfAbsent(row, delete);
+    if (returned != null){
+      //todo race here for newer tombstone
+      returned.put(new RowTombstoneKey(), new TombstoneValue(time));
+    }
+    
+    /*
     ConcurrentSkipListMap<AtomKey, AtomValue> cols = data.get(row);
     if (cols != null) {
       cols.put(new RowTombstoneKey(), new TombstoneValue(time));
     }
     for (Map.Entry<AtomKey, AtomValue> col : cols.entrySet()){
-      /*
-       * TODO
+      //TODO
       if (col.getValue().getTime() < time){
         cols.remove(col.getKey());
-      }*/
-    }
+      }
+    }*/
   }
   
   public void delete (Token rowkey, String column, long time){

@@ -34,6 +34,7 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
+import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
@@ -87,12 +88,22 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     while ((t = r.getNextToken()) != null){
       SortedMap<AtomKey, AtomValue> x = r.readColumns();
       for (Entry<AtomKey, AtomValue> col: x.entrySet()){
-        //note this changes the create time which could effect ttl. Need new constructor.
-        //TODO broken
-        /*
-        memtable.get().put(t, ((ColumnKey) col.getKey()).getColumn(), col.getValue().getValue(), 
-                col.getValue().getTime(), col.getValue().getTtl());
-                */
+        if (col.getKey() instanceof RowTombstoneKey){
+          TombstoneValue v = (TombstoneValue) col.getValue();
+          memtable.get().delete(t, v.getTime());
+        } else if (col.getKey() instanceof ColumnKey){
+          ColumnKey ck = (ColumnKey) col.getKey();
+          if (col.getValue() instanceof ColumnValue){
+            ColumnValue cv = (ColumnValue) col.getValue();
+            memtable.get().put(t, ck.getColumn(), cv.getValue(), cv.getTime(), cv.getTtl());
+          } else if (col.getValue() instanceof TombstoneValue){
+            memtable.get().delete(t, ck.getColumn(), col.getValue().getTime());
+          } else {
+            throw new RuntimeException("processing commit log "+id);
+          }
+        } else {
+          throw new RuntimeException("processing commit log "+id);
+        }
       }
     }
     r.close();
