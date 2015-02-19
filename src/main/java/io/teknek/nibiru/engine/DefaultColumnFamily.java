@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
@@ -141,7 +140,7 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     this.memtable.set(memtable);
   }
   
-  public AtomValue applyRules(AtomValue lastValue, AtomValue thisValue){
+  public static AtomValue applyRules(AtomValue lastValue, AtomValue thisValue){
     if (thisValue == null){
       return lastValue;
     }
@@ -152,18 +151,24 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
             thisValue.getTime() >= lastValue.getTime()){
       return thisValue;
     }
-    if (thisValue instanceof ColumnValue && 
-            lastValue instanceof TombstoneValue && 
-            thisValue.getTime() > lastValue.getTime()){
-      return thisValue;
+    if (lastValue instanceof TombstoneValue && 
+            lastValue.getTime() >= thisValue.getTime()){
+      return lastValue;
     }
-    if (thisValue.getTime() == lastValue.getTime() 
-            && thisValue instanceof ColumnValue 
-            && lastValue instanceof ColumnValue){
-      if ( ((ColumnValue) thisValue).getValue().compareTo(((ColumnValue) lastValue).getValue() ) > 0){
+    
+    if (thisValue instanceof ColumnValue && lastValue instanceof ColumnValue){
+      if (thisValue.getTime() == lastValue.getTime()){ 
+        if ( ((ColumnValue) thisValue).getValue().compareTo(((ColumnValue) lastValue).getValue() ) > 0){
+          return thisValue;  
+        } else {
+          return lastValue;
+        }
+      } else if (thisValue.getTime() > lastValue.getTime()){
         return thisValue;  
+      } else {
+        return lastValue;
       }
-    }
+    } 
     
     throw new IllegalArgumentException ( "comparing " + thisValue + " " + lastValue);
   }

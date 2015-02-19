@@ -112,4 +112,30 @@ public class SSTableTest {
     
   }
     
+  
+  @Test
+  public void optimizeWideColumnsTest() throws IOException{
+    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
+    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
+    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
+    for (int i = 0; i < 100; i++) {
+      NumberFormat nf = new DecimalFormat("00000");
+      for (int j = 0;j< 100; j++) {
+        m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column"+nf.format(j), nf.format(j), 1, 0L);
+      }
+    }
+    SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
+    SSTableWriter w = new SSTableWriter();
+    w.flushToDisk("1", ks1.getColumnFamilies().get("abc"), m);
+    s.open("1", ks1.getConfiguration());
+    {
+      long x = System.currentTimeMillis();
+      for (int i = 0 ; i < 50000 ; i++) {
+        Assert.assertEquals("00050", ((ColumnValue)s.get(ks1.getKeyspaceMetadata().getPartitioner().partition("00001"), "column00050")).getValue());
+      }
+      System.out.println("Wide column " + (System.currentTimeMillis() - x));
+    }
+  }
+  
+  
 }
