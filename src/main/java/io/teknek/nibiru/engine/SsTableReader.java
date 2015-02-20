@@ -101,30 +101,30 @@ public class SsTableReader {
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
-    /*
-    
-    while (bg.dst[bg.currentIndex] != END_TOKEN){
-      token.append((char) bg.dst[bg.currentIndex]);
-      bg.advanceIndex();
-    }
-    bg.advanceIndex();*/
     return token;
   }
   
   static StringBuilder readRowkey(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != END_ROWKEY){
+    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    for (int i=0;i< length;i++){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
-    bg.advanceIndex();
     return token;
   }
   
   private void skipRowkey(BufferGroup bg) throws IOException{
-    do {
+    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    for (int i=0;i< length;i++){
       bg.advanceIndex();
-    } while (bg.dst[bg.currentIndex] != END_ROWKEY);
+    }
   }
   
   private static StringBuilder readColumn(BufferGroup bg) throws IOException{

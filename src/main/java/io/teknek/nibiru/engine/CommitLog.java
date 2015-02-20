@@ -73,8 +73,7 @@ public class CommitLog {
     columns.put(column, v);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
     SsTableStreamWriter.writeToken(rowkey, ssOutputStream);
-    ssOutputStream.writeAndCount(rowkey.getRowkey().getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
+    SsTableStreamWriter.writeRowkey(rowkey, ssOutputStream);
     boolean writeJoin = false;
     for (Entry<AtomKey, AtomValue> j : columns.entrySet()) {
       if (!writeJoin) {
