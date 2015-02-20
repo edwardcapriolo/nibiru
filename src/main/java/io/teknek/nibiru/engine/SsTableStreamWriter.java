@@ -24,7 +24,6 @@ import java.util.Map.Entry;
 
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
@@ -56,12 +55,17 @@ public class SsTableStreamWriter {
     indexWriter.open();
   }
   
+  public static void writeToken(Token token, CountingBufferedOutputStream ssOutputStream) throws IOException {
+    ssOutputStream.writeAndCount((byte) (token.getToken().getBytes().length >> 8) & 0xFF);
+    ssOutputStream.writeAndCount((byte) (token.getToken().getBytes().length & 0xFF));
+    ssOutputStream.writeAndCount(token.getToken().getBytes());
+  }
+  
   public void write(Token t, Map<AtomKey,AtomValue> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
     bloomFilter.put(t);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
-    ssOutputStream.writeAndCount(t.getToken().getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
+    writeToken(t, ssOutputStream);
     ssOutputStream.writeAndCount(t.getRowkey().getBytes());
     ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
     indexWriter.handleRow(startOfRecord, t.getToken());

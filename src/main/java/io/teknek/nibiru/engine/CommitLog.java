@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 
 public class CommitLog {
 
+  public static final char END_TOKEN = '\1';
   private final ColumnFamily columnFamily;
   private final String tableId;
   private CountingBufferedOutputStream ssOutputStream;
@@ -71,8 +72,7 @@ public class CommitLog {
     ColumnValue v = new ColumnValue(value, stamp, System.currentTimeMillis(), ttl);
     columns.put(column, v);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
-    ssOutputStream.writeAndCount(rowkey.getToken().getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
+    SsTableStreamWriter.writeToken(rowkey, ssOutputStream);
     ssOutputStream.writeAndCount(rowkey.getRowkey().getBytes());
     ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
     boolean writeJoin = false;

@@ -45,7 +45,7 @@ public class IndexWriter {
     if (rowkeyCount++ % columnFamily.getColumnFamilyMetadata().getIndexInterval() == 0){
       indexStream.write(SsTableReader.START_RECORD);
       indexStream.write(token.getBytes());
-      indexStream.write(SsTableReader.END_TOKEN);
+      indexStream.write(IndexReader.END_TOKEN);
       indexStream.write(String.valueOf(startOfRecord).getBytes());
       indexStream.write(SsTableReader.END_ROW);
     }

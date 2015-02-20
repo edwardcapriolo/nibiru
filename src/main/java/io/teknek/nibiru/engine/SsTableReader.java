@@ -36,7 +36,6 @@ import java.util.TreeMap;
 public class SsTableReader {
 
   public static final char START_RECORD = '\0';
-  public static final char END_TOKEN = '\1';
   public static final char END_ROWKEY = '\2';
   public static final char END_COLUMN_PART = '\3';
   public static final char END_COLUMN = '\4';
@@ -87,18 +86,28 @@ public class SsTableReader {
   
   static void readHeader(BufferGroup bg) throws IOException {
     if (bg.dst[bg.currentIndex] != '\0'){
-      throw new RuntimeException("corrupt expected \\0 got " + bg.dst[bg.currentIndex]  );
+      throw new RuntimeException("corrupt expected \\0 got " + (char) bg.dst[bg.currentIndex]  );
     }
     bg.advanceIndex();
   }
   
   static StringBuilder readToken(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
+    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    for (int i=0;i< length;i++){
+      token.append((char) bg.dst[bg.currentIndex]);
+      bg.advanceIndex();
+    }
+    /*
+    
     while (bg.dst[bg.currentIndex] != END_TOKEN){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
-    bg.advanceIndex();
+    bg.advanceIndex();*/
     return token;
   }
   
