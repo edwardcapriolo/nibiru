@@ -83,7 +83,7 @@ public class CommitLog {
       }
       ssOutputStream.writeAndCount(j.getKey().externalize());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      j.getValue().externalize(ssOutputStream);
+      ssOutputStream.writeAndCount(j.getValue().externalize());
     }
     ssOutputStream.writeAndCount(SsTableReader.END_ROW);
     

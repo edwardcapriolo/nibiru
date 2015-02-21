@@ -1,9 +1,5 @@
 package io.teknek.nibiru.engine.atom;
 
-import java.io.IOException;
-
-import io.teknek.nibiru.io.CountingBufferedOutputStream;
-
 public class TombstoneValue extends AtomValue {
 
   private final long time;
@@ -17,8 +13,11 @@ public class TombstoneValue extends AtomValue {
   }
 
   @Override
-  public void externalize(CountingBufferedOutputStream s) throws IOException {
-    s.writeAndCount("T".getBytes());
-    s.writeAndCount(String.valueOf(time).getBytes());
+  public byte [] externalize() {
+    //todo byte buffer
+    StringBuffer sb = new StringBuffer();
+    sb.append('T');
+    sb.append(String.valueOf(time));
+    return sb.toString().getBytes();
   }
 }

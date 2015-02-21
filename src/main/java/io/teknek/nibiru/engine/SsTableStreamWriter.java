@@ -67,6 +67,25 @@ public class SsTableStreamWriter {
     ssOutputStream.writeAndCount(token.getRowkey().getBytes());
   }
   
+  public static void writeColumns(Map<AtomKey,AtomValue> columns, CountingBufferedOutputStream ssOutputStream) throws IOException {
+    ssOutputStream.writeAndCount((byte) (columns.size() >> 8) & 0xFF);
+    ssOutputStream.writeAndCount((byte) (columns.size() & 0xFF));
+    for (Entry<AtomKey, AtomValue> j : columns.entrySet()) {
+      {
+        byte[] key = j.getKey().externalize();
+        ssOutputStream.writeAndCount((byte) (key.length >> 8) & 0xFF);
+        ssOutputStream.writeAndCount((byte) (key.length & 0xFF));
+        ssOutputStream.writeAndCount(key);
+      }
+      {
+        byte[] value = j.getValue().externalize();
+        //ssOutputStream.writeAndCount((byte) (value.length >> 8) & 0xFF);
+        //ssOutputStream.writeAndCount((byte) (value.length & 0xFF));
+        ssOutputStream.writeAndCount(value);
+      }
+    }
+  }
+  
   public void write(Token t, Map<AtomKey,AtomValue> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
     bloomFilter.put(t);
@@ -83,7 +102,7 @@ public class SsTableStreamWriter {
       }
       ssOutputStream.writeAndCount(j.getKey().externalize());
       ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      j.getValue().externalize(ssOutputStream);
+      ssOutputStream.writeAndCount(j.getValue().externalize());
     }
     ssOutputStream.writeAndCount(SsTableReader.END_ROW);
   }

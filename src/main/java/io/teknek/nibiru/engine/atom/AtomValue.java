@@ -1,14 +1,10 @@
 package io.teknek.nibiru.engine.atom;
 
-import java.io.IOException;
-
-import io.teknek.nibiru.io.CountingBufferedOutputStream;
-
 public abstract class AtomValue {
 
   protected long time;
   
-  public abstract void externalize(CountingBufferedOutputStream s) throws IOException;
+  public abstract byte[] externalize();
   
   public long getTime() {
     return time;
