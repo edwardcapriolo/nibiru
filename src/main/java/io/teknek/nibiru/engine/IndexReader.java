@@ -21,6 +21,7 @@ import java.io.IOException;
 
 public class IndexReader {
 
+  public static final char END_TOKEN = '\1';
   private final BufferGroup bgIndex;
 
   public IndexReader(BufferGroup bgIndex) {
@@ -56,7 +57,7 @@ public class IndexReader {
   
   private StringBuilder readToken(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != SsTableReader.END_TOKEN){
+    while (bg.dst[bg.currentIndex] != END_TOKEN){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }

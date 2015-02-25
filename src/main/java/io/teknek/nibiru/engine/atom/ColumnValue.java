@@ -1,9 +1,10 @@
 package io.teknek.nibiru.engine.atom;
 
-import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import org.apache.http.util.ByteArrayBuffer;
 
 import io.teknek.nibiru.engine.SsTableReader;
-import io.teknek.nibiru.io.CountingBufferedOutputStream;
 
 public class ColumnValue extends AtomValue {
 
@@ -24,15 +25,26 @@ public class ColumnValue extends AtomValue {
   }
   
   @Override
-  public void externalize(CountingBufferedOutputStream ssOutputStream) throws IOException {
-    ssOutputStream.writeAndCount("C".getBytes());
-    ssOutputStream.writeAndCount(String.valueOf(getCreateTime()).getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-    ssOutputStream.writeAndCount(String.valueOf(getTime()).getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-    ssOutputStream.writeAndCount(String.valueOf(getTtl()).getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-    ssOutputStream.writeAndCount(String.valueOf(getValue()).getBytes());
+  public byte [] externalize(){
+    //TODO use byte buffer
+
+    ByteArrayBuffer bb1 = new ByteArrayBuffer(100);
+    
+    bb1.append('C');
+    byte [] cr = String.valueOf(getCreateTime()).getBytes();
+    bb1.append(cr, 0 , cr.length);
+    bb1.append(SsTableReader.END_COLUMN_PART);
+    cr = String.valueOf(getTime()).getBytes();
+    bb1.append(cr, 0 , cr.length);
+    bb1.append(SsTableReader.END_COLUMN_PART);
+    cr = String.valueOf(getTtl()).getBytes();
+    bb1.append(cr,0,cr.length);
+    bb1.append(SsTableReader.END_COLUMN_PART);
+    cr = String.valueOf(getValue()).getBytes();
+    bb1.append(SsTableReader.END_COLUMN_PART);
+    bb1.append(cr,0,cr.length);
+    
+    return bb1.toByteArray();
   }
 
   public String getValue() {

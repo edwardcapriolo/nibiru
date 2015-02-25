@@ -36,7 +36,6 @@ import java.util.TreeMap;
 public class SsTableReader {
 
   public static final char START_RECORD = '\0';
-  public static final char END_TOKEN = '\1';
   public static final char END_ROWKEY = '\2';
   public static final char END_COLUMN_PART = '\3';
   public static final char END_COLUMN = '\4';
@@ -87,38 +86,59 @@ public class SsTableReader {
   
   static void readHeader(BufferGroup bg) throws IOException {
     if (bg.dst[bg.currentIndex] != '\0'){
-      throw new RuntimeException("corrupt expected \\0 got " + bg.dst[bg.currentIndex]  );
+      throw new RuntimeException("corrupt expected \\0 got " + (char) bg.dst[bg.currentIndex]  );
     }
     bg.advanceIndex();
   }
   
   static StringBuilder readToken(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != END_TOKEN){
+    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    for (int i=0;i< length;i++){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
-    bg.advanceIndex();
     return token;
   }
   
   static StringBuilder readRowkey(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != END_ROWKEY){
+    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    for (int i=0;i< length;i++){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
-    bg.advanceIndex();
     return token;
   }
   
   private void skipRowkey(BufferGroup bg) throws IOException{
-    do {
+    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    for (int i=0;i< length;i++){
       bg.advanceIndex();
-    } while (bg.dst[bg.currentIndex] != END_ROWKEY);
+    }
   }
   
   private static StringBuilder readColumn(BufferGroup bg) throws IOException{
+    StringBuilder token = new StringBuilder();
+    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    for (int i=0;i< length;i++){
+      token.append((char) bg.dst[bg.currentIndex]);
+      bg.advanceIndex();
+    }
+    return token;
+    /*
     StringBuilder create = new StringBuilder();
     while (bg.dst[bg.currentIndex] != END_COLUMN_PART){
       create.append((char) bg.dst[bg.currentIndex]);
@@ -126,6 +146,7 @@ public class SsTableReader {
     }
     bg.advanceIndex();
     return create;
+    */
   }
  
   private static StringBuilder endColumn(BufferGroup bg) throws IOException{
@@ -137,10 +158,84 @@ public class SsTableReader {
     return create;
   }
 
+  private static StringBuilder endColumnPart(BufferGroup bg) throws IOException{
+    StringBuilder create = new StringBuilder();
+    while (!(bg.dst[bg.currentIndex] == END_COLUMN_PART) ){
+      create.append((char) bg.dst[bg.currentIndex]);
+      bg.advanceIndex();
+    }
+    return create;
+  }
+  
  
+  public static int readTwoByteSize(BufferGroup bg) throws IOException{
+    int colSize = (bg.dst[bg.currentIndex] & 0xFF) << 8;
+    bg.advanceIndex();
+    colSize = colSize + (bg.dst[bg.currentIndex] & 0xFF);
+    bg.advanceIndex();
+    return colSize;
+  }
+  
+  static StringBuilder readNextNIntoBuilder(BufferGroup bg, int size) throws IOException{
+    StringBuilder sb = new StringBuilder();
+    for (int i =0;i< size ; i++){
+      sb.append((char) bg.dst[bg.currentIndex]);
+      bg.advanceIndex();
+    }
+    return sb;
+  }
+  
   
   static SortedMap<AtomKey,AtomValue> readColumns(BufferGroup bg) throws IOException {
     SortedMap<AtomKey,AtomValue> result = new TreeMap<>();
+    int numberOfColumns = readTwoByteSize(bg);
+    for (int i =0;i< numberOfColumns ; i++){
+      int next = readTwoByteSize(bg);
+      char c = (char) bg.dst[bg.currentIndex];
+      bg.advanceIndex();
+      StringBuilder name = readNextNIntoBuilder(bg, next-1);
+      AtomKey x = null;
+      if (c == 'C'){
+        x = new ColumnKey(name.toString());
+      } else if (c == 'T'){
+        x = new RowTombstoneKey();
+      } else {
+        throw new RuntimeException("can not handle "+c);
+      }
+      int size = readTwoByteSize(bg);
+      char g = (char) bg.dst[bg.currentIndex];
+      bg.advanceIndex();
+      AtomValue atomValue = null;
+      if (g == 'C'){
+        int soFar = 0;
+        StringBuilder create = endColumnPart(bg);
+        soFar += create.length();
+        bg.advanceIndex();
+        StringBuilder time = endColumnPart(bg);
+        soFar += time.length();
+        bg.advanceIndex();
+        StringBuilder ttl = endColumnPart(bg);
+        soFar += ttl.length();
+        bg.advanceIndex();
+        soFar += 5;
+        int remaining = size - soFar;
+        bg.advanceIndex();
+        StringBuilder value = readNextNIntoBuilder(bg, remaining);
+        ColumnValue v = new ColumnValue();
+        v.setValue(value.toString());
+        v.setTime(Long.parseLong(time.toString()));
+        v.setTtl(Long.parseLong(ttl.toString()));
+        v.setCreateTime(Long.parseLong(create.toString()));
+        atomValue = v;
+      } else if (g == 'T'){
+        throw new RuntimeException("T");
+      } else {
+        throw new RuntimeException("can not handle "+g);
+      }
+      result.put(x, atomValue);
+    }
+    
+    /*
     do {
       if (bg.dst[bg.currentIndex] == END_COLUMN){
         bg.advanceIndex();
@@ -176,6 +271,7 @@ public class SsTableReader {
       }
       
     } while (bg.dst[bg.currentIndex] != END_ROW);
+    */
     return result;
   }
   

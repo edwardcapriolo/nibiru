@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 
 public class CommitLog {
 
+  public static final char END_TOKEN = '\1';
   private final ColumnFamily columnFamily;
   private final String tableId;
   private CountingBufferedOutputStream ssOutputStream;
@@ -71,23 +72,9 @@ public class CommitLog {
     ColumnValue v = new ColumnValue(value, stamp, System.currentTimeMillis(), ttl);
     columns.put(column, v);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
-    ssOutputStream.writeAndCount(rowkey.getToken().getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
-    ssOutputStream.writeAndCount(rowkey.getRowkey().getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
-    boolean writeJoin = false;
-    for (Entry<AtomKey, AtomValue> j : columns.entrySet()) {
-      if (!writeJoin) {
-        writeJoin = true;
-      } else {
-        ssOutputStream.writeAndCount(SsTableReader.END_COLUMN);
-      }
-      ssOutputStream.writeAndCount(j.getKey().externalize());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      j.getValue().externalize(ssOutputStream);
-    }
-    ssOutputStream.writeAndCount(SsTableReader.END_ROW);
-    
+    SsTableStreamWriter.writeToken(rowkey, ssOutputStream);
+    SsTableStreamWriter.writeRowkey(rowkey, ssOutputStream);
+    SsTableStreamWriter.writeColumns(columns, ssOutputStream);
     if (columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes() > 0 && 
             ssOutputStream.getWrittenOffset() - lastOffset > columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes()){
       ssOutputStream.flush();

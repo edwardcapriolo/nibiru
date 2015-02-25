@@ -24,7 +24,6 @@ import java.util.Map.Entry;
 
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
@@ -56,26 +55,45 @@ public class SsTableStreamWriter {
     indexWriter.open();
   }
   
+  public static void writeToken(Token token, CountingBufferedOutputStream ssOutputStream) throws IOException {
+    ssOutputStream.writeAndCount((byte) (token.getToken().getBytes().length >> 8) & 0xFF);
+    ssOutputStream.writeAndCount((byte) (token.getToken().getBytes().length & 0xFF));
+    ssOutputStream.writeAndCount(token.getToken().getBytes());
+  }
+  
+  public static void writeRowkey(Token token, CountingBufferedOutputStream ssOutputStream) throws IOException {
+    ssOutputStream.writeAndCount((byte) (token.getRowkey().getBytes().length >> 8) & 0xFF);
+    ssOutputStream.writeAndCount((byte) (token.getRowkey().getBytes().length & 0xFF));
+    ssOutputStream.writeAndCount(token.getRowkey().getBytes());
+  }
+  
+  public static void writeColumns(Map<AtomKey,AtomValue> columns, CountingBufferedOutputStream ssOutputStream) throws IOException {
+    ssOutputStream.writeAndCount((byte) (columns.size() >> 8) & 0xFF);
+    ssOutputStream.writeAndCount((byte) (columns.size() & 0xFF));
+    for (Entry<AtomKey, AtomValue> j : columns.entrySet()) {
+      {
+        byte[] key = j.getKey().externalize();
+        ssOutputStream.writeAndCount((byte) (key.length >> 8) & 0xFF);
+        ssOutputStream.writeAndCount((byte) (key.length & 0xFF));
+        ssOutputStream.writeAndCount(key);
+      }
+      {
+        byte[] value = j.getValue().externalize();
+        ssOutputStream.writeAndCount((byte) (value.length >> 8) & 0xFF);
+        ssOutputStream.writeAndCount((byte) (value.length & 0xFF));
+        ssOutputStream.writeAndCount(value);
+      }
+    }
+  }
+  
   public void write(Token t, Map<AtomKey,AtomValue> columns) throws IOException {
     long startOfRecord = ssOutputStream.getWrittenOffset();
     bloomFilter.put(t);
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
-    ssOutputStream.writeAndCount(t.getToken().getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_TOKEN);
-    ssOutputStream.writeAndCount(t.getRowkey().getBytes());
-    ssOutputStream.writeAndCount(SsTableReader.END_ROWKEY);
+    writeToken(t, ssOutputStream);
+    writeRowkey(t, ssOutputStream);
     indexWriter.handleRow(startOfRecord, t.getToken());
-    boolean writeJoin = false;
-    for (Entry<AtomKey, AtomValue> j : columns.entrySet()){
-      if (!writeJoin){
-        writeJoin = true;
-      } else {
-        ssOutputStream.writeAndCount(SsTableReader.END_COLUMN);
-      }
-      ssOutputStream.writeAndCount(j.getKey().externalize());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      j.getValue().externalize(ssOutputStream);
-    }
+    writeColumns(columns, ssOutputStream);
     ssOutputStream.writeAndCount(SsTableReader.END_ROW);
   }
   
