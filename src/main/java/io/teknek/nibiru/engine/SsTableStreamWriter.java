@@ -79,8 +79,8 @@ public class SsTableStreamWriter {
       }
       {
         byte[] value = j.getValue().externalize();
-        //ssOutputStream.writeAndCount((byte) (value.length >> 8) & 0xFF);
-        //ssOutputStream.writeAndCount((byte) (value.length & 0xFF));
+        ssOutputStream.writeAndCount((byte) (value.length >> 8) & 0xFF);
+        ssOutputStream.writeAndCount((byte) (value.length & 0xFF));
         ssOutputStream.writeAndCount(value);
       }
     }
@@ -93,17 +93,7 @@ public class SsTableStreamWriter {
     writeToken(t, ssOutputStream);
     writeRowkey(t, ssOutputStream);
     indexWriter.handleRow(startOfRecord, t.getToken());
-    boolean writeJoin = false;
-    for (Entry<AtomKey, AtomValue> j : columns.entrySet()){
-      if (!writeJoin){
-        writeJoin = true;
-      } else {
-        ssOutputStream.writeAndCount(SsTableReader.END_COLUMN);
-      }
-      ssOutputStream.writeAndCount(j.getKey().externalize());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(j.getValue().externalize());
-    }
+    writeColumns(columns, ssOutputStream);
     ssOutputStream.writeAndCount(SsTableReader.END_ROW);
   }
   

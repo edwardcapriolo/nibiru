@@ -74,19 +74,7 @@ public class CommitLog {
     ssOutputStream.writeAndCount(SsTableReader.START_RECORD);
     SsTableStreamWriter.writeToken(rowkey, ssOutputStream);
     SsTableStreamWriter.writeRowkey(rowkey, ssOutputStream);
-    boolean writeJoin = false;
-    for (Entry<AtomKey, AtomValue> j : columns.entrySet()) {
-      if (!writeJoin) {
-        writeJoin = true;
-      } else {
-        ssOutputStream.writeAndCount(SsTableReader.END_COLUMN);
-      }
-      ssOutputStream.writeAndCount(j.getKey().externalize());
-      ssOutputStream.writeAndCount(SsTableReader.END_COLUMN_PART);
-      ssOutputStream.writeAndCount(j.getValue().externalize());
-    }
-    ssOutputStream.writeAndCount(SsTableReader.END_ROW);
-    
+    SsTableStreamWriter.writeColumns(columns, ssOutputStream);
     if (columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes() > 0 && 
             ssOutputStream.getWrittenOffset() - lastOffset > columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes()){
       ssOutputStream.flush();

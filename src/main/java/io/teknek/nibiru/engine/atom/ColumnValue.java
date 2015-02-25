@@ -41,7 +41,9 @@ public class ColumnValue extends AtomValue {
     bb1.append(cr,0,cr.length);
     bb1.append(SsTableReader.END_COLUMN_PART);
     cr = String.valueOf(getValue()).getBytes();
+    bb1.append(SsTableReader.END_COLUMN_PART);
     bb1.append(cr,0,cr.length);
+    
     return bb1.toByteArray();
   }
 
