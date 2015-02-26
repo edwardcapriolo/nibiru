@@ -7,6 +7,8 @@ package io.teknek.nibiru.engine.atom;
  */
 public class RowTombstoneKey extends AtomKey {
 
+  public static final char SERIALIZE_CHAR = 'T';
+  
   @Override
   public int compareTo(AtomKey o) {
     if (o instanceof RowTombstoneKey){
@@ -17,8 +19,7 @@ public class RowTombstoneKey extends AtomKey {
 
   @Override
   public byte[] externalize() {
-
-    return "T".getBytes();
+    return (""+SERIALIZE_CHAR).getBytes();
   }
   
 }
