@@ -64,11 +64,13 @@ public class SSTableTest {
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
-    for (int i = 0; i < 10000; i++) {
+    
+    for (int i = 0; i < 100000; i++) {
       NumberFormat nf = new DecimalFormat("00000");
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column2", "c", 1, 0L);
       m.put(ks1.getKeyspaceMetadata().getPartitioner().partition(nf.format(i)), "column3", "c", 1, 0L);
     }
+    
     SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
     SSTableWriter w = new SSTableWriter();
     w.flushToDisk("1", ks1.getColumnFamilies().get("abc"), m);

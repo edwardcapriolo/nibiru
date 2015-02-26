@@ -75,6 +75,12 @@ public class MemtableTest {
     m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", 3);
     Assert.assertEquals(new ColumnValue(null,3, System.currentTimeMillis(), 0).getValue(), 
             ((ColumnValue) m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2")).getValue()  );
+    m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), 4);
+    Assert.assertEquals(4, 
+            ((TombstoneValue) m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2")).getTime()  );
+    Assert.assertEquals(4, 
+            ((TombstoneValue) m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "c")).getTime() );
+    Assert.assertEquals(4, ((TombstoneValue)m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "k")).getTime()) ;
   }
   
   @Test

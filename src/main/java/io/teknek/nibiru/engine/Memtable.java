@@ -116,7 +116,7 @@ public class Memtable implements Comparable<Memtable>{
       } else { 
         ColumnValue foundColumn = (ColumnValue) rowkeyAndColumns.get(new ColumnKey(column));
         if (foundColumn == null) {
-          return null;
+          return tomb;
         } else {
           if (tomb.getTime() >= foundColumn.getTime()) {
             return tomb;
