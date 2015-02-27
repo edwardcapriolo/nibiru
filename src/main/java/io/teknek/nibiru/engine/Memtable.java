@@ -20,7 +20,6 @@ import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.TimeSource;
 import io.teknek.nibiru.TimeSourceImpl;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
@@ -28,7 +27,6 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -103,6 +101,7 @@ public class Memtable implements Comparable<Memtable>{
    * @return 
    *   null if row does not exist
    *   TombstoneValue if row has row tombstone >= column
+   *   TombstoneValue if row column is a tombstone column
    *   null if colun does not exist
    */
   public AtomValue get(Token row, String column) {
@@ -116,7 +115,7 @@ public class Memtable implements Comparable<Memtable>{
       } else { 
         ColumnValue foundColumn = (ColumnValue) rowkeyAndColumns.get(new ColumnKey(column));
         if (foundColumn == null) {
-          return null;
+          return tomb;
         } else {
           if (tomb.getTime() >= foundColumn.getTime()) {
             return tomb;

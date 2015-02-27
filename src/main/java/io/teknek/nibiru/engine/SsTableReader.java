@@ -93,10 +93,7 @@ public class SsTableReader {
   
   static StringBuilder readToken(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
-    bg.advanceIndex();
-    length = length + (bg.dst[bg.currentIndex] & 0xFF);
-    bg.advanceIndex();
+    int length = readTwoByteSize(bg);
     for (int i=0;i< length;i++){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
@@ -106,10 +103,7 @@ public class SsTableReader {
   
   static StringBuilder readRowkey(BufferGroup bg) throws IOException {
     StringBuilder token = new StringBuilder();
-    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
-    bg.advanceIndex();
-    length = length + (bg.dst[bg.currentIndex] & 0xFF);
-    bg.advanceIndex();
+    int length = readTwoByteSize(bg);
     for (int i=0;i< length;i++){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
@@ -118,10 +112,7 @@ public class SsTableReader {
   }
   
   private void skipRowkey(BufferGroup bg) throws IOException{
-    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
-    bg.advanceIndex();
-    length = length + (bg.dst[bg.currentIndex] & 0xFF);
-    bg.advanceIndex();
+    int length = readTwoByteSize(bg);
     for (int i=0;i< length;i++){
       bg.advanceIndex();
     }
@@ -129,24 +120,13 @@ public class SsTableReader {
   
   private static StringBuilder readColumn(BufferGroup bg) throws IOException{
     StringBuilder token = new StringBuilder();
-    int length = (bg.dst[bg.currentIndex] & 0xFF) << 8;
-    bg.advanceIndex();
-    length = length + (bg.dst[bg.currentIndex] & 0xFF);
+    int length = readTwoByteSize(bg);
     bg.advanceIndex();
     for (int i=0;i< length;i++){
       token.append((char) bg.dst[bg.currentIndex]);
       bg.advanceIndex();
     }
     return token;
-    /*
-    StringBuilder create = new StringBuilder();
-    while (bg.dst[bg.currentIndex] != END_COLUMN_PART){
-      create.append((char) bg.dst[bg.currentIndex]);
-      bg.advanceIndex();
-    }
-    bg.advanceIndex();
-    return create;
-    */
   }
  
   private static StringBuilder endColumn(BufferGroup bg) throws IOException{
@@ -191,22 +171,22 @@ public class SsTableReader {
     int numberOfColumns = readTwoByteSize(bg);
     for (int i =0;i< numberOfColumns ; i++){
       int next = readTwoByteSize(bg);
-      char c = (char) bg.dst[bg.currentIndex];
+      char typeOfColumn = (char) bg.dst[bg.currentIndex];
       bg.advanceIndex();
       StringBuilder name = readNextNIntoBuilder(bg, next-1);
-      AtomKey x = null;
-      if (c == 'C'){
-        x = new ColumnKey(name.toString());
-      } else if (c == 'T'){
-        x = new RowTombstoneKey();
+      AtomKey columnType = null;
+      if (typeOfColumn == ColumnKey.SERIALIZE_CHAR){
+        columnType = new ColumnKey(name.toString());
+      } else if (typeOfColumn == RowTombstoneKey.SERIALIZE_CHAR){
+        columnType = new RowTombstoneKey();
       } else {
-        throw new RuntimeException("can not handle "+c);
+        throw new RuntimeException("can not handle "+typeOfColumn);
       }
       int size = readTwoByteSize(bg);
-      char g = (char) bg.dst[bg.currentIndex];
+      char typeOfValue = (char) bg.dst[bg.currentIndex];
       bg.advanceIndex();
       AtomValue atomValue = null;
-      if (g == 'C'){
+      if (typeOfValue == 'C'){
         int soFar = 0;
         StringBuilder create = endColumnPart(bg);
         soFar += create.length();
@@ -227,12 +207,12 @@ public class SsTableReader {
         v.setTtl(Long.parseLong(ttl.toString()));
         v.setCreateTime(Long.parseLong(create.toString()));
         atomValue = v;
-      } else if (g == 'T'){
+      } else if (typeOfValue == 'T'){
         throw new RuntimeException("T");
       } else {
-        throw new RuntimeException("can not handle "+g);
+        throw new RuntimeException("can not handle "+typeOfValue);
       }
-      result.put(x, atomValue);
+      result.put(columnType, atomValue);
     }
     
     /*

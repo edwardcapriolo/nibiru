@@ -29,6 +29,7 @@ public class Configuration {
   private String transportHost = "127.0.0.1";
   private String clusterMembershipClass = GossipClusterMembership.class.getName();
   private Map<String,Object> clusterMembershipProperties;
+  private boolean httpDumpOnStop = false;
   
   public Configuration(){
   }
@@ -87,6 +88,14 @@ public class Configuration {
 
   public void setClusterMembershipProperties(Map<String, Object> clusterMembershipProperties) {
     this.clusterMembershipProperties = clusterMembershipProperties;
+  }
+
+  public boolean isHttpDumpOnStop() {
+    return httpDumpOnStop;
+  }
+
+  public void setHttpDumpOnStop(boolean httpDumpOnStop) {
+    this.httpDumpOnStop = httpDumpOnStop;
   }  
   
 }

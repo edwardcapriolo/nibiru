@@ -51,7 +51,7 @@ public class HttpJsonTransport {
     s.setHost(configuration.getTransportHost());
     s.setPort(configuration.getTransportPort());
     server.addConnector(s);
-    server.setDumpBeforeStop(true);
+    server.setDumpBeforeStop(configuration.isHttpDumpOnStop());
     server.setHandler(getHandler());
     try {
       server.start();

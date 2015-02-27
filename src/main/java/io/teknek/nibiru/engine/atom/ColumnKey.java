@@ -2,6 +2,7 @@ package io.teknek.nibiru.engine.atom;
 
 public class ColumnKey extends AtomKey {
 
+  public static final char SERIALIZE_CHAR = 'C';
   private final String column;
   
   public ColumnKey(String column){
@@ -27,7 +28,7 @@ public class ColumnKey extends AtomKey {
 
   @Override
   public byte[] externalize() {
-    return ("C"+getColumn()).getBytes();
+    return (SERIALIZE_CHAR + getColumn()).getBytes();
   }
   
 }
