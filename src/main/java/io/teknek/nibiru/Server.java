@@ -17,12 +17,14 @@ package io.teknek.nibiru;
 
 import io.teknek.nibiru.cluster.ClusterMembership;
 import io.teknek.nibiru.coordinator.Coordinator;
-import io.teknek.nibiru.engine.CompactionManager;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
+import io.teknek.nibiru.plugins.AbstractPlugin;
 import io.teknek.nibiru.transport.HttpJsonTransport;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,33 +38,44 @@ public class Server {
   private final Coordinator coordinator;
   private final ServerId serverId;
   private final ClusterMembership clusterMembership;
-    
-  private CompactionManager compactionManager;
-  private Thread compactionRunnable;
+  private final Map<String,AbstractPlugin> plugins;
   
   public Server(Configuration configuration){
     this.configuration = configuration;
     keyspaces = new ConcurrentHashMap<String,Keyspace>();
-    compactionManager = new CompactionManager(this);
     metaDataManager = new MetaDataManager(configuration, this);
     serverId = new ServerId(configuration);
     clusterMembership = ClusterMembership.createFrom(configuration, serverId);
     coordinator = new Coordinator(this);
     transport = new HttpJsonTransport(configuration, coordinator);
+    plugins = new ConcurrentHashMap<String,AbstractPlugin>();
   }
   
   public void init(){
     serverId.init();
     metaDataManager.init();
-    compactionRunnable = new Thread(compactionManager);
-    compactionRunnable.start();
     clusterMembership.init();
     coordinator.init();
     transport.init();
+    initPlugins();
+  }
+  
+  private void initPlugins(){
+    for (String plugin : configuration.getPlugins()){
+      try {
+        Constructor<?> c = Class.forName(plugin).getConstructor(Server.class);
+        AbstractPlugin p = (AbstractPlugin) c.newInstance(this);
+        plugins.put(p.getName(), p);
+      } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    for (Map.Entry<String, AbstractPlugin> pluginEntry: plugins.entrySet()){
+      pluginEntry.getValue().init();
+    }
   }
  
   public void shutdown() {
-    compactionManager.setGoOn(false);
     transport.shutdown();
     coordinator.shutdown();
     clusterMembership.shutdown();
@@ -74,6 +87,9 @@ public class Server {
           throw new RuntimeException(e);
         }
       }
+    }
+    for (Map.Entry<String, AbstractPlugin> pluginEntry: plugins.entrySet()){
+      pluginEntry.getValue().shutdown();
     }
   }
     
@@ -128,10 +144,6 @@ public class Server {
     return configuration;
   }
 
-  public CompactionManager getCompactionManager() {
-    return compactionManager;
-  }
-
   public MetaDataManager getMetaDataManager() {
     return metaDataManager;
   }
@@ -146,6 +158,10 @@ public class Server {
 
   public Coordinator getCoordinator() {
     return coordinator;
+  }
+
+  public Map<String, AbstractPlugin> getPlugins() {
+    return plugins;
   }
     
 }

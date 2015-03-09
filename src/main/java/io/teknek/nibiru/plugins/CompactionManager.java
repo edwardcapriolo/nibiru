@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.teknek.nibiru.engine;
+package io.teknek.nibiru.plugins;
 
 import io.teknek.nibiru.ColumnFamily;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
+import io.teknek.nibiru.engine.DefaultColumnFamily;
+import io.teknek.nibiru.engine.SsTable;
+import io.teknek.nibiru.engine.SsTableStreamReader;
+import io.teknek.nibiru.engine.SsTableStreamWriter;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 
@@ -30,13 +34,32 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class CompactionManager implements Runnable{
-  private Server server;
+public class CompactionManager extends AbstractPlugin implements Runnable {
+  public static final String MY_NAME = "compaction_manager";
+  
   private AtomicLong numberOfCompactions = new AtomicLong(0);
   private volatile boolean goOn = true;
+  private Thread thread;
   
   public CompactionManager(Server server){
-    this.server = server;
+    super(server);
+  }
+  
+  @Override
+  public String getName() {
+    return MY_NAME; 
+  }
+  
+  @Override
+  public void init() {
+    thread = new Thread(this);
+    thread.start();
+    
+  }
+
+  @Override
+  public void shutdown() {
+    this.setGoOn(false);
   }
   
   @Override

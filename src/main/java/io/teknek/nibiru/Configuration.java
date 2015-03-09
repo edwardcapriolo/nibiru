@@ -17,8 +17,11 @@ package io.teknek.nibiru;
 
 import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.metadata.XmlStorage;
+import io.teknek.nibiru.plugins.CompactionManager;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 public class Configuration {
@@ -30,6 +33,7 @@ public class Configuration {
   private String clusterMembershipClass = GossipClusterMembership.class.getName();
   private Map<String,Object> clusterMembershipProperties;
   private boolean httpDumpOnStop = false;
+  private List<String> plugins = Arrays.asList(CompactionManager.class.getName());
   
   public Configuration(){
   }
@@ -96,6 +100,14 @@ public class Configuration {
 
   public void setHttpDumpOnStop(boolean httpDumpOnStop) {
     this.httpDumpOnStop = httpDumpOnStop;
+  }
+
+  public List<String> getPlugins() {
+    return plugins;
+  }
+
+  public void setPlugins(List<String> plugins) {
+    this.plugins = plugins;
   }  
   
 }
