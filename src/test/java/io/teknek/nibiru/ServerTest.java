@@ -90,11 +90,9 @@ public class ServerTest {
       s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
       Thread.sleep(1);
     }
-    AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "0", "age");
-    Assert.assertEquals("4", ((ColumnValue) x).getValue());
     {
       AtomValue y = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "2", "age");
-      Assert.assertEquals("4", ((ColumnValue) x).getValue());
+      Assert.assertEquals("4", ((ColumnValue) y).getValue());
     }
     Thread.sleep(1000);
     s.shutdown();
@@ -102,9 +100,10 @@ public class ServerTest {
     {
       Server j = new Server(configuration);
       j.init();
-      Assert.assertNotNull(j.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY));
+      Assert.assertNotNull(j.getKeyspaces().get(TestUtil.DATA_KEYSPACE)
+              .getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY));
       AtomValue y = j.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "2", "age");
-      Assert.assertEquals("4", ((ColumnValue) x).getValue());
+      Assert.assertEquals("4", ((ColumnValue) y).getValue());
       j.shutdown();
     }
     s.shutdown();

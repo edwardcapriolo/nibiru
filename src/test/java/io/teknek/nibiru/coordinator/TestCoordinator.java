@@ -4,13 +4,10 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.client.Session;
-import io.teknek.nibiru.client.SessionBuilder;
-
 import io.teknek.nibiru.cluster.ConfigurationClusterMembership;
 import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
@@ -19,7 +16,6 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.router.TokenRouter;
 import io.teknek.nibiru.transport.Response;
 
@@ -33,8 +29,6 @@ import junit.framework.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.common.collect.ImmutableMap;
 
 public class TestCoordinator {
 
