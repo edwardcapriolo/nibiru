@@ -58,7 +58,10 @@ public class SsTableReader {
   }
   
   public void open(String id) throws IOException{
-    File sstable = new File(ssTable.getColumnFamily().getKeyspace().getConfiguration().getDataDirectory(), id + ".ss");
+    File pathToDataDirectory = SsTableStreamWriter.pathToSsTableDataDirectory(
+            ssTable.getColumnFamily().getKeyspace().getConfiguration(),
+            ssTable.getColumnFamily().getColumnFamilyMetadata());
+    File sstable = new File(pathToDataDirectory, id + ".ss" );
     ssRaf = new RandomAccessFile(sstable, "r");
     ssChannel = ssRaf.getChannel();
     ssBuffer = ssChannel.map(FileChannel.MapMode.READ_ONLY, 0, ssChannel.size());
