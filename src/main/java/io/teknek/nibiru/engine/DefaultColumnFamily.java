@@ -58,7 +58,9 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
   }
 
   public void init() throws IOException {
-    for(File ssTable: keyspace.getConfiguration().getDataDirectory().listFiles()){
+    File sstableDirectory = SsTableStreamWriter.pathToSsTableDataDirectory
+            (keyspace.getConfiguration(), columnFamilyMetadata);
+    for(File ssTable: sstableDirectory.listFiles()){
       String [] parts = ssTable.getName().split("\\.");
       if (parts.length == 2){
         if ("ss".equalsIgnoreCase(parts[1])){

@@ -23,10 +23,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
+import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 public class SsTableStreamWriter {
 
@@ -43,8 +45,18 @@ public class SsTableStreamWriter {
     bloomFilter = new BloomFilterWriter(id, columnFamily.getKeyspace().getConfiguration());
   }
   
+  public static File pathToSsTableDataDirectory(Configuration configuration, ColumnFamilyMetaData cfmd ){
+    configuration.getDataDirectory().mkdir();
+    File ssTablePath = new File(configuration.getDataDirectory(), cfmd.getName());
+    ssTablePath.mkdir();
+    return ssTablePath;
+  }
+  
   public void open() throws FileNotFoundException {
-    File sstableFile = new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory(), id + ".ss");
+
+    //File sstableFile = new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory(), id + ".ss");
+    File sstableFile = new File (pathToSsTableDataDirectory(columnFamily.getKeyspace().getConfiguration(), 
+            columnFamily.getColumnFamilyMetadata()), id + ".ss");
     if (!columnFamily.getKeyspace().getConfiguration().getDataDirectory().exists()){
       boolean create = columnFamily.getKeyspace().getConfiguration().getDataDirectory().mkdirs();
       if (!create){
