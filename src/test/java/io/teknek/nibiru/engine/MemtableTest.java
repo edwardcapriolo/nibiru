@@ -2,7 +2,6 @@ package io.teknek.nibiru.engine;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.TestUtil;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.Memtable;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
@@ -15,10 +14,7 @@ import io.teknek.nibiru.partitioner.Md5Partitioner;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.SortedMap;
-import java.util.TreeMap;
-
 import junit.framework.Assert;
 
 import org.junit.Rule;

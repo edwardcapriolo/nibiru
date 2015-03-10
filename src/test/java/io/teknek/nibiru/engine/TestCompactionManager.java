@@ -3,6 +3,7 @@ package io.teknek.nibiru.engine;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.plugins.CompactionManager;
 
 import java.io.IOException;
 
