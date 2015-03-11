@@ -30,5 +30,10 @@ public class ColumnKey extends AtomKey {
   public byte[] externalize() {
     return (SERIALIZE_CHAR + getColumn()).getBytes();
   }
+
+  @Override
+  public String toString() {
+    return "ColumnKey [column=" + column + "]";
+  }
   
 }

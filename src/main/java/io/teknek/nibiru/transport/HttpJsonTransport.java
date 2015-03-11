@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.coordinator.Coordinator;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -34,6 +35,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class HttpJsonTransport {
  
+  private static Logger LOGGER = Logger.getLogger(HttpJsonTransport.class);
   private Server server;
   private static ObjectMapper MAPPER = new ObjectMapper();
   private final Configuration configuration;
@@ -84,10 +86,9 @@ public class HttpJsonTransport {
         try {
           MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
         } catch (RuntimeException ex){
+          LOGGER.debug(ex);
           Response r = new Response();
           r.put("exception", ex.getMessage());
-          System.err.println(message);
-          ex.printStackTrace();
           MAPPER.writeValue(response.getOutputStream(), r);
         }
         response.getOutputStream().close();

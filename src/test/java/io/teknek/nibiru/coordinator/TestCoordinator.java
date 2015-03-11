@@ -16,6 +16,7 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
+import io.teknek.nibiru.plugins.HintReplayer;
 import io.teknek.nibiru.router.TokenRouter;
 import io.teknek.nibiru.transport.Response;
 
@@ -85,14 +86,14 @@ public class TestCoordinator {
       Map<String, Object> clusterProperties = new HashMap<>();
       clusterProperties.put(ConfigurationClusterMembership.HOSTS, payload);
       conf.setClusterMembershipProperties(clusterProperties);
-      conf.setTransportHost("127.0.0." + i + 1);
+      conf.setTransportHost("127.0.0." + (i + 1));
       clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
       cs[i] = conf;
     }
     for (int i = 0; i < s.length; i++) {
       s[i] = new Server(cs[i]);
       s[i].init();
-      payload.put("127.0.0." + i + 1, s[i].getServerId().getU().toString());
+      payload.put("127.0.0." + (i + 1), s[i].getServerId().getU().toString());
       s[i].shutdown();
     }
     for (int i = 0; i < s.length; i++) {
@@ -112,9 +113,11 @@ public class TestCoordinator {
     passIfAllAreUp(s, clAll);
     passIfOneIsUp(s, clOne);
     failIfSomeAreDown(s, clAll);
-    s[0].shutdown();
-    s[1].shutdown();
     
+    for (int i=0;i<2;i++){
+      s[i].shutdown();
+    }
+      
   }
   
   public void passIfOneIsUp(Server [] s, Session sb) throws ClientException {
