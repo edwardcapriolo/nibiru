@@ -1,7 +1,6 @@
 package io.teknek.nibiru.plugins;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -115,10 +114,9 @@ public class HintReplayer extends AbstractPlugin implements Runnable {
       client.post( om.readValue(v.getValue(), Message.class));
       hintCf.delete(m.getId(), c.getColumn(), System.currentTimeMillis() * 1000);
       hintsDelivered.getAndIncrement();
-      System.out.println("We deliver for you!");
     } catch ( IOException | RuntimeException e) {
       try {
-        Thread.sleep(1);
+        Thread.sleep(10);
       } catch (InterruptedException e1) {
       }
       hintsFailed.getAndIncrement();

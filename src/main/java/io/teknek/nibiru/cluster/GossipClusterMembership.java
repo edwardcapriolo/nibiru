@@ -60,13 +60,12 @@ public class GossipClusterMembership extends ClusterMembership{
       GossipMember g = new RemoteGossipMember(host, port, "");
       startupMembers.add(g);
     }
-    try {
+    try { 
       gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU()
               .toString(), LogLevel.DEBUG, startupMembers, settings, new GossipListener() {
         @Override
         public void gossipEvent(GossipMember member, GossipState state) {
-          LOGGER.info(serverId + " " + member + state); 
-          System.err.println(serverId + " " + member + state);
+          LOGGER.info(serverId.getU() + " " + member + state); 
         }
       });
     } catch (UnknownHostException | InterruptedException e) {

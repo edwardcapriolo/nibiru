@@ -56,34 +56,50 @@ public class Memtable implements Comparable<Memtable>{
   }
 
   public void put(Token rowkey, String column, String value, long stamp, long ttl) {
+    ColumnValue v = new ColumnValue(value, stamp, timeSource.getTimeInMillis(), ttl);
+    ColumnKey c = new ColumnKey(column);
     ConcurrentSkipListMap<AtomKey, AtomValue> newMap = new ConcurrentSkipListMap<>();
-    newMap.put(new ColumnKey(column), new ColumnValue(value, stamp, timeSource.getTimeInMillis(),
-            ttl));
+    newMap.put(c, v);
     ConcurrentSkipListMap<AtomKey, AtomValue> foundRow = data.putIfAbsent(rowkey, newMap);
     if (foundRow == null) {
       return;
     }
-    ColumnValue v = new ColumnValue(value, stamp, timeSource.getTimeInMillis(), ttl);
+
     while (true) {
-      AtomValue foundColumn = foundRow.putIfAbsent(new ColumnKey(column), v);
+      AtomValue foundColumn = foundRow.putIfAbsent(c, v);
       if (foundColumn == null) {
         return;
       }
       if (foundColumn instanceof TombstoneValue) {
         TombstoneValue tomb = (TombstoneValue) foundColumn;
         if (tomb.getTime() < v.getTime()) {
-          boolean res = foundRow.replace(new ColumnKey(column), foundColumn, v);
+          boolean res = foundRow.replace(c, foundColumn, v);
           if (res) {
             return;
           }
+        } else {
+          return ;
         }
       }
       
       if (foundColumn instanceof ColumnValue) {
         ColumnValue orig = (ColumnValue) foundColumn;
         if (orig.getTime() < v.getTime()) {
-          boolean res = foundRow.replace(new ColumnKey(column), foundColumn, v);
+          boolean res = foundRow.replace(c, foundColumn, v);
           if (res) {
+            return;
+          }
+        }
+        if (orig.getTime() == v.getTime()){
+          int compare = v.getValue().compareTo(orig.getValue());
+          if (compare == 0){
+            return;
+          } if (compare > 0){
+            boolean res = foundRow.replace(c, foundColumn, v);
+            if (res) {
+              return;
+            }
+          } else {
             return;
           }
         }

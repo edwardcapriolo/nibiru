@@ -113,11 +113,34 @@ public class TestCoordinator {
     passIfAllAreUp(s, clAll);
     passIfOneIsUp(s, clOne);
     failIfSomeAreDown(s, clAll);
-    
     for (int i=0;i<2;i++){
       s[i].shutdown();
     }
-      
+    //test hinted handoff
+    for (int i = 0; i < s.length; i++) {
+      s[i] = new Server(cs[i]);
+      s[i].init();
+    }
+    HintReplayer h = (HintReplayer) s[0].getPlugins().get(HintReplayer.MY_NAME);
+    for (int tries = 0; tries < 10; tries++) {
+      long x = h.getHintsDelivered();
+      if (x == 3) {
+        break;
+      }
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(3, h.getHintsDelivered());
+    int found = 0;
+    for (int i = 0; i < s.length; i++) {
+       ColumnValue cv = (ColumnValue) s[i].get("abc", "def", "a", "b");
+       if (cv != null && cv.getValue().equals("d")){
+         found++;
+       }
+    }
+    Assert.assertEquals(3, found);
+    for (int i = 0; i < s.length; i++) {
+      s[i].shutdown();
+    }
   }
   
   public void passIfOneIsUp(Server [] s, Session sb) throws ClientException {
@@ -149,7 +172,7 @@ public class TestCoordinator {
     for (int i = 2; i < s.length; i++) {
       s[i].shutdown();
       try {
-        sb.put("a", "b", "c", 1);
+        sb.put("a", "b", "d", 2);
         Assert.assertEquals(1, s[i].getCoordinator().getHinter().getHintsAdded());
       } catch (ClientException ex){
         Assert.assertEquals("coordinator timeout", ex.getMessage());
