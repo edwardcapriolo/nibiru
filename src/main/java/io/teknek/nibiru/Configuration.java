@@ -18,6 +18,7 @@ package io.teknek.nibiru;
 import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.metadata.XmlStorage;
 import io.teknek.nibiru.plugins.CompactionManager;
+import io.teknek.nibiru.plugins.HintReplayer;
 
 import java.io.File;
 import java.util.Arrays;
@@ -33,7 +34,7 @@ public class Configuration {
   private String clusterMembershipClass = GossipClusterMembership.class.getName();
   private Map<String,Object> clusterMembershipProperties;
   private boolean httpDumpOnStop = false;
-  private List<String> plugins = Arrays.asList(CompactionManager.class.getName());
+  private List<String> plugins = Arrays.asList(CompactionManager.class.getName(), HintReplayer.class.getName());
   
   public Configuration(){
   }

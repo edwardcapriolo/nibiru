@@ -51,10 +51,14 @@ public class Coordinator {
     hinter = createHinter();
   }
   
-  private Hinter createHinter(){
+  public static ColumnFamilyPersonality getHintCf(Server server){
     ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
     ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
-    return new Hinter(pers);  
+    return pers;
+  }
+  
+  private Hinter createHinter(){
+    return new Hinter(getHintCf(server));  
   }
   
   public void shutdown(){

@@ -27,6 +27,7 @@ import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -46,6 +47,12 @@ public class Client {
     client = new DefaultHttpClient();
     mgr = client.getConnectionManager();
     HttpParams params = client.getParams();
+    int timeoutConnection = 1000;
+    HttpConnectionParams.setConnectionTimeout(params, timeoutConnection);
+    int timeoutSocket = 1000;
+    HttpConnectionParams.setSoTimeout(params, timeoutSocket);
+    
+    
     client = new DefaultHttpClient(new ThreadSafeClientConnManager(params,
             mgr.getSchemeRegistry()), params);
     
@@ -54,6 +61,7 @@ public class Client {
   public Response post( Message request)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
+    
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
     input.setContentType("application/json");
     postRequest.setEntity(input);

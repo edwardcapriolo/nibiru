@@ -19,18 +19,23 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.LogLevel;
 import com.google.code.gossip.RemoteGossipMember;
+import com.google.code.gossip.event.GossipListener;
+import com.google.code.gossip.event.GossipState;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.ServerId;
 
 public class GossipClusterMembership extends ClusterMembership{
 
+  static final Logger LOGGER = Logger.getLogger(GossipClusterMembership.class);
   public static final String HOSTS = "gossip_hosts_list";
   public static final String PORT = "gossip_port";
   
@@ -55,8 +60,14 @@ public class GossipClusterMembership extends ClusterMembership{
       GossipMember g = new RemoteGossipMember(host, port, "");
       startupMembers.add(g);
     }
-    try {
-      gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU().toString(), LogLevel.DEBUG, startupMembers, settings, null);
+    try { 
+      gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU()
+              .toString(), LogLevel.DEBUG, startupMembers, settings, new GossipListener() {
+        @Override
+        public void gossipEvent(GossipMember member, GossipState state) {
+          LOGGER.info(serverId.getU() + " " + member + state); 
+        }
+      });
     } catch (UnknownHostException | InterruptedException e) {
       throw new RuntimeException(e);
     }

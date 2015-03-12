@@ -229,6 +229,13 @@ public class EventualCoordinator {
   public void shutdown(){
     executor.shutdown();
     lastChance.shutdown();
+    /*
+    try {
+      lastChance.awaitTermination(5, TimeUnit.SECONDS);
+      executor.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }*/
     for ( Entry<Destination, ColumnFamilyClient> i : mapping.entrySet()){
       i.getValue().shutdown();
     }
