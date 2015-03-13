@@ -168,7 +168,6 @@ public class SsTableReader {
     return sb;
   }
   
-  
   static SortedMap<AtomKey,AtomValue> readColumns(BufferGroup bg) throws IOException {
     SortedMap<AtomKey,AtomValue> result = new TreeMap<>();
     int numberOfColumns = readTwoByteSize(bg);
@@ -211,50 +210,14 @@ public class SsTableReader {
         v.setCreateTime(Long.parseLong(create.toString()));
         atomValue = v;
       } else if (typeOfValue == 'T'){
-        throw new RuntimeException("T");
+        StringBuilder value = readNextNIntoBuilder(bg, size-1);
+        TombstoneValue tv = new TombstoneValue(Long.parseLong(value.toString()));
+        atomValue = tv;
       } else {
         throw new RuntimeException("can not handle "+typeOfValue);
       }
       result.put(columnType, atomValue);
     }
-    
-    /*
-    do {
-      if (bg.dst[bg.currentIndex] == END_COLUMN){
-        bg.advanceIndex();
-      }
-      StringBuilder name = readColumn(bg);
-      if (name.charAt(0)== 'C'){
-        byte typeOfValue = bg.dst[bg.currentIndex]; 
-        bg.advanceIndex();
-        if (typeOfValue == 'C'){
-          StringBuilder create = readColumn(bg);
-          StringBuilder time = readColumn(bg);
-          StringBuilder ttl = readColumn(bg);
-          StringBuilder value = endColumn(bg);
-          ColumnValue v = new ColumnValue();
-          v.setValue(value.toString());
-          v.setTime(Long.parseLong(time.toString()));
-          v.setTtl(Long.parseLong(ttl.toString()));
-          v.setCreateTime(Long.parseLong(create.toString()));
-          result.put(new ColumnKey(name.substring(1)), v);
-        } else if (typeOfValue == 'T'){
-          StringBuilder delete = readColumn(bg);
-          TombstoneValue v = new TombstoneValue(Long.parseLong(delete.toString()));
-          result.put(new RowTombstoneKey(), v);
-        } else {
-          throw new RuntimeException("corrupt data" + ((char) typeOfValue));
-        }
-      } else if (name.charAt(0)=='T'){
-        StringBuilder delete = readColumn(bg);
-        TombstoneValue v = new TombstoneValue(Long.parseLong(delete.toString()));
-        result.put(new RowTombstoneKey(), v);
-      } else {
-        throw new IllegalArgumentException("can not handle " + name);
-      }
-      
-    } while (bg.dst[bg.currentIndex] != END_ROW);
-    */
     return result;
   }
   
@@ -295,7 +258,17 @@ public class SsTableReader {
         if (rowkey.toString().equals(searchToken.getRowkey())){
           keyCache.put(searchToken.getRowkey(), startOfRow);
           SortedMap<AtomKey,AtomValue> columns = readColumns(bg);
-          return columns.get(new ColumnKey(column));
+          TombstoneValue v = (TombstoneValue) columns.get(new RowTombstoneKey());
+          if (v == null){
+            return columns.get(new ColumnKey(column));
+          } else {
+            AtomValue atomValue = columns.get(new ColumnKey(column));
+            if (atomValue.getTime() > v.getTime()){
+              return atomValue;
+            } else {
+              return v;
+            }
+          }
         } else {
           ignoreColumns(bg);
         }

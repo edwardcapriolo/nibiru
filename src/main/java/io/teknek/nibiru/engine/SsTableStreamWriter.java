@@ -50,7 +50,7 @@ public class SsTableStreamWriter {
     File ssTablePath = new File(configuration.getDataDirectory(), cfmd.getName());
     ssTablePath.mkdir();
     return ssTablePath;
-  }
+  } 
   
   public void open() throws FileNotFoundException {
 

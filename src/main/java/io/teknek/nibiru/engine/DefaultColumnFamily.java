@@ -48,7 +48,7 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     //It would be nice to move this into init but some things are dependent
     CommitLog commitLog = new CommitLog(this);
     try {
-      commitLog.open();
+      commitLog.open(); 
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
