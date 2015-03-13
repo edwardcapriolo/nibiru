@@ -2,7 +2,10 @@ package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Keyspace;
+import io.teknek.nibiru.Token;
+import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
+import io.teknek.nibiru.engine.atom.TombstoneValue;
 import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
 
 import java.io.File;
@@ -140,4 +143,29 @@ public class SSTableTest {
   }
   
   
+  @Test
+  public void rowTombstoneShadowColumnTest() throws IOException{
+    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
+    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
+    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
+    Token t = ks1.getKeyspaceMetadata().getPartitioner().partition("arow");
+    m.put(t, "acolumn", "avalue", 1, 0L);
+    m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("arow"), 2);
+    m.put(t, "bcolumn", "bvalue", 3, 0L);
+    SsTable s = new SsTable(ks1.getColumnFamilies().get("abc"));
+    SSTableWriter w = new SSTableWriter();
+    w.flushToDisk("1", ks1.getColumnFamilies().get("abc"), m);
+    s.open("1", ks1.getConfiguration());
+    {
+      AtomValue av = s.get(t, "acolumn");
+      Assert.assertEquals(2, av.getTime());
+      Assert.assertTrue((av instanceof TombstoneValue));
+    }
+    {
+      AtomValue av = s.get(t, "bcolumn");
+      Assert.assertEquals(3, av.getTime());
+      Assert.assertTrue((av instanceof ColumnValue));
+    }
+    
+  }
 }
