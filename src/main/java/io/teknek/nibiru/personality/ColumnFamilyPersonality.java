@@ -22,7 +22,7 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 
 public interface ColumnFamilyPersonality {
 
-  public static final String COLUMN_FAMILY_PERSONALITY = "COLUMN_FAMILY_PERSONALITY";
+  public static final String PERSONALITY = "COLUMN_FAMILY_PERSONALITY";
           
   public abstract AtomValue get(String rowkey, String column);
 

@@ -84,18 +84,18 @@ public class Coordinator {
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
     long timeoutInMs = determineTimeout(columnFamily, message);
 
-    if (ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY.equals(message.getRequestPersonality())) {
+    if (ColumnFamilyPersonality.PERSONALITY.equals(message.getPersonality())) {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       ResultMerger merger = new HighestTimestampResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger, getHinterForMessage(message, columnFamily));
-    } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getRequestPersonality())) {
+    } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getPersonality())) {
       LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
       ResultMerger merger = new MajorityValueResultMerger();
       return eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger, null);
     } else {
-      throw new UnsupportedOperationException(message.getRequestPersonality());
+      throw new UnsupportedOperationException(message.getPersonality());
     }
 
   }

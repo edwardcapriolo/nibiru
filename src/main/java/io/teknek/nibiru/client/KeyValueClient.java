@@ -35,7 +35,7 @@ public class KeyValueClient extends Client {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(columnFamily);
-    m.setRequestPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
+    m.setPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "put")
             .put("rowkey", key)
@@ -52,7 +52,7 @@ public class KeyValueClient extends Client {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(columnFamily);
-    m.setRequestPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
+    m.setPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "get")
             .put("rowkey", key)

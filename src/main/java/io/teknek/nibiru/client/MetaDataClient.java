@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
-
 public class MetaDataClient extends Client {
 
   public MetaDataClient(String host, int port) {
@@ -37,7 +35,7 @@ public class MetaDataClient extends Client {
   public List<ClusterMember> getLiveMembers() throws ClientException {
     Message m = new Message();
     m.setKeyspace("system");
-    m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
     Map<String,Object> payload = new HashMap<>();
     payload.put("type", MetaPersonality.LIST_LIVE_MEMBERS);
     m.setPayload(payload);
@@ -58,7 +56,7 @@ public class MetaDataClient extends Client {
     Message m = new Message();
     m.setKeyspace("system");
     m.setStore(null);
-    m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
     Map<String,Object> payload = new HashMap<>();
             payload.put("type", MetaPersonality.CREATE_OR_UPDATE_KEYSPACE);
             payload.put("keyspace", keyspace);
@@ -75,7 +73,7 @@ public class MetaDataClient extends Client {
     Message m = new Message();
     m.setKeyspace("system");
     m.setStore(null);
-    m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
     Map<String, Object> payload = new HashMap<>();
     payload.put("type", MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY);
     payload.put("keyspace", keyspace);

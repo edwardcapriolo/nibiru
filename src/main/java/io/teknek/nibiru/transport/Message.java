@@ -20,7 +20,7 @@ import java.util.Map;
 public class Message {
   private String keyspace;
   private String store;
-  private String requestPersonality;
+  private String personality;
   private Map<String,Object> payload;
   
   public Message(){
@@ -51,18 +51,18 @@ public class Message {
     this.payload = payload;
   }
 
-  public String getRequestPersonality() {
-    return requestPersonality;
+  public String getPersonality() {
+    return personality;
   }
 
-  public void setRequestPersonality(String requestPersonality) {
-    this.requestPersonality = requestPersonality;
+  public void setPersonality(String requestPersonality) {
+    this.personality = requestPersonality;
   }
 
   @Override
   public String toString() {
     return "Message [keyspace=" + keyspace + ", columnFamily=" + store
-            + ", requestPersonality=" + requestPersonality + ", payload=" + payload + "]";
+            + ", personality=" + personality + ", payload=" + payload + "]";
   }
 
   

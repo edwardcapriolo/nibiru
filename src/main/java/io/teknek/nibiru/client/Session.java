@@ -37,7 +37,7 @@ public class Session {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "get")
             .put("rowkey", rowkey)
@@ -64,7 +64,7 @@ public class Session {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "slice")
             .put("rowkey", rowkey)
@@ -94,7 +94,7 @@ public class Session {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "delete")
             .put("rowkey", rowkey)
@@ -122,7 +122,7 @@ public class Session {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "put")
             .put("rowkey", rowkey)
@@ -152,7 +152,7 @@ public class Session {
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
+    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "put")
             .put("rowkey", rowkey)
