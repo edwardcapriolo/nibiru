@@ -8,7 +8,7 @@ import java.util.Map;
 public class SessionBuilder {
   private final ColumnFamilyClient client;
   private String keyspace;
-  private String columnFamily;
+  private String store;
   private Consistency writeConsistency;
   private Consistency readConsistency;
   private long timeoutMillis;
@@ -26,8 +26,8 @@ public class SessionBuilder {
     return this;
   }
   
-  public SessionBuilder withColumnFamily(String columnFamily){
-    this.columnFamily = columnFamily;
+  public SessionBuilder withStore(String columnFamily){
+    this.store = columnFamily;
     return this;
   }
     
@@ -42,6 +42,6 @@ public class SessionBuilder {
   }
   
   public Session build(){
-    return new Session(client, keyspace, columnFamily, writeConsistency, readConsistency, timeoutMillis);
+    return new Session(client, keyspace, store, writeConsistency, readConsistency, timeoutMillis);
   }
 }

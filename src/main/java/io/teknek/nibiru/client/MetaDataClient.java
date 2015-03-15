@@ -57,7 +57,7 @@ public class MetaDataClient extends Client {
   public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties) throws ClientException {
     Message m = new Message();
     m.setKeyspace("system");
-    m.setColumnFamily(null);
+    m.setStore(null);
     m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
     Map<String,Object> payload = new HashMap<>();
             payload.put("type", MetaPersonality.CREATE_OR_UPDATE_KEYSPACE);
@@ -71,15 +71,15 @@ public class MetaDataClient extends Client {
     }
   }
   
-  public void createOrUpdateColumnFamily(String keyspace, String columnFamily,  Map<String,Object> properties) throws ClientException {
+  public void createOrUpdateStore(String keyspace, String store,  Map<String,Object> properties) throws ClientException {
     Message m = new Message();
     m.setKeyspace("system");
-    m.setColumnFamily(null);
+    m.setStore(null);
     m.setRequestPersonality(MetaPersonality.META_PERSONALITY);
     Map<String, Object> payload = new HashMap<>();
     payload.put("type", MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY);
     payload.put("keyspace", keyspace);
-    payload.put("columnfamily", columnFamily);
+    payload.put("store", store);
     payload.putAll(properties);
     m.setPayload(payload);
     try {

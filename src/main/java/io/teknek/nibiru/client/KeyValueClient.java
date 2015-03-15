@@ -34,7 +34,7 @@ public class KeyValueClient extends Client {
   public void put(String keyspace, String columnFamily, String key, String value) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
-    m.setColumnFamily(columnFamily);
+    m.setStore(columnFamily);
     m.setRequestPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "put")
@@ -51,7 +51,7 @@ public class KeyValueClient extends Client {
   public String get(String keyspace, String columnFamily, String key) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
-    m.setColumnFamily(columnFamily);
+    m.setStore(columnFamily);
     m.setRequestPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "get")

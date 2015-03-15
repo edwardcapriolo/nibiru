@@ -21,17 +21,17 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 
 public class IndexWriter {
 
   private final String id;
-  private final ColumnFamily columnFamily;
+  private final Store columnFamily;
   private BufferedOutputStream indexStream;
   private long rowkeyCount;
   
   
-  public IndexWriter(String id, ColumnFamily columnFamily){
+  public IndexWriter(String id, Store columnFamily){
     this.id = id;
     this.columnFamily = columnFamily;
   }
@@ -42,7 +42,7 @@ public class IndexWriter {
   }
   
   public void handleRow(long startOfRecord, String token) throws IOException {
-    if (rowkeyCount++ % columnFamily.getColumnFamilyMetadata().getIndexInterval() == 0){
+    if (rowkeyCount++ % columnFamily.getStoreMetadata().getIndexInterval() == 0){
       indexStream.write(SsTableReader.START_RECORD);
       indexStream.write(token.getBytes());
       indexStream.write(IndexReader.END_TOKEN);

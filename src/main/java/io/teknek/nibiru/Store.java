@@ -17,19 +17,19 @@ package io.teknek.nibiru;
 
 import java.io.IOException;
 
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 
-public abstract class ColumnFamily {
+public abstract class Store {
   protected final Keyspace keyspace;
-  protected final ColumnFamilyMetaData columnFamilyMetadata;
+  protected final StoreMetaData storeMetadata;
   
-  public ColumnFamily(Keyspace keyspace, ColumnFamilyMetaData cfmd){
+  public Store(Keyspace keyspace, StoreMetaData cfmd){
     this.keyspace = keyspace;
-    this.columnFamilyMetadata = cfmd;
+    this.storeMetadata = cfmd;
   }
 
-  public ColumnFamilyMetaData getColumnFamilyMetadata() {
-    return columnFamilyMetadata;
+  public StoreMetaData getStoreMetadata() {
+    return storeMetadata;
   }
   
   public Keyspace getKeyspace() {

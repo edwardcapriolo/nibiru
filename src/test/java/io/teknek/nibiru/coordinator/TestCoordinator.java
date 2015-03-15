@@ -13,7 +13,7 @@ import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.plugins.HintReplayer;
@@ -63,13 +63,13 @@ public class TestCoordinator {
     props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
     c.createOrUpdateKeyspace("abc", props);
     Map <String,Object> x = new HashMap<String,Object>();
-    x.put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-    c.createOrUpdateColumnFamily("abc", "def", x);
+    x.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
+    c.createOrUpdateStore("abc", "def", x);
     Thread.sleep(10);
     for (int i = 0; i < s.length; i++) {
       Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));
       Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetadata().getRouter().getClass().getName());
-      Assert.assertTrue(s[i].getKeyspaces().get("abc").getColumnFamilies().containsKey("def"));
+      Assert.assertTrue(s[i].getKeyspaces().get("abc").getStores().containsKey("def"));
     }
     
   }
@@ -103,11 +103,11 @@ public class TestCoordinator {
     createMetaData(s);
     ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
             .getConfiguration().getTransportPort());
-    Session clAll = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
+    Session clAll = cf.createBuilder().withKeyspace("abc").withStore("def")
             .withWriteConsistency(ConsistencyLevel.ALL, new HashMap())
             .withReadConsistency(ConsistencyLevel.ALL, new HashMap()).build();
     Map one = new HashMap(); one.put("n", 1);
-    Session clOne = cf.createBuilder().withKeyspace("abc").withColumnFamily("def")
+    Session clOne = cf.createBuilder().withKeyspace("abc").withStore("def")
             .withReadConsistency(ConsistencyLevel.N, one).withWriteConsistency(ConsistencyLevel.N, one).build();
     
     passIfAllAreUp(s, clAll);
@@ -155,7 +155,7 @@ public class TestCoordinator {
     int found = 0;
     for (int i = 0; i < s.length; i++) {
       ColumnFamilyPersonality c = (ColumnFamilyPersonality) s[i].getKeyspaces().get("abc")
-              .getColumnFamilies().get("def"); 
+              .getStores().get("def"); 
       AtomValue v = c.get("a", "b");
       if (v != null){
         Assert.assertEquals("c", ((ColumnValue) c.get("a", "b")).getValue());

@@ -15,7 +15,7 @@
  */
 package io.teknek.nibiru.engine;
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.TimeSource;
 import io.teknek.nibiru.TimeSourceImpl;
 import io.teknek.nibiru.Token;
@@ -35,7 +35,7 @@ import java.util.Map.Entry;
 public class CommitLog {
 
   public static final char END_TOKEN = '\1';
-  private final ColumnFamily columnFamily;
+  private final Store columnFamily;
   private final String tableId;
   private CountingBufferedOutputStream ssOutputStream;
   private long lastOffset = 0;
@@ -43,15 +43,15 @@ public class CommitLog {
   private TimeSource timeSource = new TimeSourceImpl();
   public static final String EXTENSION = "commitlog";
   
-  public CommitLog(ColumnFamily cf){
+  public CommitLog(Store cf){
     this.columnFamily = cf;
     tableId = String.valueOf(timeSource.getTimeInMillis());
   }
   
-  public static File getCommitLogDirectoryForColumnFamily(ColumnFamily columnFamily){
+  public static File getCommitLogDirectoryForColumnFamily(Store columnFamily){
     return new File(columnFamily.getKeyspace().getConfiguration()
             .getCommitlogDirectory(), 
-            columnFamily.getColumnFamilyMetadata()
+            columnFamily.getStoreMetadata()
             .getName());
   }
   
@@ -75,8 +75,8 @@ public class CommitLog {
     SsTableStreamWriter.writeToken(rowkey, ssOutputStream);
     SsTableStreamWriter.writeRowkey(rowkey, ssOutputStream);
     SsTableStreamWriter.writeColumns(columns, ssOutputStream);
-    if (columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes() > 0 && 
-            ssOutputStream.getWrittenOffset() - lastOffset > columnFamily.getColumnFamilyMetadata().getCommitlogFlushBytes()){
+    if (columnFamily.getStoreMetadata().getCommitlogFlushBytes() > 0 && 
+            ssOutputStream.getWrittenOffset() - lastOffset > columnFamily.getStoreMetadata().getCommitlogFlushBytes()){
       ssOutputStream.flush();
       lastOffset = ssOutputStream.getWrittenOffset();
     }

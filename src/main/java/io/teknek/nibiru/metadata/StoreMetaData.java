@@ -17,7 +17,7 @@ package io.teknek.nibiru.metadata;
 
 import java.util.Map;
 
-public class ColumnFamilyMetaData {
+public class StoreMetaData {
   public static final String IMPLEMENTING_CLASS = "implementing_class"; 
   
   private String name;
@@ -34,7 +34,7 @@ public class ColumnFamilyMetaData {
   private long operationTimeoutInMs = 5000;
   private boolean enableHints = true;
   
-  public ColumnFamilyMetaData(){
+  public StoreMetaData(){
     
   }
 

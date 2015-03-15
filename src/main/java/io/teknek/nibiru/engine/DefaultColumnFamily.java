@@ -25,7 +25,7 @@ import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
  
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.atom.AtomKey;
@@ -34,16 +34,16 @@ import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
-public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPersonality {
+public class DefaultColumnFamily extends Store implements ColumnFamilyPersonality {
 
   private AtomicReference<Memtable> memtable;
   private MemtableFlusher memtableFlusher;
   private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   
-  public DefaultColumnFamily(Keyspace keyspace, ColumnFamilyMetaData cfmd){
+  public DefaultColumnFamily(Keyspace keyspace, StoreMetaData cfmd){
     super(keyspace, cfmd);
     //It would be nice to move this into init but some things are dependent
     CommitLog commitLog = new CommitLog(this);
@@ -59,7 +59,7 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
 
   public void init() throws IOException {
     File sstableDirectory = SsTableStreamWriter.pathToSsTableDataDirectory
-            (keyspace.getConfiguration(), columnFamilyMetadata);
+            (keyspace.getConfiguration(), storeMetadata);
     for(File ssTable: sstableDirectory.listFiles()){
       String [] parts = ssTable.getName().split("\\.");
       if (parts.length == 2){
@@ -128,8 +128,8 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
     }
   }
   
-  public ColumnFamilyMetaData getColumnFamilyMetadata() {
-    return columnFamilyMetadata;
+  public StoreMetaData getStoreMetadata() {
+    return storeMetadata;
   }
   
   @Deprecated
@@ -226,8 +226,8 @@ public class DefaultColumnFamily extends ColumnFamily implements ColumnFamilyPer
   
   void considerFlush(){
     Memtable now = memtable.get();
-    if (columnFamilyMetadata.getFlushNumberOfRowKeys() != 0 
-            && now.size() >= columnFamilyMetadata.getFlushNumberOfRowKeys()){
+    if (storeMetadata.getFlushNumberOfRowKeys() != 0 
+            && now.size() >= storeMetadata.getFlushNumberOfRowKeys()){
       CommitLog commitLog = new CommitLog(this);
       try {
         commitLog.open();

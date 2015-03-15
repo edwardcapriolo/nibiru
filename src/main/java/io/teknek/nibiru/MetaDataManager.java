@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import io.teknek.nibiru.engine.DefaultColumnFamily;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
-import io.teknek.nibiru.metadata.KeyspaceAndColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
+import io.teknek.nibiru.metadata.KeyspaceAndStoreMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.metadata.MetaDataStorage;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
@@ -60,25 +60,25 @@ public class MetaDataManager {
     {
       Map<String,Object> properties = new HashMap<>();
       properties.put("implementing_class", DefaultColumnFamily.class.getName());
-      system.createColumnFamily("hints", properties);
+      system.createStore("hints", properties);
     }
     server.getKeyspaces().put("system", system);
   }
 
   
   private void createKeyspaces(){
-    Map<String,KeyspaceAndColumnFamilyMetaData> meta = read();
+    Map<String,KeyspaceAndStoreMetaData> meta = read();
     addSystemKeyspace();
     if (!(meta == null)){
-      for (Entry<String, KeyspaceAndColumnFamilyMetaData> keyspaceEntry : meta.entrySet()){
+      for (Entry<String, KeyspaceAndStoreMetaData> keyspaceEntry : meta.entrySet()){
         Keyspace k = new Keyspace(configuration);
         k.setKeyspaceMetadata(keyspaceEntry.getValue().getKeyspaceMetaData());
-        for (Map.Entry<String, ColumnFamilyMetaData> columnFamilyEntry : keyspaceEntry.getValue().getColumnFamilies().entrySet()){
-          ColumnFamily columnFamily = null;
+        for (Map.Entry<String, StoreMetaData> columnFamilyEntry : keyspaceEntry.getValue().getColumnFamilies().entrySet()){
+          Store columnFamily = null;
           try {
             Class<?> cfClass = Class.forName(columnFamilyEntry.getValue().getImplementingClass());
-            Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetaData.class);
-            columnFamily = (ColumnFamily) cons.newInstance(k, columnFamilyEntry.getValue());
+            Constructor<?> cons = cfClass.getConstructor(Keyspace.class, StoreMetaData.class);
+            columnFamily = (Store) cons.newInstance(k, columnFamilyEntry.getValue());
           } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
           }
@@ -87,7 +87,7 @@ public class MetaDataManager {
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
-          k.getColumnFamilies().put(columnFamilyEntry.getKey(), columnFamily);
+          k.getStores().put(columnFamilyEntry.getKey(), columnFamily);
         }
         server.getKeyspaces().put(keyspaceEntry.getKey(), k);
       }
@@ -108,33 +108,28 @@ public class MetaDataManager {
   }
   
   private void persistMetadata(){
-    Map<String,KeyspaceAndColumnFamilyMetaData> meta = new HashMap<>();
+    Map<String,KeyspaceAndStoreMetaData> meta = new HashMap<>();
     for (Map.Entry<String, Keyspace> entry : server.getKeyspaces().entrySet()){
-      KeyspaceAndColumnFamilyMetaData kfmd = new KeyspaceAndColumnFamilyMetaData();
+      KeyspaceAndStoreMetaData kfmd = new KeyspaceAndStoreMetaData();
       kfmd.setKeyspaceMetaData(entry.getValue().getKeyspaceMetadata());
-      for (Map.Entry<String, ColumnFamily> cfEntry : entry.getValue().getColumnFamilies().entrySet()){
-        kfmd.getColumnFamilies().put(cfEntry.getKey(), cfEntry.getValue().getColumnFamilyMetadata());
+      for (Map.Entry<String, Store> cfEntry : entry.getValue().getStores().entrySet()){
+        kfmd.getColumnFamilies().put(cfEntry.getKey(), cfEntry.getValue().getStoreMetadata());
       }
       meta.put(entry.getKey(), kfmd);
     }
     persist(meta);
   }
   
-  public void createOrUpdateColumnFamily(String keyspaceName, String columnFamilyName, Map<String,Object> properties){
-    server.getKeyspaces().get(keyspaceName).createColumnFamily(columnFamilyName, properties);
+  public void createOrUpdateStore(String keyspaceName, String store, Map<String,Object> properties){
+    server.getKeyspaces().get(keyspaceName).createStore(store, properties);
     persistMetadata();
   }
   
-  public ColumnFamilyMetaData getColumnFamily(String keyspaceName, String columnFamilyName){
-    return null;
-  }
-  
-  
-  public Map<String,KeyspaceAndColumnFamilyMetaData> read(){
+  public Map<String,KeyspaceAndStoreMetaData> read(){
     return metaDataStorage.read(configuration);
   }
   
-  public void persist(Map<String,KeyspaceAndColumnFamilyMetaData> meta){
+  public void persist(Map<String,KeyspaceAndStoreMetaData> meta){
     metaDataStorage.persist(configuration, meta);
   }
 }

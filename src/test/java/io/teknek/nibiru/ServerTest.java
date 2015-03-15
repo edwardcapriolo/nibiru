@@ -23,7 +23,7 @@ public class ServerTest {
   @Test
   public void aTest() throws IOException, InterruptedException{
     Server s = TestUtil.aBasicServer(testFolder);
-    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
+    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
     AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
@@ -32,7 +32,7 @@ public class ServerTest {
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "ziggy", "age", "8", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "dotty", "age", "4", 1);
     Thread.sleep(2000);
-    Assert.assertEquals(2, ((DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY))
+    Assert.assertEquals(2, ((DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY))
             .getMemtableFlusher().getFlushCount());
     x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
     Assert.assertEquals("6", ((ColumnValue) x).getValue());
@@ -62,9 +62,9 @@ public class ServerTest {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, new HashMap<String,Object>());
-    s.getMetaDataManager().createOrUpdateColumnFamily(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
-    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
-    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY).getColumnFamilyMetadata().setCommitlogFlushBytes(1);
+    s.getMetaDataManager().createOrUpdateStore(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
+    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
+    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setCommitlogFlushBytes(1);
     for (int i = 0; i < 3; i++) {
       s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
       Thread.sleep(1);
@@ -80,7 +80,7 @@ public class ServerTest {
       Server j = new Server(configuration);
       j.init();
       Assert.assertNotNull(j.getKeyspaces().get(TestUtil.DATA_KEYSPACE)
-              .getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY));
+              .getStores().get(TestUtil.PETS_COLUMN_FAMILY));
       AtomValue y = j.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "2", "age");
       Assert.assertEquals("4", ((ColumnValue) y).getValue());
       j.shutdown();

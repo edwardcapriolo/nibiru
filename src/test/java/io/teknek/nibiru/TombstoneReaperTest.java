@@ -27,9 +27,9 @@ public class TombstoneReaperTest {
     Server s = new Server(c);
     s.init();
     s.getMetaDataManager().createOrUpdateKeyspace(ks, null);
-    s.getMetaDataManager().createOrUpdateColumnFamily(ks, cf, null);
-    s.getKeyspaces().get(ks).getColumnFamilies().get(cf).getColumnFamilyMetadata().setTombstoneGraceMillis(2);
-    ((DefaultColumnFamily) s.getKeyspaces().get(ks).getColumnFamilies().get(cf)).getMemtable().setTimeSource(
+    s.getMetaDataManager().createOrUpdateStore(ks, cf, null);
+    s.getKeyspaces().get(ks).getStores().get(cf).getStoreMetadata().setTombstoneGraceMillis(2);
+    ((DefaultColumnFamily) s.getKeyspaces().get(ks).getStores().get(cf)).getMemtable().setTimeSource(
             new TimeSource(){
               public long getTimeInMillis() {
                 return 2;

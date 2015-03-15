@@ -16,7 +16,7 @@
 package io.teknek.nibiru.coordinator;
 
 import java.util.List;
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
@@ -52,7 +52,7 @@ public class Coordinator {
   }
   
   public static ColumnFamilyPersonality getHintCf(Server server){
-    ColumnFamily cf = server.getKeyspaces().get("system").getColumnFamilies().get("hints");
+    Store cf = server.getKeyspaces().get("system").getStores().get("hints");
     ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
     return pers;
   }
@@ -75,9 +75,9 @@ public class Coordinator {
     if (keyspace == null){
       throw new RuntimeException(message.getKeyspace() + " is not found");
     }
-    ColumnFamily columnFamily = keyspace.getColumnFamilies().get(message.getColumnFamily());
+    Store columnFamily = keyspace.getStores().get(message.getStore());
     if (columnFamily == null){
-      throw new RuntimeException(message.getColumnFamily() + " is not found");
+      throw new RuntimeException(message.getStore() + " is not found");
     }
     Token token = keyspace.getKeyspaceMetadata().getPartitioner().partition((String) message.getPayload().get("rowkey"));
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
@@ -100,9 +100,9 @@ public class Coordinator {
 
   }
   
-  private Hinter getHinterForMessage(Message message, ColumnFamily columnFamily){
+  private Hinter getHinterForMessage(Message message, Store columnFamily){
     String type = (String) message.getPayload().get("type");
-    if (!columnFamily.getColumnFamilyMetadata().isEnableHints()){
+    if (!columnFamily.getStoreMetadata().isEnableHints()){
       return null;
     }
     if (type.equals("put") || type.equals("delete") ){
@@ -116,11 +116,11 @@ public class Coordinator {
     return hinter;
   }
 
-  private static long determineTimeout(ColumnFamily columnFamily, Message message){
+  private static long determineTimeout(Store columnFamily, Message message){
     if (message.getPayload().containsKey("timeout")){
       return ((Number) message.getPayload().get("timeout")).longValue();
     } else {
-      return columnFamily.getColumnFamilyMetadata().getOperationTimeoutInMs();
+      return columnFamily.getStoreMetadata().getOperationTimeoutInMs();
     }
   }
 

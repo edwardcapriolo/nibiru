@@ -15,7 +15,7 @@
  */
 package io.teknek.nibiru;
 
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 
 import java.lang.reflect.Constructor;
@@ -28,11 +28,11 @@ public class Keyspace {
 
   private KeyspaceMetaData keyspaceMetadata;
   private Configuration configuration;
-  private ConcurrentMap<String,ColumnFamily> columnFamilies;
+  private ConcurrentMap<String,Store> stores;
   
   public Keyspace(Configuration configuration){
     this.configuration = configuration;
-    columnFamilies = new ConcurrentHashMap<>();
+    stores = new ConcurrentHashMap<>();
   }
 
   public KeyspaceMetaData getKeyspaceMetadata() {
@@ -43,31 +43,31 @@ public class Keyspace {
     this.keyspaceMetadata = keyspaceMetadata;
   }
   
-  public void createColumnFamily(String name, Map<String,Object> properties){
-    ColumnFamilyMetaData cfmd = new ColumnFamilyMetaData();
+  public void createStore(String name, Map<String,Object> properties){
+    StoreMetaData cfmd = new StoreMetaData();
     cfmd.setName(name);
-    String implementingClass = (String) properties.get(ColumnFamilyMetaData.IMPLEMENTING_CLASS);
+    String implementingClass = (String) properties.get(StoreMetaData.IMPLEMENTING_CLASS);
     if (implementingClass == null){
-      throw new RuntimeException("property "+ ColumnFamilyMetaData.IMPLEMENTING_CLASS + " must be specified");
+      throw new RuntimeException("property "+ StoreMetaData.IMPLEMENTING_CLASS + " must be specified");
     }
     cfmd.setImplementingClass(implementingClass);
-    ColumnFamily columnFamily = null;
+    Store columnFamily = null;
     try {
       Class<?> cfClass = Class.forName(implementingClass);
-      Constructor<?> cons = cfClass.getConstructor(Keyspace.class, ColumnFamilyMetaData.class);
-      columnFamily = (ColumnFamily) cons.newInstance(this, cfmd);
+      Constructor<?> cons = cfClass.getConstructor(Keyspace.class, StoreMetaData.class);
+      columnFamily = (Store) cons.newInstance(this, cfmd);
     } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
-    columnFamilies.put(name, columnFamily);
+    stores.put(name, columnFamily);
   }
 
-  public ConcurrentMap<String, ColumnFamily> getColumnFamilies() {
-    return columnFamilies;
+  public ConcurrentMap<String, Store> getStores() {
+    return stores;
   }
 
-  public void setColumnFamilies(ConcurrentMap<String, ColumnFamily> columnFamilies) {
-    this.columnFamilies = columnFamilies;
+  public void setStores(ConcurrentMap<String, Store> stores) {
+    this.stores = stores;
   }
   
   public Token createToken(String rowkey){

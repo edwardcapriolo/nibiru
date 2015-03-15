@@ -35,7 +35,7 @@ public class BasicTransportTest {
     Assert.assertEquals("6", ((ColumnValue) x).getValue());
     ColumnFamilyClient c = new ColumnFamilyClient("127.0.0.1", s.getConfiguration().getTransportPort());
     Session session = c.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE)
-      .withColumnFamily(TestUtil.PETS_COLUMN_FAMILY)
+      .withStore(TestUtil.PETS_COLUMN_FAMILY)
       .build();
     Assert.assertEquals("6", session.get("jack", "age").getValue());
     Assert.assertEquals("bunnyjack", session.get("jack", "name").getValue());

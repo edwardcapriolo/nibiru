@@ -16,7 +16,7 @@
 package io.teknek.nibiru.engine;
 
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.TimeSource;
 import io.teknek.nibiru.TimeSourceImpl;
 import io.teknek.nibiru.Token;
@@ -38,12 +38,12 @@ public class Memtable implements Comparable<Memtable>{
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey,AtomValue>> data;
   private TimeSource timeSource;
-  private final ColumnFamily columnFamily;
+  private final Store columnFamily;
   private final long myId;
   private static AtomicLong MEMTABLE_ID = new AtomicLong();
   private final CommitLog commitLog;
   
-  public Memtable(ColumnFamily columnFamily, CommitLog commitLog){
+  public Memtable(Store columnFamily, CommitLog commitLog){
     data = new ConcurrentSkipListMap<>();
     timeSource = new TimeSourceImpl();
     this.columnFamily = columnFamily;

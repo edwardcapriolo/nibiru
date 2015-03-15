@@ -23,15 +23,15 @@ public class TestCompactionManager {
   public void compactionTest() throws IOException, InterruptedException{
     Server s = TestUtil.aBasicServer(testFolder);
     s.getMetaDataManager().createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, new HashMap<String,Object>());
-    s.getMetaDataManager().createOrUpdateColumnFamily(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
-    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY).getColumnFamilyMetadata().setFlushNumberOfRowKeys(2);
+    s.getMetaDataManager().createOrUpdateStore(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
+    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
     for (int i = 0; i < 9; i++) {
       s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
       Thread.sleep(1);
     }
     AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "8", "age");
     Thread.sleep(1000);
-    Assert.assertEquals(4, ((DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getColumnFamilies().get(TestUtil.PETS_COLUMN_FAMILY))
+    Assert.assertEquals(4, ((DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY))
             .getMemtableFlusher().getFlushCount());
     Assert.assertEquals(1, ((CompactionManager) s.getPlugins().get(CompactionManager.MY_NAME)).getNumberOfCompactions());
     Assert.assertEquals("4", ((ColumnValue) x).getValue());

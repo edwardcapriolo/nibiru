@@ -15,7 +15,7 @@
  */
 package io.teknek.nibiru.plugins;
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
@@ -67,12 +67,12 @@ public class CompactionManager extends AbstractPlugin implements Runnable {
     while (goOn){
       for (Entry<String, Keyspace> keyspaces : server.getKeyspaces().entrySet()){
         Keyspace keyspace = keyspaces.getValue();
-        for (Map.Entry<String,ColumnFamily> columnFamilies : keyspace.getColumnFamilies().entrySet()){
+        for (Map.Entry<String,Store> columnFamilies : keyspace.getStores().entrySet()){
           if (!(columnFamilies.getValue() instanceof DefaultColumnFamily)){
             continue;
           }
           Set<SsTable> tables = ((DefaultColumnFamily) columnFamilies.getValue()).getSstable();
-          if (tables.size() >= columnFamilies.getValue().getColumnFamilyMetadata().getMaxCompactionThreshold()){
+          if (tables.size() >= columnFamilies.getValue().getStoreMetadata().getMaxCompactionThreshold()){
             SsTable [] ssArray = tables.toArray(new SsTable[] {});
             try {
               String newName = getNewSsTableName();

@@ -18,16 +18,16 @@ import com.google.common.collect.ImmutableMap;
 public class Session {
   private final ColumnFamilyClient client;
   private final String keyspace;
-  private final String columnFamily;
+  private final String store;
   private final Consistency writeConsistency;
   private final Consistency readConsistency;
   private final long timeoutMillis;
   private ObjectMapper MAPPER = new ObjectMapper();
   
-  Session(ColumnFamilyClient client, String keyspace, String columnFamily, Consistency writeConsistency, Consistency readConsistency, long timeoutMillis){
+  Session(ColumnFamilyClient client, String keyspace, String store, Consistency writeConsistency, Consistency readConsistency, long timeoutMillis){
     this.client = client;
     this.keyspace = keyspace;
-    this.columnFamily = columnFamily;
+    this.store = store;
     this.writeConsistency = writeConsistency;
     this.readConsistency = readConsistency;
     this.timeoutMillis = timeoutMillis;
@@ -36,7 +36,7 @@ public class Session {
   public Val get(String rowkey, String column) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
-    m.setColumnFamily(columnFamily);
+    m.setStore(store);
     m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "get")
@@ -63,7 +63,7 @@ public class Session {
   public SortedMap<String,Val> slice(String rowkey, String start, String end) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
-    m.setColumnFamily(columnFamily);
+    m.setStore(store);
     m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "slice")
@@ -93,7 +93,7 @@ public class Session {
   public Response delete(String rowkey, String column, long time) throws ClientException {
     Message m = new Message();
     m.setKeyspace(keyspace);
-    m.setColumnFamily(columnFamily);
+    m.setStore(store);
     m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "delete")
@@ -121,7 +121,7 @@ public class Session {
   public Response put(String rowkey, String column, String value, long time, long ttl) throws ClientException{
     Message m = new Message();
     m.setKeyspace(keyspace);
-    m.setColumnFamily(columnFamily);
+    m.setStore(store);
     m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "put")
@@ -151,7 +151,7 @@ public class Session {
   public Response put(String rowkey, String column, String value, long time) throws ClientException{
     Message m = new Message();
     m.setKeyspace(keyspace);
-    m.setColumnFamily(columnFamily);
+    m.setStore(store);
     m.setRequestPersonality(ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY);
     Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
             .put("type", "put")
