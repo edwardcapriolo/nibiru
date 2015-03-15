@@ -6,11 +6,12 @@ Nibiru is a NoSql database designed for maximum plugablitily and configurability
 Motivation
 ======
 
-There has been a recent proliferation in NoSql datastores. Many systems evolved around specific use cases. Many debates over design elements such as consistency model or implementations of specific features end with assertions that the design choice made is always the best for the user.
+There has been a recent proliferation in NoSql datastores. Many systems evolved from specific use cases or a specific industry. Often these systems are pitted against each other in apples to orange comparisons. Because apples and oranges can not be compared easily the debates typically degrade into a debate over what is the "best" implementation for the "real" users.
 
-Nibiru takes a different approach by building API's throughout the codebase, not just stable client API. 
+Nibiru takes a different approach by building API's throughout the codebase. There is no "locked in" implementation that is the "best" rather there is a system in place to provide alternative implementations. For example, Nibiru supports a gossiper for cluster discovery and a static provider. However this implemenentation is plugable so that an interested user can build a Zookeeper based implementation, an etcd based implementation, or whatever. 
 
-Building around APIs should allow users to swap physical backends or change routing semantics, by choosing between available implementations or designing one.
+Plugability and is the key focus throughout the codebase. Nibiru is not even built around a specific data model. We already have support for a Column Family data model and a Key Value data model! Again Nibiru does not aim to tell you "apples are the best" or "we only support oranges". A user should be able to plug together the pieces they desire into the system they want! For example if a user wants a fast, in memory, non durable, key value store for one table, and a strongly consistent ColumnFamily store in another table they build that in nibiru.
+
 
 Quickstart
 ======
