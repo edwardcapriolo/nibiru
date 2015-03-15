@@ -22,10 +22,8 @@ public class TombstoneReaperTest {
   public void testTombstoneGrace(){
     String ks = "testks";
     String cf = "testcf";
-    File tempFolder = testFolder.newFolder("sstable");
-    File commitlog = testFolder.newFolder("commitlog");
     Configuration c = new Configuration();
-    c.setDataDirectory(tempFolder);
+    c.setDataDirectory("sstable");
     Server s = new Server(c);
     s.init();
     s.getMetaDataManager().createOrUpdateKeyspace(ks, null);

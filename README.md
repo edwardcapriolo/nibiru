@@ -12,3 +12,11 @@ Nibiru takes a different approach by building API's throughout the codebase, not
 
 Building around APIs should allow users to swap physical backends or change routing semantics, by choosing between available implementations or designing one.
 
+Quickstart
+======
+
+If you want to launch an instance of nibiru we have configuration files that will create a two node cluster. Run the following commands in two separate shells. You will find the server on port 7070 on 127.0.0.1 and 127.0.0.2.
+
+    mvn exec:java -Dexec.mainClass="io.teknek.nibiru.Server" -Dexec.args="src/test/resources/nibiru_1.xml"
+    mvn exec:java -Dexec.mainClass="io.teknek.nibiru.Server" -Dexec.args="src/test/resources/nibiru_2.xml"
+

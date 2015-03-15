@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.7.0_45" class="java.beans.XMLDecoder">
+ <object class="io.teknek.nibiru.Configuration">
+  <void property="clusterMembershipProperties">
+   <object class="java.util.HashMap">
+    <void method="put">
+     <string>gossip_hosts_list</string>
+     <object class="java.util.ArrayList">
+      <void method="add">
+       <string>127.0.0.1</string>
+      </void>
+     </object>
+    </void>
+   </object>
+  </void>
+  <void property="commitlogDirectory">
+   <string>/tmp/commit2</string>
+  </void>
+  <void property="dataDirectory">
+   <string>/tmp/data2</string>
+  </void>
+  <void property="transportHost">
+   <string>127.0.0.2</string>
+  </void>
+ </object>
+</java>
