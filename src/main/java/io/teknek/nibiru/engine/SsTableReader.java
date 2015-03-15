@@ -60,7 +60,7 @@ public class SsTableReader {
   public void open(String id) throws IOException{
     File pathToDataDirectory = SsTableStreamWriter.pathToSsTableDataDirectory(
             ssTable.getColumnFamily().getKeyspace().getConfiguration(),
-            ssTable.getColumnFamily().getColumnFamilyMetadata());
+            ssTable.getColumnFamily().getStoreMetadata());
     File sstable = new File(pathToDataDirectory, id + ".ss" );
     ssRaf = new RandomAccessFile(sstable, "r");
     ssChannel = ssRaf.getChannel();

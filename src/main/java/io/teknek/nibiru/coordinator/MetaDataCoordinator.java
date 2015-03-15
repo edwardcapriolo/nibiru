@@ -116,8 +116,8 @@ public class MetaDataCoordinator {
       }
       return new Response();
     } else if (MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY.equals(message.getPayload().get("type"))){
-      metaDataManager.createOrUpdateColumnFamily((String) message.getPayload().get("keyspace"),
-              (String) message.getPayload().get("columnfamily"),
+      metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
+              (String) message.getPayload().get("store"),
               (Map<String,Object>) message.getPayload());
       if (!message.getPayload().containsKey("reroute")){
         message.getPayload().put("reroute", "");
@@ -126,9 +126,9 @@ public class MetaDataCoordinator {
           final MetaDataClient c = clientForClusterMember(clusterMember);
           Callable<Void> call = new Callable<Void>(){
             public Void call() throws Exception {
-              c.createOrUpdateColumnFamily(
+              c.createOrUpdateStore(
                       (String) message.getPayload().get("keyspace"),
-                      (String) message.getPayload().get("columnfamily"),
+                      (String) message.getPayload().get("store"),
                       (Map<String,Object>) message.getPayload());
               return null;
             }};

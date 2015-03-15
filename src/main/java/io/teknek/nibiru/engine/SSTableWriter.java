@@ -15,7 +15,7 @@
  */
 package io.teknek.nibiru.engine;
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 public class SSTableWriter {
 
-  public void flushToDisk(String id, ColumnFamily columnFamily, Memtable m) throws IOException{
+  public void flushToDisk(String id, Store columnFamily, Memtable m) throws IOException{
     SsTableStreamWriter w = new SsTableStreamWriter(id, columnFamily);
     w.open();
     for (Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> i : m.getData().entrySet()){

@@ -4,7 +4,7 @@ import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.keyvalue.InMemoryKeyValue;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 
 import java.io.File;
 import java.util.HashMap;
@@ -19,10 +19,10 @@ import com.google.common.collect.ImmutableMap;
 public class TestUtil {
 
   public static Map<String, Object> STANDARD_COLUMN_FAMILY = new ImmutableMap.Builder<String, Object>()
-  .put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
+  .put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
   .build();
   public static Map<String, Object> STANDARD_KEY_VLUE = new ImmutableMap.Builder<String, Object>()
-          .put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, InMemoryKeyValue.class.getName())
+          .put(StoreMetaData.IMPLEMENTING_CLASS, InMemoryKeyValue.class.getName())
           .build();
   public static String PETS_COLUMN_FAMILY = "pets";
   public static String DATA_KEYSPACE = "data";
@@ -33,8 +33,8 @@ public class TestUtil {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createOrUpdateKeyspace(DATA_KEYSPACE, new HashMap<String,Object>());
-    s.getMetaDataManager().createOrUpdateColumnFamily(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
-    s.getMetaDataManager().createOrUpdateColumnFamily(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
+    s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
+    s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
     return s;
   }
 

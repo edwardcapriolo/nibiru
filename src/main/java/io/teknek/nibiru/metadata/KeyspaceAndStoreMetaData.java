@@ -24,11 +24,11 @@ import java.util.Map;
  * @author edward
  *
  */
-public class KeyspaceAndColumnFamilyMetaData {
+public class KeyspaceAndStoreMetaData {
   private KeyspaceMetaData keyspaceMetaData;
-  private Map<String,ColumnFamilyMetaData> columnFamilies;
+  private Map<String,StoreMetaData> columnFamilies;
   
-  public KeyspaceAndColumnFamilyMetaData(){
+  public KeyspaceAndStoreMetaData(){
     columnFamilies = new HashMap<>();
   }
 
@@ -40,11 +40,11 @@ public class KeyspaceAndColumnFamilyMetaData {
     this.keyspaceMetaData = keyspaceMetaData;
   }
 
-  public Map<String, ColumnFamilyMetaData> getColumnFamilies() {
+  public Map<String, StoreMetaData> getColumnFamilies() {
     return columnFamilies;
   }
 
-  public void setColumnFamilies(Map<String, ColumnFamilyMetaData> columnFamilies) {
+  public void setColumnFamilies(Map<String, StoreMetaData> columnFamilies) {
     this.columnFamilies = columnFamilies;
   }
 

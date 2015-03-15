@@ -15,10 +15,6 @@
  */
 package io.teknek.nibiru.client;
 
-
-
-
-
 public class ColumnFamilyClient extends Client {
 
   public ColumnFamilyClient(String host, int port) {

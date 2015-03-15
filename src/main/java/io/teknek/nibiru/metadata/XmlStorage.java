@@ -32,7 +32,7 @@ public class XmlStorage implements MetaDataStorage {
   public static final String SCHEMA_NAME = "schema.xml";
   
   @Override
-  public void persist(Configuration configuration, Map<String, KeyspaceAndColumnFamilyMetaData> writeThis) {
+  public void persist(Configuration configuration, Map<String, KeyspaceAndStoreMetaData> writeThis) {
     XMLEncoder e ;
     try {
       
@@ -47,7 +47,7 @@ public class XmlStorage implements MetaDataStorage {
   }
 
   @Override
-  public Map<String, KeyspaceAndColumnFamilyMetaData> read(Configuration configuration) {
+  public Map<String, KeyspaceAndStoreMetaData> read(Configuration configuration) {
     XMLDecoder d;
     try {
       d = new XMLDecoder(
@@ -58,7 +58,7 @@ public class XmlStorage implements MetaDataStorage {
     }
     Object result = d.readObject();
     d.close();
-    return (Map<String, KeyspaceAndColumnFamilyMetaData>) result;
+    return (Map<String, KeyspaceAndStoreMetaData>) result;
   }
 
 }

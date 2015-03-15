@@ -22,30 +22,30 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 
 public class SsTableStreamWriter {
 
-  private final ColumnFamily columnFamily;
+  private final Store columnFamily;
   private final String id;
   private final IndexWriter indexWriter;
   private CountingBufferedOutputStream ssOutputStream;
   private BloomFilterWriter bloomFilter;
   
-  public SsTableStreamWriter(String id, ColumnFamily columnFamily){
+  public SsTableStreamWriter(String id, Store columnFamily){
     this.id = id;
     this.columnFamily = columnFamily;
     indexWriter = new IndexWriter(id, columnFamily);
     bloomFilter = new BloomFilterWriter(id, columnFamily.getKeyspace().getConfiguration());
   }
   
-  public static File pathToSsTableDataDirectory(Configuration configuration, ColumnFamilyMetaData cfmd ){
+  public static File pathToSsTableDataDirectory(Configuration configuration, StoreMetaData cfmd ){
     new File(configuration.getDataDirectory()).mkdir();
     File ssTablePath = new File(configuration.getDataDirectory(), cfmd.getName());
     ssTablePath.mkdir();
@@ -56,7 +56,7 @@ public class SsTableStreamWriter {
 
     //File sstableFile = new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory(), id + ".ss");
     File sstableFile = new File (pathToSsTableDataDirectory(columnFamily.getKeyspace().getConfiguration(), 
-            columnFamily.getColumnFamilyMetadata()), id + ".ss");
+            columnFamily.getStoreMetadata()), id + ".ss");
     if (! new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory()).exists()){
       boolean create = new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory()).mkdirs();
       if (!create){

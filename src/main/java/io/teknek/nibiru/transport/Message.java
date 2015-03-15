@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class Message {
   private String keyspace;
-  private String columnFamily;
+  private String store;
   private String requestPersonality;
   private Map<String,Object> payload;
   
@@ -35,12 +35,12 @@ public class Message {
     this.keyspace = keyspace;
   }
   
-  public String getColumnFamily() {
-    return columnFamily;
+  public String getStore() {
+    return store;
   }
   
-  public void setColumnFamily(String columnFamily) {
-    this.columnFamily = columnFamily;
+  public void setStore(String columnFamily) {
+    this.store = columnFamily;
   }
   
   public Map<String, Object> getPayload() {
@@ -61,7 +61,7 @@ public class Message {
 
   @Override
   public String toString() {
-    return "Message [keyspace=" + keyspace + ", columnFamily=" + columnFamily
+    return "Message [keyspace=" + keyspace + ", columnFamily=" + store
             + ", requestPersonality=" + requestPersonality + ", payload=" + payload + "]";
   }
 

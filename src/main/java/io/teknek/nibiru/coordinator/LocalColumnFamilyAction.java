@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
@@ -32,14 +32,14 @@ import io.teknek.nibiru.transport.Response;
 public class LocalColumnFamilyAction extends LocalAction {
   
 
-  public LocalColumnFamilyAction(Message message, Keyspace ks, ColumnFamily cf){
+  public LocalColumnFamilyAction(Message message, Keyspace ks, Store cf){
     super(message,ks,cf);
   }
   
   @Override
   public Response handleReqest() {
     if (! (this.columnFamily instanceof ColumnFamilyPersonality)){
-      throw new RuntimeException("Column Family "+columnFamily.getColumnFamilyMetadata().getName() 
+      throw new RuntimeException("Column Family "+columnFamily.getStoreMetadata().getName() 
               + "does not support " + ColumnFamilyPersonality.COLUMN_FAMILY_PERSONALITY );
     }
     ColumnFamilyPersonality personality = (ColumnFamilyPersonality) this.columnFamily;

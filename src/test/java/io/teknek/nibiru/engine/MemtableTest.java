@@ -8,7 +8,7 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.partitioner.Md5Partitioner;
 import io.teknek.nibiru.partitioner.NaturalPartitioner;
@@ -46,8 +46,8 @@ public class MemtableTest {
   public void test(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     //ks1.createColumnFamily("abc", Maps.newHashMap( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
-    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
-    Memtable m = new Memtable( ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
+    ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
+    Memtable m = new Memtable( ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", ((ColumnValue)m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2")).getValue());
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
@@ -62,10 +62,10 @@ public class MemtableTest {
   @Test
   public void testDeleting(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>()
-            .put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
-    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"),
-            new CommitLog(ks1.getColumnFamilies().get("abc")));
+    ks1.createStore("abc", new ImmutableMap.Builder<String,Object>()
+            .put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
+    Memtable m = new Memtable(ks1.getStores().get("abc"),
+            new CommitLog(ks1.getStores().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "c", "d", 1, 0L);
     m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", 3);
@@ -82,8 +82,8 @@ public class MemtableTest {
   @Test
   public void testDeletingM5d(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
-    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
+    ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
+    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "c", "d", 1, 0L);
     m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", 3);
@@ -97,8 +97,8 @@ public class MemtableTest {
   @Test
   public void testRowDelete(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
-    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"),new CommitLog(ks1.getColumnFamilies().get("abc")));
+    ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
+    Memtable m = new Memtable(ks1.getStores().get("abc"),new CommitLog(ks1.getStores().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1, 0l);
     m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), 2);
     Assert.assertTrue(m.get(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2") instanceof TombstoneValue);
@@ -110,8 +110,8 @@ public class MemtableTest {
   @Test
   public void aSliceWithTomb(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createColumnFamily("abc", new ImmutableMap.Builder<String,Object>().put( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
-    Memtable m = new Memtable(ks1.getColumnFamilies().get("abc"), new CommitLog(ks1.getColumnFamilies().get("abc")));
+    ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
+    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column2", "c", 1L , 0L);
     m.put(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), "column3", "d", 4L, 0L);
     m.delete(ks1.getKeyspaceMetadata().getPartitioner().partition("row1"), 3);

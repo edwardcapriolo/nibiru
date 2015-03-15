@@ -83,7 +83,7 @@ public class Server {
     coordinator.shutdown();
     clusterMembership.shutdown();
     for (Map.Entry<String, Keyspace> entry : keyspaces.entrySet()){
-      for (Map.Entry<String, ColumnFamily> columnFamilyEntry : entry.getValue().getColumnFamilies().entrySet()){
+      for (Map.Entry<String, Store> columnFamilyEntry : entry.getValue().getStores().entrySet()){
         try {
           columnFamilyEntry.getValue().shutdown();
         } catch (IOException e) {
@@ -98,7 +98,7 @@ public class Server {
     
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time){
     Keyspace ks = keyspaces.get(keyspace);
-    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    Store cf = ks.getStores().get(columnFamily);
     if (cf instanceof ColumnFamilyPersonality){
       ((ColumnFamilyPersonality) cf).put(rowkey, column, value, time, 0L);
     } else {
@@ -108,7 +108,7 @@ public class Server {
   
   public void put(String keyspace, String columnFamily, String rowkey, String column, String value, long time, long ttl){
     Keyspace ks = keyspaces.get(keyspace);
-    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    Store cf = ks.getStores().get(columnFamily);
     if (cf instanceof ColumnFamilyPersonality){
       ((ColumnFamilyPersonality) cf).put(rowkey, column, value, time);
     } else {
@@ -121,7 +121,7 @@ public class Server {
     if (ks == null){
       throw new RuntimeException(keyspace + " is not found");
     }
-    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    Store cf = ks.getStores().get(columnFamily);
     if (cf instanceof ColumnFamilyPersonality){
       return ((ColumnFamilyPersonality) cf).get(rowkey, column);
     } else {
@@ -131,7 +131,7 @@ public class Server {
   
   public void delete(String keyspace, String columnFamily, String rowkey, String column, long time){
     Keyspace ks = keyspaces.get(keyspace);
-    ColumnFamily cf = ks.getColumnFamilies().get(columnFamily);
+    Store cf = ks.getStores().get(columnFamily);
     if (cf instanceof ColumnFamilyPersonality){
       ((ColumnFamilyPersonality) cf).delete(rowkey, column, time);
     } else {

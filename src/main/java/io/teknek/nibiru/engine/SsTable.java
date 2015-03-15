@@ -15,7 +15,7 @@
  */
 package io.teknek.nibiru.engine;
 
-import io.teknek.nibiru.ColumnFamily;
+import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.atom.AtomKey;
@@ -30,11 +30,11 @@ public class SsTable implements Comparable<SsTable> {
   private KeyCache keyCache;
   private static AtomicLong ID = new AtomicLong();
   private long myId; 
-  private ColumnFamily columnFamily;
+  private Store columnFamily;
   private SsTableReader ssTableReader;
   private BloomFilter bloomFilterReader;
   
-  public SsTable(ColumnFamily columnFamily){
+  public SsTable(Store columnFamily){
     this.columnFamily = columnFamily;
     myId = ID.getAndIncrement();
   }
@@ -42,7 +42,7 @@ public class SsTable implements Comparable<SsTable> {
   public void open(String id, Configuration conf) throws IOException {    
     bloomFilterReader = new BloomFilter();
     bloomFilterReader.open(id, conf);
-    keyCache = new KeyCache(columnFamily.getColumnFamilyMetadata().getKeyCachePerSsTable());
+    keyCache = new KeyCache(columnFamily.getStoreMetadata().getKeyCachePerSsTable());
     ssTableReader = new SsTableReader(this, keyCache, bloomFilterReader);
     ssTableReader.open(id);
   }
@@ -82,7 +82,7 @@ public class SsTable implements Comparable<SsTable> {
     }
   }
 
-  public ColumnFamily getColumnFamily() {
+  public Store getColumnFamily() {
     return columnFamily;
   }
   

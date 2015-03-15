@@ -14,7 +14,7 @@ import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
-import io.teknek.nibiru.metadata.ColumnFamilyMetaData;
+import io.teknek.nibiru.metadata.StoreMetaData;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,11 +73,11 @@ public class TestCluster {
       Assert.assertNotNull(server.getKeyspaces().get("abc"));
     }
     Map<String,Object> stuff = new HashMap<String,Object>();
-    stuff.put(ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-    c.createOrUpdateColumnFamily("abc", "def", stuff);
+    stuff.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
+    c.createOrUpdateStore("abc", "def", stuff);
     Thread.sleep(1000);
     for (Server server : s){
-      Assert.assertNotNull(server.getKeyspaces().get("abc").getColumnFamilies().get("def"));
+      Assert.assertNotNull(server.getKeyspaces().get("abc").getStores().get("def"));
       Set<String> livingHosts = new TreeSet<>();
       for (ClusterMember cm : c.getLiveMembers()){
         livingHosts.add(cm.getHost());
