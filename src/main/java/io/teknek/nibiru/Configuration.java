@@ -20,14 +20,13 @@ import io.teknek.nibiru.metadata.XmlStorage;
 import io.teknek.nibiru.plugins.CompactionManager;
 import io.teknek.nibiru.plugins.HintReplayer;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class Configuration {
-  private File dataDirectory;
-  private File commitlogDirectory;
+  private String dataDirectory;
+  private String commitlogDirectory;
   private String metaDataStorageClass = XmlStorage.class.getName();
   private int transportPort = 7070;
   private String transportHost = "127.0.0.1";
@@ -39,19 +38,19 @@ public class Configuration {
   public Configuration(){
   }
   
-  public File getDataDirectory() {
+  public String getDataDirectory() {
     return dataDirectory;
   }
   
-  public void setDataDirectory(File sstableDirectory) {
+  public void setDataDirectory(String sstableDirectory) {
     this.dataDirectory = sstableDirectory;
-  }
+  } 
   
-  public File getCommitlogDirectory() {
+  public String getCommitlogDirectory() {
     return commitlogDirectory;
   }
 
-  public void setCommitlogDirectory(File commitlogDirectory) {
+  public void setCommitlogDirectory(String commitlogDirectory) {
     this.commitlogDirectory = commitlogDirectory;
   }
 

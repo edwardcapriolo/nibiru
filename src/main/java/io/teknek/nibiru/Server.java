@@ -22,6 +22,9 @@ import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.plugins.AbstractPlugin;
 import io.teknek.nibiru.transport.HttpJsonTransport;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -163,5 +166,14 @@ public class Server {
   public Map<String, AbstractPlugin> getPlugins() {
     return plugins;
   }
-    
+ 
+  public static void main(String [] args) throws FileNotFoundException {
+    String configPath = args[0];
+    File f = new File(configPath);
+    java.beans.XMLDecoder d = new java.beans.XMLDecoder(new FileInputStream(f));
+    Configuration config = (Configuration) d.readObject();
+    d.close();
+    Server s = new Server(config);
+    s.init();
+  }
 }

@@ -35,6 +35,13 @@ public class ServerId {
   }
   
   public void init(){
+    File f = new File(configuration.getDataDirectory());
+    if (!f.exists()) {
+      boolean created = f.mkdir();
+      if (!created) {
+        throw new RuntimeException("Can not create " + configuration.getDataDirectory());
+      }
+    }
     File uuid = new File(configuration.getDataDirectory(), "server.id");
     if (!uuid.exists()){
       u = UUID.randomUUID();

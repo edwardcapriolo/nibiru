@@ -46,7 +46,7 @@ public class SsTableStreamWriter {
   }
   
   public static File pathToSsTableDataDirectory(Configuration configuration, ColumnFamilyMetaData cfmd ){
-    configuration.getDataDirectory().mkdir();
+    new File(configuration.getDataDirectory()).mkdir();
     File ssTablePath = new File(configuration.getDataDirectory(), cfmd.getName());
     ssTablePath.mkdir();
     return ssTablePath;
@@ -57,8 +57,8 @@ public class SsTableStreamWriter {
     //File sstableFile = new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory(), id + ".ss");
     File sstableFile = new File (pathToSsTableDataDirectory(columnFamily.getKeyspace().getConfiguration(), 
             columnFamily.getColumnFamilyMetadata()), id + ".ss");
-    if (!columnFamily.getKeyspace().getConfiguration().getDataDirectory().exists()){
-      boolean create = columnFamily.getKeyspace().getConfiguration().getDataDirectory().mkdirs();
+    if (! new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory()).exists()){
+      boolean create = new File(columnFamily.getKeyspace().getConfiguration().getDataDirectory()).mkdirs();
       if (!create){
         throw new RuntimeException ("could not create "+ columnFamily.getKeyspace().getConfiguration().getDataDirectory());
       }

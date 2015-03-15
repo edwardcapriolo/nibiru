@@ -42,8 +42,8 @@ public class TestUtil {
     File tempFolder = testFolder.newFolder("sstable");
     File commitlog = testFolder.newFolder("commitlog");
     Configuration configuration = new Configuration();
-    configuration.setDataDirectory(tempFolder);
-    configuration.setCommitlogDirectory(commitlog);
+    configuration.setDataDirectory(tempFolder.getPath());
+    configuration.setCommitlogDirectory(commitlog.getPath());
     return configuration;
   }
 
