@@ -79,76 +79,85 @@ public class MetaDataCoordinator {
     return c;
   }
   
-  @SuppressWarnings("unchecked")
   public Response handleSystemMessage(final Message message){
     if (MetaPersonality.LIST_LIVE_MEMBERS.equals(message.getPayload().get("type"))){
       return handleListLiveMembersMessage(message);
+    } else if (MetaPersonality.LIST_KEYSPACES.equals(message.getPayload().get("type"))){
+      return handleListKeyspaces(message);
     } else if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
-      metaDataManager.createOrUpdateKeyspace(
-              (String) message.getPayload().get("keyspace"), 
-              (Map<String,Object>) message.getPayload());
-      if (!message.getPayload().containsKey("reroute")){
-        message.getPayload().put("reroute", "");
-        List<Callable<Void>> calls = new ArrayList<>();
-        for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
-          final MetaDataClient c = clientForClusterMember(clusterMember);
-          Callable<Void> call = new Callable<Void>(){
-            public Void call() throws Exception {
-              try {
-              c.createOrUpdateKeyspace(
-                      (String) message.getPayload().get("keyspace"), 
-                      //(Map<String,Object>) message.getPayload().get("properties")
-                      (Map<String,Object>) message.getPayload()
-                      );
-             
-              } catch (RuntimeException ex){
-                ex.printStackTrace();
-              }
-              return null;
-            }};
-          calls.add(call); 
-        }
-        try {
-          List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-
-        }
-      }
-      return new Response();
+      return handleCreateOrUpdateKeyspace(message);
     } else if (MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY.equals(message.getPayload().get("type"))){
-      metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
-              (String) message.getPayload().get("store"),
-              (Map<String,Object>) message.getPayload());
-      if (!message.getPayload().containsKey("reroute")){
-        message.getPayload().put("reroute", "");
-        List<Callable<Void>> calls = new ArrayList<>();
-        for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
-          final MetaDataClient c = clientForClusterMember(clusterMember);
-          Callable<Void> call = new Callable<Void>(){
-            public Void call() throws Exception {
-              c.createOrUpdateStore(
-                      (String) message.getPayload().get("keyspace"),
-                      (String) message.getPayload().get("store"),
-                      (Map<String,Object>) message.getPayload());
-              return null;
-            }};
-          calls.add(call); 
-        }
-        try {
-          List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
-          //todo return results to client
-        } catch (InterruptedException e) {
-
-        }
-      }
-      return new Response();
+      return handleCreateOrUpdateColumnFamily(message);
     } else {
       throw new IllegalArgumentException("could not process " + message);
     }
   }
   
-  private Response handleShowKeyspaceMessage(final Message message){
+  private Response handleCreateOrUpdateColumnFamily(final Message message){
+    metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
+            (String) message.getPayload().get("store"),
+            (Map<String,Object>) message.getPayload());
+    if (!message.getPayload().containsKey("reroute")){
+      message.getPayload().put("reroute", "");
+      List<Callable<Void>> calls = new ArrayList<>();
+      for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
+        final MetaDataClient c = clientForClusterMember(clusterMember);
+        Callable<Void> call = new Callable<Void>(){
+          public Void call() throws Exception {
+            c.createOrUpdateStore(
+                    (String) message.getPayload().get("keyspace"),
+                    (String) message.getPayload().get("store"),
+                    (Map<String,Object>) message.getPayload());
+            return null;
+          }};
+        calls.add(call); 
+      }
+      try {
+        List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
+        //todo return results to client
+      } catch (InterruptedException e) {
+
+      }
+    }
+    return new Response();
+  }
+  
+  private Response handleListKeyspaces(final Message message){
     return new Response().withProperty("payload", metaDataManager.listKeyspaces());
+  }
+  
+  private Response handleCreateOrUpdateKeyspace(final Message message){
+    metaDataManager.createOrUpdateKeyspace(
+            (String) message.getPayload().get("keyspace"), 
+            (Map<String,Object>) message.getPayload());
+    if (!message.getPayload().containsKey("reroute")){
+      message.getPayload().put("reroute", "");
+      List<Callable<Void>> calls = new ArrayList<>();
+      for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
+        final MetaDataClient c = clientForClusterMember(clusterMember);
+        Callable<Void> call = new Callable<Void>(){
+          public Void call() throws Exception {
+            try {
+            c.createOrUpdateKeyspace(
+                    (String) message.getPayload().get("keyspace"), 
+                    //(Map<String,Object>) message.getPayload().get("properties")
+                    (Map<String,Object>) message.getPayload()
+                    );
+           
+            } catch (RuntimeException ex){
+              ex.printStackTrace();
+            }
+            return null;
+          }};
+        calls.add(call); 
+      }
+      try {
+        List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+
+      }
+    }
+    return new Response();
   }
   
   private Response handleListLiveMembersMessage(final Message message){
