@@ -22,6 +22,7 @@ import io.teknek.nibiru.transport.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +88,27 @@ public class MetaDataClient extends Client {
     }
   }
   
+  public Collection<String> listKeyspaces() throws ClientException {
+    Message m = new Message();
+    m.setKeyspace("system");
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("type", MetaPersonality.LIST_KEYSPACES);
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+      return (Collection<String>) response.get("payload");
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
   
+  
+  public static void main (String [] args) throws ClientException {
+    MetaDataClient c = new MetaDataClient("127.0.0.1", 7070);
+    System.out.println(c.getLiveMembers());
+    
+  }
   
   
 }

@@ -11,8 +11,10 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import com.google.common.collect.Sets;
+
 import io.teknek.nibiru.engine.atom.*;
-import io.teknek.nibiru.plugins.CompactionManager;
 
 
 public class ServerTest {
@@ -36,6 +38,8 @@ public class ServerTest {
             .getMemtableFlusher().getFlushCount());
     x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
     Assert.assertEquals("6", ((ColumnValue) x).getValue());
+    Assert.assertEquals(Sets.newHashSet("system", TestUtil.DATA_KEYSPACE), s.getMetaDataManager().listKeyspaces());
+    Assert.assertEquals(Sets.newHashSet(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), s.getMetaDataManager().listStores(TestUtil.DATA_KEYSPACE));
     s.shutdown();
   }
   

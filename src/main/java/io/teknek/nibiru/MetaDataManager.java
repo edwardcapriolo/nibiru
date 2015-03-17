@@ -18,6 +18,7 @@ package io.teknek.nibiru;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -123,6 +124,16 @@ public class MetaDataManager {
   public void createOrUpdateStore(String keyspaceName, String store, Map<String,Object> properties){
     server.getKeyspaces().get(keyspaceName).createStore(store, properties);
     persistMetadata();
+  }
+  
+  public Collection<String> listKeyspaces(){
+    return server.getKeyspaces().keySet();
+  }
+  
+  public Collection<String> listStores(String keyspace){
+    Keyspace ks = server.getKeyspaces().get(keyspace);
+    //TODO if keyspace is null throw ex
+    return ks.getStores().keySet();
   }
   
   public Map<String,KeyspaceAndStoreMetaData> read(){

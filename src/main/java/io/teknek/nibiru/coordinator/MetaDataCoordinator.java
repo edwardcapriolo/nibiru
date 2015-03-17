@@ -145,8 +145,12 @@ public class MetaDataCoordinator {
     } else {
       throw new IllegalArgumentException("could not process " + message);
     }
-    
   }
+  
+  private Response handleShowKeyspaceMessage(final Message message){
+    return new Response().withProperty("payload", metaDataManager.listKeyspaces());
+  }
+  
   private Response handleListLiveMembersMessage(final Message message){
     List<ClusterMember> copy = new ArrayList<>();
     copy.addAll(clusterMembership.getLiveMembers());
