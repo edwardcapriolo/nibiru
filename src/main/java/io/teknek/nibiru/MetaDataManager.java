@@ -132,7 +132,6 @@ public class MetaDataManager {
   
   public Collection<String> listStores(String keyspace){
     Keyspace ks = server.getKeyspaces().get(keyspace);
-    //TODO if keyspace is null throw ex
     return ks.getStores().keySet();
   }
   

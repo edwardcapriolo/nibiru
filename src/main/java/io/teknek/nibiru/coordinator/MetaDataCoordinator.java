@@ -88,11 +88,19 @@ public class MetaDataCoordinator {
       return handleCreateOrUpdateKeyspace(message);
     } else if (MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY.equals(message.getPayload().get("type"))){
       return handleCreateOrUpdateColumnFamily(message);
+    } else if (MetaPersonality.LIST_STORES.equals(message.getPayload().get("type"))){
+      return handleListStores(message);
     } else {
       throw new IllegalArgumentException("could not process " + message);
     }
   }
   
+  private Response handleListStores(Message message) {
+    String keyspace = (String) message.getPayload().get("keyspace");
+    //TODO: keyspace does not exist?
+    return new Response().withProperty("payload", metaDataManager.listStores(keyspace));
+  }
+
   private Response handleCreateOrUpdateColumnFamily(final Message message){
     metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
             (String) message.getPayload().get("store"),
