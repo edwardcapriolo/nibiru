@@ -83,6 +83,7 @@ public class MetaDataClient extends Client {
     m.setPayload(payload);
     try {
       Response response = post(m);
+      System.out.println(response);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
