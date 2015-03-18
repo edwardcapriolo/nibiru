@@ -3,7 +3,6 @@ package io.teknek.nibiru.engine;
 import io.teknek.nibiru.io.CountingBufferedOutputStream;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -17,6 +16,7 @@ public class TestCountingBufferOutputStream {
 
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
+  
   @Test
   public void test() throws IOException{
     File tempFolder = testFolder.newFolder("sstable");
@@ -27,7 +27,6 @@ public class TestCountingBufferOutputStream {
     i.writeAndCount("hi".getBytes("UTF-8"));
     Assert.assertEquals(2, "hi".getBytes().length);
     Assert.assertEquals(3, i.getWrittenOffset());
-    
-    
+    i.close();
   }
 }
