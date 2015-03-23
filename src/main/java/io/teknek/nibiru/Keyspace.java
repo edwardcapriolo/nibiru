@@ -35,7 +35,7 @@ public class Keyspace {
     stores = new ConcurrentHashMap<>();
   }
 
-  public KeyspaceMetaData getKeyspaceMetadata() {
+  public KeyspaceMetaData getKeyspaceMetaData() {
     return keyspaceMetadata;
   }
 

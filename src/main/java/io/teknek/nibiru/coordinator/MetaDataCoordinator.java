@@ -16,11 +16,13 @@
 package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
+import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -79,6 +81,14 @@ public class MetaDataCoordinator {
     return c;
   }
   
+  public void syncSchemaToSponsoredMember(Destination destination){
+    for (String keyspace : metaDataManager.listKeyspaces()){
+      //KeyspaceMetaData cmd = metaDataManager.
+      //MetaDataClient c = null;
+      //c.createOrUpdateKeyspace(keyspace, properties)
+    }
+  }
+  
   public Response handleSystemMessage(final Message message){
     if (MetaPersonality.LIST_LIVE_MEMBERS.equals(message.getPayload().get("type"))){
       return handleListLiveMembersMessage(message);
@@ -90,6 +100,8 @@ public class MetaDataCoordinator {
       return handleCreateOrUpdateStore(message);
     } else if (MetaPersonality.LIST_STORES.equals(message.getPayload().get("type"))){
       return handleListStores(message);
+    } else if (MetaPersonality.GET_KEYSPACE_METADATA.equals(message.getPayload().get("type"))){ 
+      return handleGetKeyspaceMetaData(message);
     } else {
       throw new IllegalArgumentException("could not process " + message);
     }
@@ -101,6 +113,13 @@ public class MetaDataCoordinator {
     return new Response().withProperty("payload", metaDataManager.listStores(keyspace));
   }
 
+  private Response handleGetKeyspaceMetaData(Message message) {
+    String keyspace = (String) message.getPayload().get("keyspace");
+    //TODO: keyspace does not exist?
+    Response r = new Response().withProperty("payload", metaDataManager.getKeyspaceMetadata(keyspace).getProperties());
+    return r;
+  }
+  
   private Response handleCreateOrUpdateStore(final Message message){
     metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
             (String) message.getPayload().get("store"),

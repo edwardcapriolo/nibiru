@@ -6,6 +6,8 @@ import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.MetaDataClient;
 
 import java.util.Arrays;
+import java.util.HashMap;
+
 import junit.framework.Assert;
 
 import org.junit.Rule;
@@ -20,8 +22,11 @@ public class TestMetaCoordinator {
   @Test
   public void listStores() throws ClientException {
     Server s = TestUtil.aBasicServer(testFolder);
-    MetaDataClient c = new MetaDataClient(s.getConfiguration().getTransportHost(), s.getConfiguration().getTransportPort());
-    Assert.assertEquals(Arrays.asList(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), c.listStores(TestUtil.DATA_KEYSPACE));
+    MetaDataClient c = new MetaDataClient(s.getConfiguration().getTransportHost(), 
+            s.getConfiguration().getTransportPort());
+   Assert.assertEquals(Arrays.asList(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), 
+            c.listStores(TestUtil.DATA_KEYSPACE));
+    Assert.assertEquals(new HashMap(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     c.shutdown();
     s.shutdown();
   }

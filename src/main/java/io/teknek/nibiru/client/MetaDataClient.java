@@ -16,6 +16,7 @@
 package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.cluster.ClusterMember;
+import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -119,6 +120,24 @@ public class MetaDataClient extends Client {
       throw new ClientException(e);
     }
   }
+  
+  public Map<String,Object> getKeyspaceMetadata(String keyspace) throws ClientException {
+    Message m = new Message();
+    m.setKeyspace("system");
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("keyspace", keyspace);
+    payload.put("type", MetaPersonality.GET_KEYSPACE_METADATA);
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+      System.out.println(response.get("payload"));
+      return (Map<String,Object>) response.get("payload");
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
+  
   
   
   public static void main (String [] args) throws ClientException {

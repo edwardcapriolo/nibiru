@@ -176,12 +176,12 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public AtomValue get(String rowkey, String column){
-    AtomValue lastValue = memtable.get().get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+    AtomValue lastValue = memtable.get().get(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column);
     for (Memtable m: memtableFlusher.getMemtables()){
-      AtomValue thisValue = m.get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+      AtomValue thisValue = m.get(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column);
       lastValue = applyRules(lastValue, thisValue);
     }
-    Token token = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
+    Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey);
     for (SsTable sstable: this.getSstable()){
       AtomValue thisValue = null;
       try {
@@ -195,31 +195,31 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public void delete(String rowkey, String column, long time){
-    memtable.get().delete(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, time);
+    memtable.get().delete(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column, time);
     //commit log
     considerFlush();
   }
   
   public void put(String rowkey, String column, String value, long time, long ttl){
     try {
-      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), 
+      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), 
               new ColumnKey(column), value, time, ttl);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+    memtable.get().put(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
   }
     
   public void put(String rowkey, String column, String value, long time){
     try {
-      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), 
+      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), 
               new ColumnKey(column), value, time, 0);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
     
-    memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, 0);
+    memtable.get().put(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column, value, time, 0);
     //commit log
     considerFlush();
   }
@@ -258,7 +258,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public SortedMap<AtomKey, AtomValue>  slice(String rowkey, String start, String end){
-    Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
+    Token t = keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey);
     SortedMap<AtomKey, AtomValue> fromMemtable = memtable.get().slice(t, start, end);
     for (SsTable table: this.sstable){
       try {

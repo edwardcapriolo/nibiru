@@ -68,7 +68,7 @@ public class TestCoordinator {
     Thread.sleep(10);
     for (int i = 0; i < s.length; i++) {
       Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));
-      Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetadata().getRouter().getClass().getName());
+      Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetaData().getRouter().getClass().getName());
       Assert.assertTrue(s[i].getKeyspaces().get("abc").getStores().containsKey("def"));
     }
     

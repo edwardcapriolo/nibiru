@@ -86,8 +86,8 @@ public class Coordinator {
     if (columnFamily == null){
       throw new RuntimeException(message.getStore() + " is not found");
     }
-    Token token = keyspace.getKeyspaceMetadata().getPartitioner().partition((String) message.getPayload().get("rowkey"));
-    List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
+    Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
+    List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
     if (protege.get() != null && destinations.contains(destinationLocal) ){
       destinations.add(protege.get());
@@ -114,7 +114,7 @@ public class Coordinator {
     String requestId = (String) message.getPayload().get("request_id");
     Destination protegeDestination = new Destination();
     protegeDestination.setDestinationId(requestId);
-    //transmit schema to protege
+    
     boolean res = protege.compareAndSet(null, protegeDestination);
     if (res){
       return new Response().withProperty("status", "ok");

@@ -26,6 +26,7 @@ public interface MetaPersonality {
   public static final String LIST_DEAD_MEMBERS = "LIST_DEAD_MEMBERS";
   public static final String LIST_KEYSPACES = "LIST_KEYSPACES";
   public static final String LIST_STORES = "LIST_STORES";
+  public static final String GET_KEYSPACE_METADATA = "GET_KEYPSACE_METADATA";
   
   void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties);
 }

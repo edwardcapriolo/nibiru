@@ -103,7 +103,7 @@ public class MetaDataManager {
     Keyspace result = server.getKeyspaces().putIfAbsent(keyspaceName, keyspace);
     if (result != null){
       //TODO what if this changes partitioner etc?
-      result.getKeyspaceMetadata().setProperties(properties);
+      result.getKeyspaceMetaData().setProperties(properties);
     }
     persistMetadata();
   }
@@ -112,7 +112,7 @@ public class MetaDataManager {
     Map<String,KeyspaceAndStoreMetaData> meta = new HashMap<>();
     for (Map.Entry<String, Keyspace> entry : server.getKeyspaces().entrySet()){
       KeyspaceAndStoreMetaData kfmd = new KeyspaceAndStoreMetaData();
-      kfmd.setKeyspaceMetaData(entry.getValue().getKeyspaceMetadata());
+      kfmd.setKeyspaceMetaData(entry.getValue().getKeyspaceMetaData());
       for (Map.Entry<String, Store> cfEntry : entry.getValue().getStores().entrySet()){
         kfmd.getColumnFamilies().put(cfEntry.getKey(), cfEntry.getValue().getStoreMetadata());
       }
@@ -133,6 +133,10 @@ public class MetaDataManager {
   public Collection<String> listStores(String keyspace){
     Keyspace ks = server.getKeyspaces().get(keyspace);
     return ks.getStores().keySet();
+  }
+  
+  public KeyspaceMetaData getKeyspaceMetadata(String keyspace){
+    return server.getKeyspaces().get(keyspace).getKeyspaceMetaData();
   }
   
   public Map<String,KeyspaceAndStoreMetaData> read(){
