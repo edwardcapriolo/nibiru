@@ -16,6 +16,8 @@
 package io.teknek.nibiru.coordinator;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
@@ -35,12 +37,14 @@ public class Coordinator {
   //TODO. this needs to be a per column family value
   private final EventualCoordinator eventualCoordinator;
   private Hinter hinter;
+  private AtomicReference<Destination> protege;
   
   public Coordinator(Server server) {
     this.server = server;
     metaDataCoordinator = new MetaDataCoordinator(this, server.getConfiguration(),
             server.getMetaDataManager(), server.getClusterMembership(), server.getServerId());
     eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
+    protege = new AtomicReference<>();
   }
   
   public void init(){
@@ -71,6 +75,9 @@ public class Coordinator {
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
       return metaDataCoordinator.handleSystemMessage(message);
     }
+    if (message.getPayload().containsKey("sponsor_request")){
+      return handleSponsorRequest(message);
+    }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
     if (keyspace == null){
       throw new RuntimeException(message.getKeyspace() + " is not found");
@@ -82,6 +89,9 @@ public class Coordinator {
     Token token = keyspace.getKeyspaceMetadata().getPartitioner().partition((String) message.getPayload().get("rowkey"));
     List<Destination> destinations = keyspace.getKeyspaceMetadata().getRouter()
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
+    if (protege.get() != null && destinations.contains(destinationLocal) ){
+      destinations.add(protege.get());
+    }
     long timeoutInMs = determineTimeout(columnFamily, message);
 
     if (ColumnFamilyPersonality.PERSONALITY.equals(message.getPersonality())) {
@@ -98,6 +108,19 @@ public class Coordinator {
       throw new UnsupportedOperationException(message.getPersonality());
     }
 
+  }
+  
+  private Response handleSponsorRequest(Message message){
+    String requestId = (String) message.getPayload().get("request_id");
+    Destination protegeDestination = new Destination();
+    protegeDestination.setDestinationId(requestId);
+    //transmit schema to protege
+    boolean res = protege.compareAndSet(null, protegeDestination);
+    if (res){
+      return new Response().withProperty("status", "ok");
+    } else { 
+      return new Response().withProperty("status", "fail").withProperty("reason", "already sponsoring") ;
+    }
   }
   
   private Hinter getHinterForMessage(Message message, Store columnFamily){

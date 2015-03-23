@@ -86,8 +86,8 @@ public class MetaDataCoordinator {
       return handleListKeyspaces(message);
     } else if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
       return handleCreateOrUpdateKeyspace(message);
-    } else if (MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY.equals(message.getPayload().get("type"))){
-      return handleCreateOrUpdateColumnFamily(message);
+    } else if (MetaPersonality.CREATE_OR_UPDATE_STORE.equals(message.getPayload().get("type"))){
+      return handleCreateOrUpdateStore(message);
     } else if (MetaPersonality.LIST_STORES.equals(message.getPayload().get("type"))){
       return handleListStores(message);
     } else {
@@ -101,7 +101,7 @@ public class MetaDataCoordinator {
     return new Response().withProperty("payload", metaDataManager.listStores(keyspace));
   }
 
-  private Response handleCreateOrUpdateColumnFamily(final Message message){
+  private Response handleCreateOrUpdateStore(final Message message){
     metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
             (String) message.getPayload().get("store"),
             (Map<String,Object>) message.getPayload());

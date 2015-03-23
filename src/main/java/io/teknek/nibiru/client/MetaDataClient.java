@@ -76,7 +76,7 @@ public class MetaDataClient extends Client {
     m.setStore(null);
     m.setPersonality(MetaPersonality.META_PERSONALITY);
     Map<String, Object> payload = new HashMap<>();
-    payload.put("type", MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY);
+    payload.put("type", MetaPersonality.CREATE_OR_UPDATE_STORE);
     payload.put("keyspace", keyspace);
     payload.put("store", store);
     payload.putAll(properties);
