@@ -15,27 +15,38 @@
  */
 package io.teknek.nibiru.metadata;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class StoreMetaData {
   public static final String IMPLEMENTING_CLASS = "implementing_class"; 
   
-  private String name;
-  private String implementingClass;
+  //TODO properties are column family specific we could rafactor the metadata so that 
+  //these constants are closer to the table type
+  public static final String ENABLE_HINTS = "enable_hints";
+  public static final String FLUSH_NUMBER_OF_ROW_KEYS = "flush_number_of_row_keys";
+  public static final String KEY_CACHE_PER_SSTABLE = "key_cache_per_sstable";
+  public static final String MAX_COMPACTION_THRESHOLD = "max_compaction_threshold";
+  public static final String COMMITLOG_FLUSH_BYTES = "commit_log_flush_bytes";
+  public static final String INDEX_INTERVAL = "index_interval";
+  public static final String IN_MEMORY_CF = "in_memory_cf";
+  public static final String OPERATION_TIMEOUT_IN_MS = "operation_timeout_ms";
+  public static final String TOMBSTONE_GRACE_MS = "tombstone_grace_ms";
   
+  private String name;
   private Map<String,Object> properties;
-  private long tombstoneGraceMillis;
-  private int flushNumberOfRowKeys = 10000;
-  private int keyCachePerSsTable = 1000;
-  private int maxCompactionThreshold = 4;
-  private long commitlogFlushBytes = 1000;
-  private long indexInterval = 1000;
-  private boolean inMemoryColumnFamily = false;
-  private long operationTimeoutInMs = 5000;
-  private boolean enableHints = true;
+  
+  //private long tombstoneGraceMillis;
+  //private int flushNumberOfRowKeys = 10000;
+  //private int keyCachePerSsTable = 1000;
+  //private int maxCompactionThreshold = 4;
+  //private long commitlogFlushBytes = 1000;
+  //private long indexInterval = 1000;
+  //private boolean inMemoryColumnFamily = false;
+  //private long operationTimeoutInMs = 5000;
   
   public StoreMetaData(){
-    
+    properties = new HashMap<String,Object>();
   }
 
   public String getName() {
@@ -47,68 +58,85 @@ public class StoreMetaData {
   }
 
   public long getTombstoneGraceMillis() {
-    return tombstoneGraceMillis;
+    Number res = (Number) properties.get(TOMBSTONE_GRACE_MS);
+    if (res == null){
+      return 1000 * 60 * 60 * 24 * 3;
+    } 
+    return res.longValue();
   }
 
   public void setTombstoneGraceMillis(long tombstoneGraceTime) {
-    this.tombstoneGraceMillis = tombstoneGraceTime;
+    properties.put(TOMBSTONE_GRACE_MS, tombstoneGraceTime);
   }
 
   public int getFlushNumberOfRowKeys() {
-    return flushNumberOfRowKeys;
+    Number res = (Number) properties.get(FLUSH_NUMBER_OF_ROW_KEYS);
+    if (res == null){
+      return 10000;
+    } 
+    return res.intValue();
   }
 
   public void setFlushNumberOfRowKeys(int flushNumberOfRowKeys) {
-    this.flushNumberOfRowKeys = flushNumberOfRowKeys;
+    properties.put(FLUSH_NUMBER_OF_ROW_KEYS, flushNumberOfRowKeys);
   }
 
   public int getKeyCachePerSsTable() {
-    return keyCachePerSsTable;
+    Number res = (Number) properties.get(KEY_CACHE_PER_SSTABLE);
+    if (res == null){
+      return 1000;
+    } 
+    return res.intValue();
   }
 
   public void setKeyCachePerSsTable(int keyCachePerSsTable) {
-    this.keyCachePerSsTable = keyCachePerSsTable;
+    properties.put(KEY_CACHE_PER_SSTABLE, keyCachePerSsTable);
   }
 
   public int getMaxCompactionThreshold() {
-    return maxCompactionThreshold;
+    Number res = (Number) properties.get(MAX_COMPACTION_THRESHOLD);
+    if (res == null){
+      return 4;
+    } 
+    return res.intValue();
   }
 
   public void setMaxCompactionThreshold(int maxCompactionThreshold) {
-    this.maxCompactionThreshold = maxCompactionThreshold;
+    properties.put(MAX_COMPACTION_THRESHOLD, maxCompactionThreshold);
   }
 
   public long getCommitlogFlushBytes() {
-    return commitlogFlushBytes;
+    Number res = (Number) properties.get(COMMITLOG_FLUSH_BYTES);
+    if (res == null){
+      return 1000;
+    } 
+    return res.intValue();
   }
 
   public void setCommitlogFlushBytes(long commitlogFlushBytes) {
-    this.commitlogFlushBytes = commitlogFlushBytes;
+    properties.put(COMMITLOG_FLUSH_BYTES, commitlogFlushBytes);
   }
 
   public String getImplementingClass() {
-    return implementingClass;
+    return (String) properties.get(StoreMetaData.IMPLEMENTING_CLASS);
   }
 
   public void setImplementingClass(String implementingClass) {
-    this.implementingClass = implementingClass;
+    properties.put(IMPLEMENTING_CLASS, implementingClass);
   }
 
   public long getIndexInterval() {
-    return indexInterval;
+    Number res = (Number) properties.get(INDEX_INTERVAL);
+    if (res == null){
+      return 1000;
+    } 
+    return res.intValue();
   }
 
   public void setIndexInterval(long indexInterval) {
-    this.indexInterval = indexInterval;
+    properties.put(INDEX_INTERVAL, indexInterval);
   }
 
-  @Override
-  public String toString() {
-    return "ColumnFamilyMetadata [name=" + name + ", tombstoneGraceMillis=" + tombstoneGraceMillis
-            + ", flushNumberOfRowKeys=" + flushNumberOfRowKeys + ", keyCachePerSsTable="
-            + keyCachePerSsTable + ", maxCompactionThreshold=" + maxCompactionThreshold
-            + ", commitlogFlushBytes=" + commitlogFlushBytes + "]";
-  }
 
   public Map<String, Object> getProperties() {
     return properties;
@@ -119,27 +147,39 @@ public class StoreMetaData {
   }
 
   public boolean isInMemoryColumnFamily() {
-    return inMemoryColumnFamily;
+    Boolean res = (Boolean) properties.get(IN_MEMORY_CF);
+    if (res == null){
+      return false;
+    } 
+    return res.booleanValue();
   }
 
   public void setInMemoryColumnFamily(boolean inMemoryColumnFamily) {
-    this.inMemoryColumnFamily = inMemoryColumnFamily;
+    properties.put(IN_MEMORY_CF, inMemoryColumnFamily);
   }
 
   public long getOperationTimeoutInMs() {
-    return operationTimeoutInMs;
+    Number res = (Number) properties.get(OPERATION_TIMEOUT_IN_MS);
+    if (res == null){
+      return 5000;
+    } 
+    return res.intValue();
   }
 
   public void setOperationTimeoutInMs(long operationTimeoutInMs) {
-    this.operationTimeoutInMs = operationTimeoutInMs;
+    properties.put(OPERATION_TIMEOUT_IN_MS, operationTimeoutInMs);
   }
 
   public boolean isEnableHints() {
-    return enableHints;
+    Boolean res = (Boolean) properties.get(ENABLE_HINTS);
+    if (res == null){
+      return true;
+    } 
+    return res.booleanValue();
   }
 
   public void setEnableHints(boolean enableHints) {
-    this.enableHints = enableHints;
+    properties.put(ENABLE_HINTS, enableHints);
   }
   
   
