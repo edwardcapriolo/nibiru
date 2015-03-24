@@ -181,6 +181,11 @@ public class StoreMetaData {
   public void setEnableHints(boolean enableHints) {
     properties.put(ENABLE_HINTS, enableHints);
   }
+
+  @Override
+  public String toString() {
+    return "StoreMetaData [name=" + name + ", properties=" + properties + "]";
+  }
   
   
   

@@ -102,6 +102,8 @@ public class MetaDataCoordinator {
       return handleListStores(message);
     } else if (MetaPersonality.GET_KEYSPACE_METADATA.equals(message.getPayload().get("type"))){ 
       return handleGetKeyspaceMetaData(message);
+    } else if (MetaPersonality.GET_STORE_METADATA.equals(message.getPayload().get("type"))){ 
+      return handleGetStoreMetaData(message);
     } else {
       throw new IllegalArgumentException("could not process " + message);
     }
@@ -119,6 +121,15 @@ public class MetaDataCoordinator {
     Response r = new Response().withProperty("payload", metaDataManager.getKeyspaceMetadata(keyspace).getProperties());
     return r;
   }
+  
+  private Response handleGetStoreMetaData(Message message) {
+    String keyspace = (String) message.getPayload().get("keyspace");
+    String store = (String) message.getPayload().get("store");
+    //TODO: keyspace does not exist?
+    Response r = new Response().withProperty("payload", metaDataManager.getStoreMetadata(keyspace, store).getProperties());
+    return r;
+  }
+  
   
   private Response handleCreateOrUpdateStore(final Message message){
     metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),

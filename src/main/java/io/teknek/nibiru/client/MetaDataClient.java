@@ -139,6 +139,26 @@ public class MetaDataClient extends Client {
   }
   
   
+  public Map<String,Object> getStoreMetadata(String keyspace, String store) throws ClientException {
+    Message m = new Message();
+    m.setKeyspace("system");
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("keyspace", keyspace);
+    payload.put("store", store);
+    payload.put("type", MetaPersonality.GET_STORE_METADATA);
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+      System.out.println(response.get("payload"));
+      return (Map<String,Object>) response.get("payload");
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
+  
+  
+  
   
   public static void main (String [] args) throws ClientException {
     MetaDataClient c = new MetaDataClient("127.0.0.1", 7070);

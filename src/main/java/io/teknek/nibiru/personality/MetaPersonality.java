@@ -27,6 +27,7 @@ public interface MetaPersonality {
   public static final String LIST_KEYSPACES = "LIST_KEYSPACES";
   public static final String LIST_STORES = "LIST_STORES";
   public static final String GET_KEYSPACE_METADATA = "GET_KEYPSACE_METADATA";
+  public static final String GET_STORE_METADATA = "GET_STORE_METADATA";
   
   void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties);
 }

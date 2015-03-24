@@ -139,6 +139,10 @@ public class MetaDataManager {
     return server.getKeyspaces().get(keyspace).getKeyspaceMetaData();
   }
   
+  public StoreMetaData getStoreMetadata(String keyspace, String store){
+    return server.getKeyspaces().get(keyspace).getStores().get(store).getStoreMetadata();
+  }
+  
   public Map<String,KeyspaceAndStoreMetaData> read(){
     return metaDataStorage.read(configuration);
   }
