@@ -18,11 +18,16 @@ package io.teknek.nibiru.coordinator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.codehaus.jackson.map.ObjectMapper;
+
+import io.teknek.nibiru.Consistency;
+import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
+import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.transport.Message;
@@ -38,6 +43,7 @@ public class Coordinator {
   private final EventualCoordinator eventualCoordinator;
   private Hinter hinter;
   private AtomicReference<Destination> protege;
+  private Tracer tracer;
   
   public Coordinator(Server server) {
     this.server = server;
@@ -53,6 +59,7 @@ public class Coordinator {
     metaDataCoordinator.init();
     eventualCoordinator.init();
     hinter = createHinter();
+    tracer = new Tracer();
   }
   
   public static ColumnFamilyPersonality getHintCf(Server server){
@@ -71,7 +78,7 @@ public class Coordinator {
   }
 
   //ah switchboad logic
-  public Response handle(Message message) {
+  public Response handle(Message message) { 
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
       return metaDataCoordinator.handleSystemMessage(message);
     }
@@ -121,6 +128,10 @@ public class Coordinator {
     } else { 
       return new Response().withProperty("status", "fail").withProperty("reason", "already sponsoring") ;
     }
+  }
+  
+  public Tracer getTracer(){
+    return this.tracer;
   }
   
   private Hinter getHinterForMessage(Message message, Store columnFamily){
