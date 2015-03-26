@@ -32,6 +32,10 @@ public class TestMetaCoordinator {
     Assert.assertEquals(new HashMap(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()), 
             c.getStoreMetadata(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY));
+    
+    Response expected = new Response().withProperty("a", "b");
+    c.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, expected, true);
+    Assert.assertEquals(expected, c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     c.shutdown();
     s.shutdown();
   }

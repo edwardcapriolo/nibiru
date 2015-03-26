@@ -61,7 +61,7 @@ public class TestCoordinator {
     props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
     props.put(TokenRouter.REPLICATION_FACTOR, 3);
     props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
-    c.createOrUpdateKeyspace("abc", props);
+    c.createOrUpdateKeyspace("abc", props,true);
     Map <String,Object> x = new HashMap<String,Object>();
     x.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
     c.createOrUpdateStore("abc", "def", x);

@@ -16,13 +16,11 @@
 package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.Configuration;
-import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -71,7 +69,7 @@ public class MetaDataCoordinator {
     }
   }
   
-  private MetaDataClient clientForClusterMember(ClusterMember clusterMember){
+  public MetaDataClient clientForClusterMember(ClusterMember clusterMember){
     MetaDataClient c = clients.get(clusterMember);
     if (c == null) {
       c = new MetaDataClient(clusterMember.getHost(), configuration
@@ -80,15 +78,7 @@ public class MetaDataCoordinator {
     }
     return c;
   }
-  
-  public void syncSchemaToSponsoredMember(Destination destination){
-    for (String keyspace : metaDataManager.listKeyspaces()){
-      //KeyspaceMetaData cmd = metaDataManager.
-      //MetaDataClient c = null;
-      //c.createOrUpdateKeyspace(keyspace, properties)
-    }
-  }
-  
+    
   public Response handleSystemMessage(final Message message){
     if (MetaPersonality.LIST_LIVE_MEMBERS.equals(message.getPayload().get("type"))){
       return handleListLiveMembersMessage(message);
@@ -105,7 +95,7 @@ public class MetaDataCoordinator {
     } else if (MetaPersonality.GET_STORE_METADATA.equals(message.getPayload().get("type"))){ 
       return handleGetStoreMetaData(message);
     } else {
-      throw new IllegalArgumentException("could not process " + message);
+      throw new IllegalArgumentException(this.getClass().getName() + " could not process " + message);
     }
   }
   
@@ -167,7 +157,7 @@ public class MetaDataCoordinator {
   private Response handleCreateOrUpdateKeyspace(final Message message){
     metaDataManager.createOrUpdateKeyspace(
             (String) message.getPayload().get("keyspace"), 
-            (Map<String,Object>) message.getPayload());
+            (Map<String,Object>) message.getPayload().get("properties"));
     if (!message.getPayload().containsKey("reroute")){
       message.getPayload().put("reroute", "");
       List<Callable<Void>> calls = new ArrayList<>();
@@ -178,8 +168,8 @@ public class MetaDataCoordinator {
             try {
             c.createOrUpdateKeyspace(
                     (String) message.getPayload().get("keyspace"), 
-                    //(Map<String,Object>) message.getPayload().get("properties")
-                    (Map<String,Object>) message.getPayload()
+
+                    (Map<String,Object>) message.getPayload().get("properties"), false
                     );
            
             } catch (RuntimeException ex){

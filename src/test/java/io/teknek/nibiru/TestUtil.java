@@ -1,5 +1,6 @@
 package io.teknek.nibiru;
 
+import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
@@ -7,6 +8,7 @@ import io.teknek.nibiru.keyvalue.InMemoryKeyValue;
 import io.teknek.nibiru.metadata.StoreMetaData;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +40,12 @@ public class TestUtil {
     return s;
   }
 
+  public static Map<String,Object> gossipPropertiesFor127Seed(){
+    Map<String, Object> clusterProperties = new HashMap<>();
+    clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
+    return clusterProperties;
+  }
+  
   public static Configuration aBasicConfiguration(TemporaryFolder testFolder){
     File tempFolder = testFolder.newFolder("sstable");
     File commitlog = testFolder.newFolder("commitlog");

@@ -54,7 +54,7 @@ public class MetaDataClient extends Client {
     }
   }
   
-  public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties) throws ClientException {
+  public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties, boolean isClient) throws ClientException {
     Message m = new Message();
     m.setKeyspace("system");
     m.setStore(null);
@@ -62,7 +62,10 @@ public class MetaDataClient extends Client {
     Map<String,Object> payload = new HashMap<>();
             payload.put("type", MetaPersonality.CREATE_OR_UPDATE_KEYSPACE);
             payload.put("keyspace", keyspace);
-            payload.putAll(properties);
+            payload.put("properties", properties);
+            if(!isClient){
+              payload.put("reroute", "");
+            }
     m.setPayload(payload);
     try {
       Response response = post(m);

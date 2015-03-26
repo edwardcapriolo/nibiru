@@ -16,18 +16,11 @@
 package io.teknek.nibiru.coordinator;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.codehaus.jackson.map.ObjectMapper;
-
-import io.teknek.nibiru.Consistency;
-import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.transport.Message;
@@ -41,16 +34,18 @@ public class Coordinator {
   private final MetaDataCoordinator metaDataCoordinator;
   //TODO. this needs to be a per column family value
   private final EventualCoordinator eventualCoordinator;
+  private final SponsorCoordinator sponsorCoordinator;
+  
   private Hinter hinter;
-  private AtomicReference<Destination> protege;
   private Tracer tracer;
+  
   
   public Coordinator(Server server) {
     this.server = server;
     metaDataCoordinator = new MetaDataCoordinator(this, server.getConfiguration(),
             server.getMetaDataManager(), server.getClusterMembership(), server.getServerId());
     eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
-    protege = new AtomicReference<>();
+    sponsorCoordinator = new SponsorCoordinator(server.getClusterMembership(), server.getMetaDataManager(), metaDataCoordinator);
   }
   
   public void init(){
@@ -79,11 +74,11 @@ public class Coordinator {
 
   //ah switchboad logic
   public Response handle(Message message) { 
+    if (message.getPayload().containsKey("sponsor_request")){
+      return sponsorCoordinator.handleSponsorRequest(message);
+    }
     if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
       return metaDataCoordinator.handleSystemMessage(message);
-    }
-    if (message.getPayload().containsKey("sponsor_request")){
-      return handleSponsorRequest(message);
     }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
     if (keyspace == null){
@@ -96,8 +91,9 @@ public class Coordinator {
     Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
     List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
-    if (protege.get() != null && destinations.contains(destinationLocal) ){
-      destinations.add(protege.get());
+    
+    if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
+      destinations.add(sponsorCoordinator.getProtege());
     }
     long timeoutInMs = determineTimeout(columnFamily, message);
 
@@ -117,18 +113,6 @@ public class Coordinator {
 
   }
   
-  private Response handleSponsorRequest(Message message){
-    String requestId = (String) message.getPayload().get("request_id");
-    Destination protegeDestination = new Destination();
-    protegeDestination.setDestinationId(requestId);
-    
-    boolean res = protege.compareAndSet(null, protegeDestination);
-    if (res){
-      return new Response().withProperty("status", "ok");
-    } else { 
-      return new Response().withProperty("status", "fail").withProperty("reason", "already sponsoring") ;
-    }
-  }
   
   public Tracer getTracer(){
     return this.tracer;
@@ -156,6 +140,10 @@ public class Coordinator {
     } else {
       return columnFamily.getStoreMetadata().getOperationTimeoutInMs();
     }
+  }
+
+  public SponsorCoordinator getSponsorCoordinator() {
+    return sponsorCoordinator;
   }
 
 }
