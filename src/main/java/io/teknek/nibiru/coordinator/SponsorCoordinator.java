@@ -84,10 +84,11 @@ public class SponsorCoordinator {
     Thread t = new Thread(){
       public void run(){
         Keyspace ks = server.getKeyspaces().get(joinKeyspace);
-        System.out.println("I am "+server.getConfiguration().getTransportHost());
+        System.out.println("I am "+server.getConfiguration().getTransportHost()+"keyspace " + joinKeyspace);
         for (Entry<String, Store> storeEntry : ks.getStores().entrySet()){
           if (storeEntry.getValue() instanceof DefaultColumnFamily){
             DefaultColumnFamily d = (DefaultColumnFamily) storeEntry.getValue();
+            System.out.println("Store "+storeEntry.getKey() +" size:"+ d.getMemtable().size());
             d.doFlush();
             //d.getMemtableFlusher().doBlockingFlush();
             for (SsTable table : d.getSstable()){
