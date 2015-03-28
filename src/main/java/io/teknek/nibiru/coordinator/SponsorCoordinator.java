@@ -89,7 +89,8 @@ public class SponsorCoordinator {
           if (storeEntry.getValue() instanceof DefaultColumnFamily){
             DefaultColumnFamily d = (DefaultColumnFamily) storeEntry.getValue();
             System.out.println("Store "+storeEntry.getKey() +" size:"+ d.getMemtable().size());
-            d.doFlush();
+            System.out.println("Store "+storeEntry.getKey() +" ss size:"+ d.getSstable().size());
+            //d.doFlush();
             //d.getMemtableFlusher().doBlockingFlush();
             for (SsTable table : d.getSstable()){
               try {
