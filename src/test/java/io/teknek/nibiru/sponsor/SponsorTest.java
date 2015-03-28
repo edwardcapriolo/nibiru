@@ -1,18 +1,19 @@
 package io.teknek.nibiru.sponsor;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
+import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.MetaDataClient;
-import io.teknek.nibiru.cluster.ConfigurationClusterMembership;
-import io.teknek.nibiru.cluster.GossipClusterMembership;
+import io.teknek.nibiru.client.Session;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
+import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.router.TokenRouter;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -48,7 +49,7 @@ public class SponsorTest {
             .getConfiguration().getTransportPort());
     Map<String,Object> props = new HashMap<>();
     TreeMap<String,String> tokenMap = new TreeMap<>();
-    tokenMap.put("0", s[0].getServerId().getU().toString());
+    tokenMap.put("10", s[0].getServerId().getU().toString());
     props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
     props.put(TokenRouter.REPLICATION_FACTOR, 1);
     props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
@@ -58,17 +59,39 @@ public class SponsorTest {
     x.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
     metaClient.createOrUpdateStore("abc", "def", x);
     Assert.assertEquals(s[0].getClusterMembership().getLiveMembers().size(), 0);//We do not count ourselves
+    
+    ColumnFamilyClient c = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
+            .getConfiguration().getTransportPort());
+    Session session = c.createBuilder().withKeyspace("abc")
+            .withWriteConsistency(ConsistencyLevel.ALL, new HashMap())
+            .withReadConsistency(ConsistencyLevel.ALL, new HashMap())
+            .withStore("def").build();
     for (int k = 0; k < 10; k++) {
-      s[0].put("abc", "def", k + "", k + "", k + "", 1);
+      session.put(k+"", k+"", k+"", 1);
     }
+    Assert.assertEquals(10, ((DefaultColumnFamily) s[0].getKeyspaces().get("abc").getStores().get("def")).getMemtable().size());
+    System.out.println("starting second node");
     s[1].init(); 
     
     Thread.sleep(10000);
     Assert.assertEquals(s[0].getClusterMembership().getLiveMembers().size(), 1);
-    s[1].join("abc", "127.0.0.1");
+    System.out.println("joining second node");
+    s[1].join("abc", "127.0.0.1", "5");
     Thread.sleep(1000);
     Assert.assertEquals(s[1].getServerId().getU().toString(), 
             s[0].getCoordinator().getSponsorCoordinator().getProtege().getDestinationId());
+    
+    
+    
+    session.put("1", "1", "after", 8);
+    session.put("7", "7", "after", 8);
+    session.put("11", "11", "after", 8);
+    Assert.assertEquals("after", ((ColumnValue) s[0].get("abc", "def", "11" , "11")).getValue());
+    Assert.assertEquals("after", ((ColumnValue) s[0].get("abc", "def", "1" , "1")).getValue());
+    
+    Assert.assertEquals("after", ((ColumnValue) s[1].get("abc", "def", "11" , "11")).getValue());
+    Assert.assertEquals("after", ((ColumnValue) s[1].get("abc", "def", "1" , "1")).getValue());
+    
     
     for (int i = 0; i < cs.length; i++) {
       s[i].shutdown();

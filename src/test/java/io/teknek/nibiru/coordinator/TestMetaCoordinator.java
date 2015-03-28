@@ -36,6 +36,12 @@ public class TestMetaCoordinator {
     Response expected = new Response().withProperty("a", "b");
     c.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, expected, true);
     Assert.assertEquals(expected, c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
+    Assert.assertEquals(expected, s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getKeyspaceMetaData().getProperties());
+    
+    Response change = new Response().withProperty("d", "e");
+    c.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, change, true);
+    Assert.assertEquals(change, c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
+    Assert.assertEquals(change, s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getKeyspaceMetaData().getProperties());
     c.shutdown();
     s.shutdown();
   }

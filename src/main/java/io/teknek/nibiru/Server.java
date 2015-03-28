@@ -18,20 +18,16 @@ package io.teknek.nibiru;
 import io.teknek.nibiru.client.InternodeClient;
 import io.teknek.nibiru.cluster.ClusterMembership;
 import io.teknek.nibiru.coordinator.Coordinator;
-import io.teknek.nibiru.coordinator.SponsorCoordinator;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.plugins.AbstractPlugin;
 import io.teknek.nibiru.transport.HttpJsonTransport;
-import io.teknek.nibiru.transport.Message;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -147,9 +143,9 @@ public class Server {
   
   
   @VisibleForTesting
-  public void join(String keyspace, String sponsorHost){
+  public void join(String keyspace, String sponsorHost, String wantedToken){
     InternodeClient internodeClient = new InternodeClient(sponsorHost, configuration.getTransportPort());
-    internodeClient.join(keyspace, sponsorHost, serverId);
+    internodeClient.join(keyspace, sponsorHost, serverId, wantedToken);
   }
   
   public ConcurrentMap<String, Keyspace> getKeyspaces() {

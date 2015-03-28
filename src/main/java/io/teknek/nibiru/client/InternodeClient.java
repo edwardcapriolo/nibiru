@@ -17,13 +17,14 @@ public class InternodeClient {
     client = new Client(host, port);
   }
   
-  public void join(String keyspace, String sponsorId, ServerId me) {
+  public void join(String keyspace, String sponsorId, ServerId me, String wantedToken) {
     Message m = new Message();
     m.setKeyspace("system");
     Map<String, Object> payload = new HashMap<>();
     payload.put("keyspace", keyspace);
     payload.put("sponsor_request", "");
     payload.put("request_id", me.getU().toString());
+    payload.put("wanted_token", wantedToken);
     m.setPayload(payload);
     
     try {

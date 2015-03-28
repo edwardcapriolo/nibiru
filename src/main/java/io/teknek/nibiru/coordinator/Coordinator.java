@@ -45,7 +45,7 @@ public class Coordinator {
     metaDataCoordinator = new MetaDataCoordinator(this, server.getConfiguration(),
             server.getMetaDataManager(), server.getClusterMembership(), server.getServerId());
     eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
-    sponsorCoordinator = new SponsorCoordinator(server.getClusterMembership(), server.getMetaDataManager(), metaDataCoordinator);
+    sponsorCoordinator = new SponsorCoordinator(server.getClusterMembership(), server.getMetaDataManager(), metaDataCoordinator, server);
   }
   
   public void init(){
@@ -93,7 +93,11 @@ public class Coordinator {
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
     
     if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
-      destinations.add(sponsorCoordinator.getProtege());
+      //TODO they only need some of the messages by range
+      String type = (String) message.getPayload().get("type");
+      if (type.equals("put") || type.equals("delete") ){ 
+        destinations.add(sponsorCoordinator.getProtege());
+      }
     }
     long timeoutInMs = determineTimeout(columnFamily, message);
 

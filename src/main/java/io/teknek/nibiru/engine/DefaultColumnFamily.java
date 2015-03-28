@@ -224,24 +224,31 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     considerFlush();
   }
   
+  public void doFlush(){
+    System.out.println("memtable size" + this.memtable.get().size());
+    
+    Memtable now = memtable.get();
+    CommitLog commitLog = new CommitLog(this);
+    try {
+      commitLog.open();
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+    Memtable aNewTable = new Memtable(this, commitLog); 
+    boolean success = memtableFlusher.add(now);
+    if (success){
+      boolean swap = memtable.compareAndSet(now, aNewTable);
+      if (!swap){
+        throw new RuntimeException("race detected");
+      }        
+    }
+  }
+  
   void considerFlush(){
     Memtable now = memtable.get();
     if (storeMetadata.getFlushNumberOfRowKeys() != 0 
             && now.size() >= storeMetadata.getFlushNumberOfRowKeys()){
-      CommitLog commitLog = new CommitLog(this);
-      try {
-        commitLog.open();
-      } catch (FileNotFoundException e) {
-        throw new RuntimeException(e);
-      }
-      Memtable aNewTable = new Memtable(this, commitLog); 
-      boolean success = memtableFlusher.add(now);
-      if (success){
-        boolean swap = memtable.compareAndSet(now, aNewTable);
-        if (!swap){
-          throw new RuntimeException("race detected");
-        }        
-      }
+      doFlush();
     }
   }
 
@@ -280,4 +287,5 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     }
     return fromMemtable;
   }
+  
 }
