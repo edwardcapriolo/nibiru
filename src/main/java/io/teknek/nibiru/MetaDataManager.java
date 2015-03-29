@@ -122,7 +122,14 @@ public class MetaDataManager {
   }
   
   public void createOrUpdateStore(String keyspaceName, String store, Map<String,Object> properties){
-    server.getKeyspaces().get(keyspaceName).createStore(store, properties);
+    //server.getKeyspaces().get(keyspaceName).createStore(store, properties);
+    Store existingStore = server.getKeyspaces().get(keyspaceName).getStores().get(store);
+    if (existingStore == null){
+      server.getKeyspaces().get(keyspaceName).createStore(store, properties);
+    } else {
+      //TODO thread safe?
+      existingStore.getStoreMetadata().setProperties(properties);
+    }
     persistMetadata();
   }
   

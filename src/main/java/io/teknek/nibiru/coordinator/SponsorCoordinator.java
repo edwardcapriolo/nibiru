@@ -84,14 +84,12 @@ public class SponsorCoordinator {
     Thread t = new Thread(){
       public void run(){
         Keyspace ks = server.getKeyspaces().get(joinKeyspace);
-        System.out.println("I am "+server.getConfiguration().getTransportHost()+"keyspace " + joinKeyspace);
+        System.out.println("I am "+server.getConfiguration().getTransportHost() + " keyspace " + joinKeyspace);
         for (Entry<String, Store> storeEntry : ks.getStores().entrySet()){
           if (storeEntry.getValue() instanceof DefaultColumnFamily){
             DefaultColumnFamily d = (DefaultColumnFamily) storeEntry.getValue();
-            System.out.println("Store "+storeEntry.getKey() +" size:"+ d.getMemtable().size());
-            System.out.println("Store "+storeEntry.getKey() +" ss size:"+ d.getSstable().size());
-            //d.doFlush();
-            //d.getMemtableFlusher().doBlockingFlush();
+            d.doFlush();
+            d.getMemtableFlusher().doBlockingFlush();
             for (SsTable table : d.getSstable()){
               try {
                 SsTableStreamReader stream = table.getStreamReader();
@@ -100,7 +98,6 @@ public class SponsorCoordinator {
                   SortedMap<AtomKey,AtomValue> columns = stream.readColumns();
                   System.out.println("sending "+token + " "+ columns);
                 }
-                System.out.println("Done reading");
               } catch (IOException e) {
                 System.err.println(e);
                 throw new RuntimeException (e);

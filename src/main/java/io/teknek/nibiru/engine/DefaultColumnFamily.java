@@ -39,9 +39,9 @@ import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
 public class DefaultColumnFamily extends Store implements ColumnFamilyPersonality {
 
-  private AtomicReference<Memtable> memtable;
-  private MemtableFlusher memtableFlusher;
-  private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
+  private final AtomicReference<Memtable> memtable;
+  private final MemtableFlusher memtableFlusher;
+  private final Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   
   public DefaultColumnFamily(Keyspace keyspace, StoreMetaData cfmd){
     super(keyspace, cfmd);
