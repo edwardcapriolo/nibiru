@@ -89,7 +89,6 @@ public class ServerTest {
       Assert.assertEquals("4", ((ColumnValue) y).getValue());
       j.shutdown();
     }
-    s.shutdown();
   }
   
   

@@ -4,6 +4,7 @@ import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.plugins.CompactionManager;
+import io.teknek.nibiru.transport.Response;
 
 import java.io.IOException;
 
@@ -23,8 +24,7 @@ public class TestCompactionManager {
   @Test
   public void test() throws IOException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
-    
+    ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
     SsTable s = new SsTable(ks1.getStores().get("abc"));
     {
       Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
@@ -49,5 +49,6 @@ public class TestCompactionManager {
     SsTable ss = new SsTable(ks1.getStores().get("abc"));
     ss.open("3", ks1.getConfiguration());
     Assert.assertEquals("e", ((ColumnValue) ss.get(   ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column3")).getValue());
+    
   }
 }

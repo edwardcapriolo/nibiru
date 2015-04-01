@@ -2,9 +2,13 @@ package io.teknek.nibiru.coordinator;
 
 import java.io.IOException;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.codehaus.jackson.map.ObjectMapper;
 
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
@@ -12,7 +16,6 @@ import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.InternodeClient;
 import io.teknek.nibiru.client.MetaDataClient;
@@ -24,6 +27,7 @@ import io.teknek.nibiru.engine.SsTableStreamReader;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
+import io.teknek.nibiru.router.TokenRouter;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -47,11 +51,11 @@ public class SponsorCoordinator {
   }
   
   public Response handleSponsorRequest(final Message message){
-    String requestId = (String) message.getPayload().get("request_id");
+    final String requestId = (String) message.getPayload().get("request_id");
     final String joinKeyspace = (String) message.getPayload().get("keyspace");
-    String wantedToken = (String) message.getPayload().get("wanted_token");
+    final String wantedToken = (String) message.getPayload().get("wanted_token");
     final String protogeHost = (String) message.getPayload().get("transport_host");
-    Destination protegeDestination = new Destination();
+    final Destination protegeDestination = new Destination();
     protegeDestination.setDestinationId(requestId);
     MetaDataClient metaDataClient = null;
     for (ClusterMember cm : clusterMembership.getLiveMembers()){
@@ -81,6 +85,7 @@ public class SponsorCoordinator {
     //TODO check to make sure node is own range
     //TODO provide auto-token
     protogeToken.set(wantedToken);
+    final MetaDataClient finalClient = metaDataClient;
     Thread t = new Thread(){
       public void run(){
         InternodeClient protegeClient = new InternodeClient(protogeHost, server.getConfiguration().getTransportPort());
@@ -98,7 +103,6 @@ public class SponsorCoordinator {
                 Token token = null;
                 while ((token = stream.getNextToken()) != null){
                   SortedMap<AtomKey,AtomValue> columns = stream.readColumns();
-                  System.out.println("sending "+token + " "+ columns);
                   protegeClient.transmit(ks.getKeyspaceMetaData().getName(), storeEntry.getKey(), token, columns, bulkUid);
                 }
               } catch (IOException e) {
@@ -108,7 +112,25 @@ public class SponsorCoordinator {
             }
           }
         }
+        //Data is streamed broadcast changes
+        ObjectMapper om = new ObjectMapper();
+        TreeMap<String,String> t = om.convertValue( ks.getKeyspaceMetaData().getProperties().get(TokenRouter.TOKEN_MAP_KEY), TreeMap.class);
+        t.put(wantedToken, requestId);
+        Map<String,Object> send = ks.getKeyspaceMetaData().getProperties();
+        send.put(TokenRouter.TOKEN_MAP_KEY, t);
+        try {
+          finalClient.createOrUpdateKeyspace(joinKeyspace, send, true);
+        } catch (ClientException e) {
+          e.printStackTrace();
+        }
+        try {
+          Thread.sleep(10000); //wait here for propagations
+        } catch (InterruptedException e) {
+          
+        }
+        boolean res = protege.compareAndSet( protegeDestination, null);
       }
+      
     };
     t.start();
     

@@ -86,13 +86,16 @@ public class SponsorTest {
     session.put("1", "1", "after", 8);
     session.put("7", "7", "after", 8);
     session.put("11", "11", "after", 8);
-    Assert.assertEquals("after", ((ColumnValue) s[0].get("abc", "def", "11" , "11")).getValue());
+    
+    Assert.assertEquals("after", ((ColumnValue) s[1].get("abc", "def", "11" , "11")).getValue());
     Assert.assertEquals("after", ((ColumnValue) s[0].get("abc", "def", "1" , "1")).getValue());
     
     Assert.assertEquals("after", ((ColumnValue) s[1].get("abc", "def", "11" , "11")).getValue());
     Assert.assertEquals("after", ((ColumnValue) s[1].get("abc", "def", "1" , "1")).getValue());
     
-    
+    Thread.sleep(5000);
+    Map<String,String> keyspaceMembers = (Map<String, String>) metaClient.getKeyspaceMetadata("abc").get(TokenRouter.TOKEN_MAP_KEY);
+    Assert.assertEquals(2, keyspaceMembers.size());
     for (int i = 0; i < cs.length; i++) {
       s[i].shutdown();
     }
