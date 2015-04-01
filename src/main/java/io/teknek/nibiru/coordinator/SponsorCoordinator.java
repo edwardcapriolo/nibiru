@@ -3,17 +3,18 @@ package io.teknek.nibiru.coordinator;
 import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.SortedMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Token;
+import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ClientException;
+import io.teknek.nibiru.client.InternodeClient;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
@@ -46,11 +47,10 @@ public class SponsorCoordinator {
   }
   
   public Response handleSponsorRequest(final Message message){
-    
-    
     String requestId = (String) message.getPayload().get("request_id");
     final String joinKeyspace = (String) message.getPayload().get("keyspace");
     String wantedToken = (String) message.getPayload().get("wanted_token");
+    final String protogeHost = (String) message.getPayload().get("transport_host");
     Destination protegeDestination = new Destination();
     protegeDestination.setDestinationId(requestId);
     MetaDataClient metaDataClient = null;
@@ -83,25 +83,28 @@ public class SponsorCoordinator {
     protogeToken.set(wantedToken);
     Thread t = new Thread(){
       public void run(){
+        InternodeClient protegeClient = new InternodeClient(protogeHost, server.getConfiguration().getTransportPort());
         Keyspace ks = server.getKeyspaces().get(joinKeyspace);
-        System.out.println("I am "+server.getConfiguration().getTransportHost() + " keyspace " + joinKeyspace);
         for (Entry<String, Store> storeEntry : ks.getStores().entrySet()){
           if (storeEntry.getValue() instanceof DefaultColumnFamily){
             DefaultColumnFamily d = (DefaultColumnFamily) storeEntry.getValue();
             d.doFlush();
             d.getMemtableFlusher().doBlockingFlush();
+            String  bulkUid = UUID.randomUUID().toString();
             for (SsTable table : d.getSstable()){
+              protegeClient.createSsTable(joinKeyspace, d.getStoreMetadata().getName(), bulkUid);
               try {
                 SsTableStreamReader stream = table.getStreamReader();
                 Token token = null;
                 while ((token = stream.getNextToken()) != null){
                   SortedMap<AtomKey,AtomValue> columns = stream.readColumns();
                   System.out.println("sending "+token + " "+ columns);
+                  protegeClient.transmit(ks.getKeyspaceMetaData().getName(), storeEntry.getKey(), token, columns, bulkUid);
                 }
               } catch (IOException e) {
-                System.err.println(e);
                 throw new RuntimeException (e);
               }
+              protegeClient.closeSsTable(joinKeyspace, d.getStoreMetadata().getName(), bulkUid);
             }
           }
         }

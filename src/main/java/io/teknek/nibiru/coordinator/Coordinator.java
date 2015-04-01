@@ -16,11 +16,24 @@
 package io.teknek.nibiru.coordinator;
 
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.jsontype.NamedType;
+import org.codehaus.jackson.type.TypeReference;
+
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
+import io.teknek.nibiru.client.InternodeClient.AtomPair;
+import io.teknek.nibiru.engine.DirectSsTableWriter;
+import io.teknek.nibiru.engine.SsTableStreamWriter;
+import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomValue;
+import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.transport.Message;
@@ -72,8 +85,40 @@ public class Coordinator {
     eventualCoordinator.shutdown();
   }
 
+  public Response handleStreamRequest(Message m){
+    
+    ObjectMapper om = new ObjectMapper();
+
+    
+    Store store = this.server.getKeyspaces().get(m.getPayload().get("keyspace"))
+            .getStores().get(m.getPayload().get("store"));
+    DirectSsTableWriter w = (DirectSsTableWriter) store;
+    if (DirectSsTableWriter.OPEN.equals(m.getPayload().get("type"))){
+      w.open((String) m.getPayload().get("id"));
+      return new Response();
+    } else if (DirectSsTableWriter.CLOSE.equals(m.getPayload().get("type"))){
+      w.close((String) m.getPayload().get("id"));
+      return new Response();
+    } else if (DirectSsTableWriter.WRITE.equals(m.getPayload().get("type"))){
+      TypeReference<List<AtomPair>> t = new TypeReference<List<AtomPair>>() { };
+      List<AtomPair> pair = om.convertValue( m.getPayload().get("columns"), t);
+      SortedMap<AtomKey, AtomValue> mp = new TreeMap<>();
+      for (AtomPair aPair: pair){
+        mp.put(aPair.getKey(), aPair.getValue());
+      }
+      w.write(om.convertValue( m.getPayload().get("token"), Token.class), mp,
+              (String)m.getPayload().get("id"));
+      return new Response();
+    }
+    return null;
+   
+  }
+  
   //ah switchboad logic
   public Response handle(Message message) { 
+    if (DirectSsTableWriter.PERSONALITY.equals(message.getPersonality())){
+      return handleStreamRequest(message);
+    }
     if (message.getPayload().containsKey("sponsor_request")){
       return sponsorCoordinator.handleSponsorRequest(message);
     }

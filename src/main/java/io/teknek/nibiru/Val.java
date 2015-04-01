@@ -15,6 +15,9 @@
  */
 package io.teknek.nibiru;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Val {
   private String value;
   private long time;

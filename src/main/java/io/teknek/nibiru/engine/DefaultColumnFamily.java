@@ -22,8 +22,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.google.common.annotations.VisibleForTesting;
  
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
@@ -37,11 +41,12 @@ import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
-public class DefaultColumnFamily extends Store implements ColumnFamilyPersonality {
+public class DefaultColumnFamily extends Store implements ColumnFamilyPersonality, DirectSsTableWriter {
 
   private final AtomicReference<Memtable> memtable;
   private final MemtableFlusher memtableFlusher;
   private final Set<SsTable> sstable = new ConcurrentSkipListSet<>();
+  private ConcurrentMap<String, SsTableStreamWriter> streamSessions = new ConcurrentHashMap<>();
   
   public DefaultColumnFamily(Keyspace keyspace, StoreMetaData cfmd){
     super(keyspace, cfmd);
@@ -287,5 +292,51 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     }
     return fromMemtable;
   }
+
+  
+  @Override
+  public void open(String id) {
+    SsTableStreamWriter add = new SsTableStreamWriter(id, this);
+    try {
+      add.open();
+      streamSessions.put(id, add);
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    
+  }
+
+  @Override
+  public void write(Token token, SortedMap<AtomKey, AtomValue> columns, String id) {
+    try {
+      streamSessions.get(id).write(token, columns);
+      
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void close(String id) {
+    SsTableStreamWriter writer = streamSessions.get(id);
+    try {
+      writer.close();
+      SsTable table = new SsTable(this);
+      table.open(id, getKeyspace().getConfiguration());
+      sstable.add(table);
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    } finally {
+      this.streamSessions.remove(id);
+    }
+  }
+
+  @VisibleForTesting
+  public ConcurrentMap<String, SsTableStreamWriter> getStreamSessions() {
+    return streamSessions;
+  }
+  
   
 }

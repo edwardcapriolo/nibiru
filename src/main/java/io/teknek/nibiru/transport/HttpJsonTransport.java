@@ -86,7 +86,7 @@ public class HttpJsonTransport {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=utf-8");
         try {
-          if (message.getPayload().get(Tracer.TRACE_PROP) != null){
+          if (message.getPayload() != null && message.getPayload().get(Tracer.TRACE_PROP) != null){
             message.getPayload().put(Tracer.TRACE_PROP, 
                     MAPPER.convertValue(message.getPayload().get(Tracer.TRACE_PROP), TraceTo.class)
                     );
@@ -96,6 +96,7 @@ public class HttpJsonTransport {
           }
           MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
         } catch (RuntimeException ex){
+          ex.printStackTrace();
           LOGGER.debug(ex);
           Response r = new Response();
           r.put("exception", ex.getMessage());

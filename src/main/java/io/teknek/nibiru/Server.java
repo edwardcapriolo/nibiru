@@ -145,7 +145,7 @@ public class Server {
   @VisibleForTesting
   public void join(String keyspace, String sponsorHost, String wantedToken){
     InternodeClient internodeClient = new InternodeClient(sponsorHost, configuration.getTransportPort());
-    internodeClient.join(keyspace, sponsorHost, serverId, wantedToken);
+    internodeClient.join(keyspace, sponsorHost, serverId, wantedToken, configuration.getTransportHost());
   }
   
   public ConcurrentMap<String, Keyspace> getKeyspaces() {
