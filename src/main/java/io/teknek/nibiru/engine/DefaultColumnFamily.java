@@ -230,8 +230,6 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public void doFlush(){
-    System.out.println("memtable size" + this.memtable.get().size());
-    
     Memtable now = memtable.get();
     CommitLog commitLog = new CommitLog(this);
     try {

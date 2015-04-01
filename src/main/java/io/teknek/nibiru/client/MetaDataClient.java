@@ -87,7 +87,6 @@ public class MetaDataClient extends Client {
     m.setPayload(payload);
     try {
       Response response = post(m);
-      System.out.println(response);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
@@ -134,7 +133,6 @@ public class MetaDataClient extends Client {
     m.setPayload(payload);
     try {
       Response response = post(m);
-      System.out.println(response.get("payload"));
       return (Map<String,Object>) response.get("payload");
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
@@ -153,21 +151,10 @@ public class MetaDataClient extends Client {
     m.setPayload(payload);
     try {
       Response response = post(m);
-      System.out.println(response.get("payload"));
       return (Map<String,Object>) response.get("payload");
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
   }
-  
-  
-  
-  
-  public static void main (String [] args) throws ClientException {
-    MetaDataClient c = new MetaDataClient("127.0.0.1", 7070);
-    System.out.println(c.getLiveMembers());
-    
-  }
-  
   
 }

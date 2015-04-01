@@ -40,7 +40,6 @@ public class InternodeClient {
     m.setPayload(payload);
     try {
       Response response = client.post(m);
-      System.out.println(response);
     } catch (IOException | RuntimeException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

@@ -84,6 +84,17 @@ public class SponsorTest {
     metaClient.shutdown();
   }
 
+  private void createKeyspaceInformation(MetaDataClient metaClient, Server [] s) throws ClientException{
+    Map<String,Object> props = new HashMap<>();
+    TreeMap<String,String> tokenMap = new TreeMap<>();
+    tokenMap.put("10", s[0].getServerId().getU().toString());
+    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
+    props.put(TokenRouter.REPLICATION_FACTOR, 1);
+    props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
+    metaClient.createOrUpdateKeyspace("abc", props, true);
+    metaClient.createOrUpdateStore("abc", "def", new Response()
+    .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
+  }
   
   private void insertDataOverClient(Session session) throws ClientException {
     session.put("1", "1", "after", 8);
@@ -98,16 +109,6 @@ public class SponsorTest {
     Assert.assertEquals("after", ((ColumnValue) servers[1].get("abc", "def", "1" , "1")).getValue());
   }
   
-  private void createKeyspaceInformation(MetaDataClient metaClient, Server [] s) throws ClientException{
-    Map<String,Object> props = new HashMap<>();
-    TreeMap<String,String> tokenMap = new TreeMap<>();
-    tokenMap.put("10", s[0].getServerId().getU().toString());
-    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
-    props.put(TokenRouter.REPLICATION_FACTOR, 1);
-    props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
-    metaClient.createOrUpdateKeyspace("abc", props, true);
-    metaClient.createOrUpdateStore("abc", "def", new Response()
-    .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
-  }
+
   
 }

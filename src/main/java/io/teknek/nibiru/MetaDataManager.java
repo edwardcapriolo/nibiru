@@ -102,10 +102,7 @@ public class MetaDataManager {
     kmd.setProperties(properties);
     Keyspace result = server.getKeyspaces().putIfAbsent(keyspaceName, keyspace);
     if (result != null){
-      System.out.println("setting properties");
-      System.out.println("old "+ result.getKeyspaceMetaData().getProperties());
       result.getKeyspaceMetaData().setProperties(properties);
-      System.out.println("new "+ properties);
     }
     persistMetadata();
   }
