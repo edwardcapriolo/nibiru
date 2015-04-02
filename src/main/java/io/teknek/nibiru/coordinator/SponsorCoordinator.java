@@ -50,6 +50,7 @@ public class SponsorCoordinator {
     this.server = server;
   }
   
+
   public Response handleSponsorRequest(final Message message){
     final String requestId = (String) message.getPayload().get("request_id");
     final String joinKeyspace = (String) message.getPayload().get("keyspace");
@@ -57,6 +58,68 @@ public class SponsorCoordinator {
     final String protogeHost = (String) message.getPayload().get("transport_host");
     final Destination protegeDestination = new Destination();
     protegeDestination.setDestinationId(requestId);
+    final MetaDataClient metaDataClient = getMetaClientForProtege(protegeDestination);
+    replicateMetaData(metaDataClient);
+    boolean res = protege.compareAndSet(null, protegeDestination);
+    if (!res){
+      return new Response().withProperty("status", "fail")
+            .withProperty("reason", "already sponsoring") ;
+    }
+    protogeToken.set(wantedToken);
+    
+    Thread t = new Thread(){
+      public void run(){
+        InternodeClient protegeClient = new InternodeClient(protogeHost, server.getConfiguration().getTransportPort());
+        Keyspace ks = server.getKeyspaces().get(joinKeyspace);
+        replicateData(protegeClient, ks);
+
+        ObjectMapper om = new ObjectMapper();
+        TreeMap<String,String> t = om.convertValue( ks.getKeyspaceMetaData().getProperties().get(TokenRouter.TOKEN_MAP_KEY), TreeMap.class);
+        t.put(wantedToken, requestId);
+        Map<String,Object> send = ks.getKeyspaceMetaData().getProperties();
+        send.put(TokenRouter.TOKEN_MAP_KEY, t);
+        try {
+          metaDataClient.createOrUpdateKeyspace(joinKeyspace, send, true);
+        } catch (ClientException e) {
+          throw new RuntimeException(e);
+        }
+        try {
+          Thread.sleep(10000); //wait here for propagations
+        } catch (InterruptedException e) { }
+        protege.compareAndSet( protegeDestination, null);
+        protogeToken.set(null);
+      }
+      
+    };
+    t.start();
+
+    if (res){
+      return new Response().withProperty("status", "ok");
+    } else { 
+      return new Response().withProperty("status", "fail")
+              .withProperty("reason", "already sponsoring") ;
+    }
+  }
+  
+  private void replicateMetaData(MetaDataClient metaDataClient) {
+    try {
+      for (String keyspace : metaDataManager.listKeyspaces()) {
+        if (keyspace.equals("system")) {
+          continue;
+        }
+        KeyspaceMetaData d = metaDataManager.getKeyspaceMetadata(keyspace);
+        metaDataClient.createOrUpdateKeyspace(keyspace, d.getProperties(), false);
+        for (String store : metaDataManager.listStores(keyspace)) {
+          metaDataClient.createOrUpdateStore(keyspace, store,
+                  metaDataManager.getStoreMetadata(keyspace, store).getProperties());
+        }
+      }
+    } catch (ClientException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  private MetaDataClient getMetaClientForProtege(Destination protegeDestination){
     MetaDataClient metaDataClient = null;
     for (ClusterMember cm : clusterMembership.getLiveMembers()){
       if (cm.getId().equals(protegeDestination.getDestinationId())){
@@ -66,84 +129,33 @@ public class SponsorCoordinator {
     if (metaDataClient == null){
       throw new RuntimeException ("can not find meta data client");
     }
-    try {
-      for (String keyspace : metaDataManager.listKeyspaces()) {
-        if (keyspace.equals("system")){
-          continue;
-        }
-        KeyspaceMetaData d = metaDataManager.getKeyspaceMetadata(keyspace);
-        metaDataClient.createOrUpdateKeyspace(keyspace, d.getProperties(), false);
-        for (String store : metaDataManager.listStores(keyspace)) {
-          metaDataClient.createOrUpdateStore(keyspace, store, 
-                  metaDataManager.getStoreMetadata(keyspace, store).getProperties());
-        }
-      }
-    } catch (ClientException| RuntimeException e) {
-      throw new RuntimeException(e);
-    }
-    boolean res = protege.compareAndSet(null, protegeDestination);
-    //TODO check to make sure node is own range
-    //TODO provide auto-token
-    protogeToken.set(wantedToken);
-    final MetaDataClient finalClient = metaDataClient;
-    Thread t = new Thread(){
-      public void run(){
-        InternodeClient protegeClient = new InternodeClient(protogeHost, server.getConfiguration().getTransportPort());
-        Keyspace ks = server.getKeyspaces().get(joinKeyspace);
-        for (Entry<String, Store> storeEntry : ks.getStores().entrySet()){
-          if (storeEntry.getValue() instanceof DefaultColumnFamily){
-            DefaultColumnFamily d = (DefaultColumnFamily) storeEntry.getValue();
-            d.doFlush();
-            d.getMemtableFlusher().doBlockingFlush();
-            String  bulkUid = UUID.randomUUID().toString();
-            for (SsTable table : d.getSstable()){
-              protegeClient.createSsTable(joinKeyspace, d.getStoreMetadata().getName(), bulkUid);
-              try {
-                SsTableStreamReader stream = table.getStreamReader();
-                Token token = null;
-                while ((token = stream.getNextToken()) != null){
-                  SortedMap<AtomKey,AtomValue> columns = stream.readColumns();
-                  protegeClient.transmit(ks.getKeyspaceMetaData().getName(), storeEntry.getKey(), token, columns, bulkUid);
-                }
-              } catch (IOException e) {
-                throw new RuntimeException (e);
-              }
-              protegeClient.closeSsTable(joinKeyspace, d.getStoreMetadata().getName(), bulkUid);
-            }
-          }
-        }
-        //Data is streamed broadcast changes
-        ObjectMapper om = new ObjectMapper();
-        TreeMap<String,String> t = om.convertValue( ks.getKeyspaceMetaData().getProperties().get(TokenRouter.TOKEN_MAP_KEY), TreeMap.class);
-        t.put(wantedToken, requestId);
-        Map<String,Object> send = ks.getKeyspaceMetaData().getProperties();
-        send.put(TokenRouter.TOKEN_MAP_KEY, t);
-        try {
-          finalClient.createOrUpdateKeyspace(joinKeyspace, send, true);
-        } catch (ClientException e) {
-          e.printStackTrace();
-        }
-        try {
-          Thread.sleep(10000); //wait here for propagations
-        } catch (InterruptedException e) {
-          
-        }
-        boolean res = protege.compareAndSet( protegeDestination, null);
-      }
-      
-    };
-    t.start();
-    
-    
-    //
-    if (res){
-      return new Response().withProperty("status", "ok");
-    } else { 
-      return new Response().withProperty("status", "fail")
-              .withProperty("reason", "already sponsoring") ;
-    }
+    return metaDataClient;
   }
   
+  private void replicateData(InternodeClient protegeClient, Keyspace ks){
+    for (Entry<String, Store> storeEntry : ks.getStores().entrySet()){
+      if (storeEntry.getValue() instanceof DefaultColumnFamily){
+        DefaultColumnFamily d = (DefaultColumnFamily) storeEntry.getValue();
+        d.doFlush();
+        d.getMemtableFlusher().doBlockingFlush();
+        String  bulkUid = UUID.randomUUID().toString();
+        for (SsTable table : d.getSstable()){
+          protegeClient.createSsTable(ks.getKeyspaceMetaData().getName(), d.getStoreMetadata().getName(), bulkUid);
+          try {
+            SsTableStreamReader stream = table.getStreamReader();
+            Token token = null;
+            while ((token = stream.getNextToken()) != null){
+              SortedMap<AtomKey,AtomValue> columns = stream.readColumns();
+              protegeClient.transmit(ks.getKeyspaceMetaData().getName(), storeEntry.getKey(), token, columns, bulkUid);
+            }
+          } catch (IOException e) {
+            throw new RuntimeException (e);
+          }
+          protegeClient.closeSsTable(ks.getKeyspaceMetaData().getName(), d.getStoreMetadata().getName(), bulkUid);
+        }
+      }
+    }
+  }
   public Destination getProtege(){
     return protege.get();
   }
