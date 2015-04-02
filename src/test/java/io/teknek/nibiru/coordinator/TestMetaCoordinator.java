@@ -20,17 +20,18 @@ import org.junit.rules.TemporaryFolder;
 public class TestMetaCoordinator {
 
   @Rule
-  public TemporaryFolder testFolder = new TemporaryFolder();
+  public TemporaryFolder testFolder3 = new TemporaryFolder();
   
   @Test
   public void listStores() throws ClientException {
-    Server s = TestUtil.aBasicServer(testFolder);
+    Server s = TestUtil.aBasicServer(testFolder3);
     MetaDataClient c = new MetaDataClient(s.getConfiguration().getTransportHost(), 
             s.getConfiguration().getTransportPort());
    Assert.assertEquals(Arrays.asList(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), 
             c.listStores(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(new HashMap(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
-    Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()), 
+    Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
+            , 
             c.getStoreMetadata(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY));
     
     Response expected = new Response().withProperty("a", "b");
