@@ -1,7 +1,9 @@
 package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.Consistency;
+import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.coordinator.Tracer;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -23,14 +25,16 @@ public class Session {
   private final Consistency readConsistency;
   private final long timeoutMillis;
   private ObjectMapper MAPPER = new ObjectMapper();
+  private final TraceTo traceTo;
   
-  Session(ColumnFamilyClient client, String keyspace, String store, Consistency writeConsistency, Consistency readConsistency, long timeoutMillis){
+  Session(ColumnFamilyClient client, String keyspace, String store, Consistency writeConsistency, Consistency readConsistency, long timeoutMillis, TraceTo traceTo){
     this.client = client;
     this.keyspace = keyspace;
     this.store = store;
     this.writeConsistency = writeConsistency;
     this.readConsistency = readConsistency;
     this.timeoutMillis = timeoutMillis;
+    this.traceTo = traceTo;
   }
   
   public Val get(String rowkey, String column) throws ClientException {
@@ -38,13 +42,15 @@ public class Session {
     m.setKeyspace(keyspace);
     m.setStore(store);
     m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", "get")
-            .put("rowkey", rowkey)
-            .put("column", column)
-            .put("timeout", timeoutMillis)
-            .put("consistency", readConsistency)
-            .build();
+    Response payload = new Response()
+            .withProperty("type", "get")
+            .withProperty("rowkey", rowkey)
+            .withProperty("column", column)
+            .withProperty("timeout", timeoutMillis)
+            .withProperty("consistency", readConsistency);
+    if (traceTo != null){
+      payload.withProperty(Tracer.TRACE_PROP, this.traceTo);
+    }
     m.setPayload(payload);
     try {
       Response response = client.post(m);

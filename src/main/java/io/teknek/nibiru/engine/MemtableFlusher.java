@@ -44,28 +44,31 @@ public class MemtableFlusher implements Runnable {
     myThread.start();
   }
   
+  public void doBlockingFlush(){
+    for (Memtable memtable : memtables){
+      SSTableWriter ssTableWriter = new SSTableWriter();
+      try {
+        //TODO: a timeuuid would be better here
+        String tableId = String.valueOf(System.nanoTime());
+        ssTableWriter.flushToDisk(tableId, columnFamily, memtable);
+        SsTable table = new SsTable(columnFamily);
+        table.open(tableId, columnFamily.getKeyspace().getConfiguration());
+        columnFamily.getSstable().add(table);
+        memtables.remove(memtable);
+        memtable.getCommitLog().delete();
+        flushes.incrementAndGet();
+      } catch (IOException e) {
+        //TODO: catch this and terminate server?
+        throw new RuntimeException(e);
+      }
+    }
+  }
   @Override
   public void run() {
     while (goOn){
-      for (Memtable memtable : memtables){
-        SSTableWriter ssTableWriter = new SSTableWriter();
-        try {
-          //TODO: a timeuuid would be better here
-          String tableId = String.valueOf(System.nanoTime());
-          ssTableWriter.flushToDisk(tableId, columnFamily, memtable);
-          SsTable table = new SsTable(columnFamily);
-          table.open(tableId, columnFamily.getKeyspace().getConfiguration());
-          columnFamily.getSstable().add(table);
-          memtables.remove(memtable);
-          memtable.getCommitLog().delete();
-          flushes.incrementAndGet();
-        } catch (IOException e) {
-          //TODO: catch this and terminate server?
-          throw new RuntimeException(e);
-        }
-      }
+      doBlockingFlush();
       try {
-        Thread.sleep(1);
+        Thread.sleep(10);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

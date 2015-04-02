@@ -28,14 +28,14 @@ public class Keyspace {
 
   private KeyspaceMetaData keyspaceMetadata;
   private Configuration configuration;
-  private ConcurrentMap<String,Store> stores;
+  private final ConcurrentMap<String,Store> stores;
   
   public Keyspace(Configuration configuration){
     this.configuration = configuration;
     stores = new ConcurrentHashMap<>();
   }
 
-  public KeyspaceMetaData getKeyspaceMetadata() {
+  public KeyspaceMetaData getKeyspaceMetaData() {
     return keyspaceMetadata;
   }
 
@@ -45,6 +45,7 @@ public class Keyspace {
   
   public void createStore(String name, Map<String,Object> properties){
     StoreMetaData cfmd = new StoreMetaData();
+    cfmd.setProperties(properties);
     cfmd.setName(name);
     String implementingClass = (String) properties.get(StoreMetaData.IMPLEMENTING_CLASS);
     if (implementingClass == null){
@@ -66,9 +67,6 @@ public class Keyspace {
     return stores;
   }
 
-  public void setStores(ConcurrentMap<String, Store> stores) {
-    this.stores = stores;
-  }
   
   public Token createToken(String rowkey){
     return keyspaceMetadata.getPartitioner().partition(rowkey);

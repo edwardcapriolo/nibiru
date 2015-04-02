@@ -47,9 +47,9 @@ public class Client {
     client = new DefaultHttpClient();
     mgr = client.getConnectionManager();
     HttpParams params = client.getParams();
-    int timeoutConnection = 1000;
+    int timeoutConnection = 50000;
     HttpConnectionParams.setConnectionTimeout(params, timeoutConnection);
-    int timeoutSocket = 1000;
+    int timeoutSocket = 50000;
     HttpConnectionParams.setSoTimeout(params, timeoutSocket);
     
     

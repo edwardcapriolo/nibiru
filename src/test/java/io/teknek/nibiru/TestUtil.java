@@ -1,12 +1,15 @@
 package io.teknek.nibiru;
 
+import io.teknek.nibiru.cluster.GossipClusterMembership;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.keyvalue.InMemoryKeyValue;
 import io.teknek.nibiru.metadata.StoreMetaData;
+import io.teknek.nibiru.transport.Response;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,13 +20,22 @@ import org.junit.rules.TemporaryFolder;
 import com.google.common.collect.ImmutableMap;
 
 public class TestUtil {
+  
+  public static Map<String, Object> STANDARD_COLUMN_FAMILY = new Response()
+  .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
 
+  /*
   public static Map<String, Object> STANDARD_COLUMN_FAMILY = new ImmutableMap.Builder<String, Object>()
   .put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
-  .build();
+  .build();*/
+  /*
   public static Map<String, Object> STANDARD_KEY_VLUE = new ImmutableMap.Builder<String, Object>()
           .put(StoreMetaData.IMPLEMENTING_CLASS, InMemoryKeyValue.class.getName())
-          .build();
+          .build(); */
+  
+  public static Map<String, Object> STANDARD_KEY_VLUE = new Response()
+  .withProperty(StoreMetaData.IMPLEMENTING_CLASS,InMemoryKeyValue.class.getName());
+  
   public static String PETS_COLUMN_FAMILY = "pets";
   public static String DATA_KEYSPACE = "data";
   public static String BOOKS_KEY_VALUE = "books";
@@ -38,6 +50,12 @@ public class TestUtil {
     return s;
   }
 
+  public static Map<String,Object> gossipPropertiesFor127Seed(){
+    Map<String, Object> clusterProperties = new HashMap<>();
+    clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
+    return clusterProperties;
+  }
+  
   public static Configuration aBasicConfiguration(TemporaryFolder testFolder){
     File tempFolder = testFolder.newFolder("sstable");
     File commitlog = testFolder.newFolder("commitlog");

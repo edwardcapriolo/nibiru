@@ -61,14 +61,14 @@ public class TestCoordinator {
     props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
     props.put(TokenRouter.REPLICATION_FACTOR, 3);
     props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
-    c.createOrUpdateKeyspace("abc", props);
+    c.createOrUpdateKeyspace("abc", props,true);
     Map <String,Object> x = new HashMap<String,Object>();
     x.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
     c.createOrUpdateStore("abc", "def", x);
     Thread.sleep(10);
     for (int i = 0; i < s.length; i++) {
       Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));
-      Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetadata().getRouter().getClass().getName());
+      Assert.assertEquals("io.teknek.nibiru.router.TokenRouter", s[i].getKeyspaces().get("abc").getKeyspaceMetaData().getRouter().getClass().getName());
       Assert.assertTrue(s[i].getKeyspaces().get("abc").getStores().containsKey("def"));
     }
     

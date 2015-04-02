@@ -37,10 +37,10 @@ public class TokenRouter implements Router {
           ClusterMembership clusterMembership, Token token) {
     //TODO this is not efficient we should cache this or refactor
     Map<String, String> tokenMap1 = (Map<String, String>) requestKeyspace
-            .getKeyspaceMetadata().getProperties().get(TOKEN_MAP_KEY);
+            .getKeyspaceMetaData().getProperties().get(TOKEN_MAP_KEY);
     TreeMap<String,String> tokenMap = new TreeMap<String,String>(tokenMap1); 
     Integer replicationFactor = (Integer) requestKeyspace
-            .getKeyspaceMetadata().getProperties().get(REPLICATION_FACTOR);
+            .getKeyspaceMetaData().getProperties().get(REPLICATION_FACTOR);
     int rf = 1;
     if (replicationFactor != null){
       rf = replicationFactor;

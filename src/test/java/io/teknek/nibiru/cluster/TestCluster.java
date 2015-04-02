@@ -67,7 +67,7 @@ public class TestCluster {
     Assert.assertEquals(2 , s[2].getClusterMembership().getLiveMembers().size());
     Assert.assertEquals("127.0.0.1", s[2].getClusterMembership().getLiveMembers().get(0).getHost());
     MetaDataClient c = new MetaDataClient("127.0.0.1", s[1].getConfiguration().getTransportPort());
-    c.createOrUpdateKeyspace("abc", new HashMap<String,Object>());
+    c.createOrUpdateKeyspace("abc", new HashMap<String,Object>(), true);
     Thread.sleep(1000);
     for (Server server : s){
       Assert.assertNotNull(server.getKeyspaces().get("abc"));

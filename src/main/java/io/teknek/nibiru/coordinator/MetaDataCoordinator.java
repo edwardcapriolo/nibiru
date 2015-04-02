@@ -69,7 +69,7 @@ public class MetaDataCoordinator {
     }
   }
   
-  private MetaDataClient clientForClusterMember(ClusterMember clusterMember){
+  public MetaDataClient clientForClusterMember(ClusterMember clusterMember){
     MetaDataClient c = clients.get(clusterMember);
     if (c == null) {
       c = new MetaDataClient(clusterMember.getHost(), configuration
@@ -78,7 +78,7 @@ public class MetaDataCoordinator {
     }
     return c;
   }
-  
+    
   public Response handleSystemMessage(final Message message){
     if (MetaPersonality.LIST_LIVE_MEMBERS.equals(message.getPayload().get("type"))){
       return handleListLiveMembersMessage(message);
@@ -86,12 +86,16 @@ public class MetaDataCoordinator {
       return handleListKeyspaces(message);
     } else if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
       return handleCreateOrUpdateKeyspace(message);
-    } else if (MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY.equals(message.getPayload().get("type"))){
-      return handleCreateOrUpdateColumnFamily(message);
+    } else if (MetaPersonality.CREATE_OR_UPDATE_STORE.equals(message.getPayload().get("type"))){
+      return handleCreateOrUpdateStore(message);
     } else if (MetaPersonality.LIST_STORES.equals(message.getPayload().get("type"))){
       return handleListStores(message);
+    } else if (MetaPersonality.GET_KEYSPACE_METADATA.equals(message.getPayload().get("type"))){ 
+      return handleGetKeyspaceMetaData(message);
+    } else if (MetaPersonality.GET_STORE_METADATA.equals(message.getPayload().get("type"))){ 
+      return handleGetStoreMetaData(message);
     } else {
-      throw new IllegalArgumentException("could not process " + message);
+      throw new IllegalArgumentException(this.getClass().getName() + " could not process " + message);
     }
   }
   
@@ -101,7 +105,23 @@ public class MetaDataCoordinator {
     return new Response().withProperty("payload", metaDataManager.listStores(keyspace));
   }
 
-  private Response handleCreateOrUpdateColumnFamily(final Message message){
+  private Response handleGetKeyspaceMetaData(Message message) {
+    String keyspace = (String) message.getPayload().get("keyspace");
+    //TODO: keyspace does not exist?
+    Response r = new Response().withProperty("payload", metaDataManager.getKeyspaceMetadata(keyspace).getProperties());
+    return r;
+  }
+  
+  private Response handleGetStoreMetaData(Message message) {
+    String keyspace = (String) message.getPayload().get("keyspace");
+    String store = (String) message.getPayload().get("store");
+    //TODO: keyspace does not exist?
+    Response r = new Response().withProperty("payload", metaDataManager.getStoreMetadata(keyspace, store).getProperties());
+    return r;
+  }
+  
+  
+  private Response handleCreateOrUpdateStore(final Message message){
     metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
             (String) message.getPayload().get("store"),
             (Map<String,Object>) message.getPayload());
@@ -137,7 +157,7 @@ public class MetaDataCoordinator {
   private Response handleCreateOrUpdateKeyspace(final Message message){
     metaDataManager.createOrUpdateKeyspace(
             (String) message.getPayload().get("keyspace"), 
-            (Map<String,Object>) message.getPayload());
+            (Map<String,Object>) message.getPayload().get("properties"));
     if (!message.getPayload().containsKey("reroute")){
       message.getPayload().put("reroute", "");
       List<Callable<Void>> calls = new ArrayList<>();
@@ -148,8 +168,8 @@ public class MetaDataCoordinator {
             try {
             c.createOrUpdateKeyspace(
                     (String) message.getPayload().get("keyspace"), 
-                    //(Map<String,Object>) message.getPayload().get("properties")
-                    (Map<String,Object>) message.getPayload()
+
+                    (Map<String,Object>) message.getPayload().get("properties"), false
                     );
            
             } catch (RuntimeException ex){

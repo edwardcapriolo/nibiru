@@ -16,6 +16,7 @@
 package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.cluster.ClusterMember;
+import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -53,7 +54,7 @@ public class MetaDataClient extends Client {
     }
   }
   
-  public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties) throws ClientException {
+  public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties, boolean isClient) throws ClientException {
     Message m = new Message();
     m.setKeyspace("system");
     m.setStore(null);
@@ -61,7 +62,10 @@ public class MetaDataClient extends Client {
     Map<String,Object> payload = new HashMap<>();
             payload.put("type", MetaPersonality.CREATE_OR_UPDATE_KEYSPACE);
             payload.put("keyspace", keyspace);
-            payload.putAll(properties);
+            payload.put("properties", properties);
+            if(!isClient){
+              payload.put("reroute", "");
+            }
     m.setPayload(payload);
     try {
       Response response = post(m);
@@ -76,14 +80,13 @@ public class MetaDataClient extends Client {
     m.setStore(null);
     m.setPersonality(MetaPersonality.META_PERSONALITY);
     Map<String, Object> payload = new HashMap<>();
-    payload.put("type", MetaPersonality.CREATE_OR_UPDATE_COLUMN_FAMILY);
+    payload.put("type", MetaPersonality.CREATE_OR_UPDATE_STORE);
     payload.put("keyspace", keyspace);
     payload.put("store", store);
     payload.putAll(properties);
     m.setPayload(payload);
     try {
       Response response = post(m);
-      System.out.println(response);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }
@@ -120,12 +123,38 @@ public class MetaDataClient extends Client {
     }
   }
   
-  
-  public static void main (String [] args) throws ClientException {
-    MetaDataClient c = new MetaDataClient("127.0.0.1", 7070);
-    System.out.println(c.getLiveMembers());
-    
+  public Map<String,Object> getKeyspaceMetadata(String keyspace) throws ClientException {
+    Message m = new Message();
+    m.setKeyspace("system");
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("keyspace", keyspace);
+    payload.put("type", MetaPersonality.GET_KEYSPACE_METADATA);
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+      return (Map<String,Object>) response.get("payload");
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
   }
   
+  
+  public Map<String,Object> getStoreMetadata(String keyspace, String store) throws ClientException {
+    Message m = new Message();
+    m.setKeyspace("system");
+    m.setPersonality(MetaPersonality.META_PERSONALITY);
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("keyspace", keyspace);
+    payload.put("store", store);
+    payload.put("type", MetaPersonality.GET_STORE_METADATA);
+    m.setPayload(payload);
+    try {
+      Response response = post(m);
+      return (Map<String,Object>) response.get("payload");
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
   
 }

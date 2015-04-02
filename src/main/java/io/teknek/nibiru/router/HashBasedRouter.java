@@ -30,12 +30,12 @@ public class HashBasedRouter implements Router {
   
   @Override
   public List<Destination> routesTo(Message message, ServerId local, Keyspace requestKeyspace, ClusterMembership clusterMembership, Token token) {
-    Number n = (Number) requestKeyspace.getKeyspaceMetadata().getProperties().get(MOD);
+    Number n = (Number) requestKeyspace.getKeyspaceMetaData().getProperties().get(MOD);
     int x = -1;
     if (n != null){
       x = n.intValue();
     } 
-    List<String> map = (List<String>) requestKeyspace.getKeyspaceMetadata().getProperties().get(MAP);
+    List<String> map = (List<String>) requestKeyspace.getKeyspaceMetaData().getProperties().get(MAP);
     Destination d = new Destination();
     
     return null;

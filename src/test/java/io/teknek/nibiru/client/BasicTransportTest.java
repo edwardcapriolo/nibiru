@@ -7,6 +7,7 @@ import java.util.SortedMap;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
+import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
@@ -38,6 +39,10 @@ public class BasicTransportTest {
       .withStore(TestUtil.PETS_COLUMN_FAMILY)
       .build();
     Assert.assertEquals("6", session.get("jack", "age").getValue());
+    Session sessionTrace = c.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE)
+            .withStore(TestUtil.PETS_COLUMN_FAMILY).withTracing(TraceTo.LOGGER)
+            .build();
+    Assert.assertEquals("6", sessionTrace.get("jack", "age").getValue());
     Assert.assertEquals("bunnyjack", session.get("jack", "name").getValue());
     session.delete("jack", "name", 2L);
     Assert.assertEquals(null, session.get("jack", "name").getValue());

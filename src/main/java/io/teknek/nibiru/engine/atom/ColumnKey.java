@@ -3,8 +3,9 @@ package io.teknek.nibiru.engine.atom;
 public class ColumnKey extends AtomKey {
 
   public static final char SERIALIZE_CHAR = 'C';
-  private final String column;
+  private String column;
   
+  public ColumnKey(){}
   public ColumnKey(String column){
     this.column = column;
   }

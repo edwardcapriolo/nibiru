@@ -52,7 +52,7 @@ public class Cli {
       else if ("createkeyspace".equalsIgnoreCase(parts[0])) {
         
         try {
-          meta.createOrUpdateKeyspace(parts[1], new HashMap<String,Object>());
+          meta.createOrUpdateKeyspace(parts[1], new HashMap<String,Object>(), true);
         } catch (ClientException e) {
           System.out.println(e);
         }

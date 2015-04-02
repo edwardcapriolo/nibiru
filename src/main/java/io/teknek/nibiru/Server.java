@@ -15,13 +15,13 @@
  */
 package io.teknek.nibiru;
 
+import io.teknek.nibiru.client.InternodeClient;
 import io.teknek.nibiru.cluster.ClusterMembership;
 import io.teknek.nibiru.coordinator.Coordinator;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.plugins.AbstractPlugin;
 import io.teknek.nibiru.transport.HttpJsonTransport;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,6 +31,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class Server {
   
@@ -137,6 +139,13 @@ public class Server {
     } else {
       throw new RuntimeException("Does not support this personality");
     }
+  }
+  
+  
+  @VisibleForTesting
+  public void join(String keyspace, String sponsorHost, String wantedToken){
+    InternodeClient internodeClient = new InternodeClient(sponsorHost, configuration.getTransportPort());
+    internodeClient.join(keyspace, sponsorHost, serverId, wantedToken, configuration.getTransportHost());
   }
   
   public ConcurrentMap<String, Keyspace> getKeyspaces() {

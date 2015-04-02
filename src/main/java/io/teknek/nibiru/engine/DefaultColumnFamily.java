@@ -22,8 +22,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.google.common.annotations.VisibleForTesting;
  
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
@@ -37,11 +41,12 @@ import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
-public class DefaultColumnFamily extends Store implements ColumnFamilyPersonality {
+public class DefaultColumnFamily extends Store implements ColumnFamilyPersonality, DirectSsTableWriter {
 
-  private AtomicReference<Memtable> memtable;
-  private MemtableFlusher memtableFlusher;
-  private Set<SsTable> sstable = new ConcurrentSkipListSet<>();
+  private final AtomicReference<Memtable> memtable;
+  private final MemtableFlusher memtableFlusher;
+  private final Set<SsTable> sstable = new ConcurrentSkipListSet<>();
+  private ConcurrentMap<String, SsTableStreamWriter> streamSessions = new ConcurrentHashMap<>();
   
   public DefaultColumnFamily(Keyspace keyspace, StoreMetaData cfmd){
     super(keyspace, cfmd);
@@ -176,12 +181,12 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public AtomValue get(String rowkey, String column){
-    AtomValue lastValue = memtable.get().get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+    AtomValue lastValue = memtable.get().get(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column);
     for (Memtable m: memtableFlusher.getMemtables()){
-      AtomValue thisValue = m.get(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column);
+      AtomValue thisValue = m.get(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column);
       lastValue = applyRules(lastValue, thisValue);
     }
-    Token token = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
+    Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey);
     for (SsTable sstable: this.getSstable()){
       AtomValue thisValue = null;
       try {
@@ -195,53 +200,58 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public void delete(String rowkey, String column, long time){
-    memtable.get().delete(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, time);
+    memtable.get().delete(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column, time);
     //commit log
     considerFlush();
   }
   
   public void put(String rowkey, String column, String value, long time, long ttl){
     try {
-      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), 
+      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), 
               new ColumnKey(column), value, time, ttl);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, ttl);
+    memtable.get().put(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column, value, time, ttl);
     considerFlush();
   }
     
   public void put(String rowkey, String column, String value, long time){
     try {
-      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), 
+      memtable.get().getCommitLog().write(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), 
               new ColumnKey(column), value, time, 0);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
     
-    memtable.get().put(keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey), column, value, time, 0);
+    memtable.get().put(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column, value, time, 0);
     //commit log
     considerFlush();
+  }
+  
+  public void doFlush(){
+    Memtable now = memtable.get();
+    CommitLog commitLog = new CommitLog(this);
+    try {
+      commitLog.open();
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+    Memtable aNewTable = new Memtable(this, commitLog); 
+    boolean success = memtableFlusher.add(now);
+    if (success){
+      boolean swap = memtable.compareAndSet(now, aNewTable);
+      if (!swap){
+        throw new RuntimeException("race detected");
+      }        
+    }
   }
   
   void considerFlush(){
     Memtable now = memtable.get();
     if (storeMetadata.getFlushNumberOfRowKeys() != 0 
             && now.size() >= storeMetadata.getFlushNumberOfRowKeys()){
-      CommitLog commitLog = new CommitLog(this);
-      try {
-        commitLog.open();
-      } catch (FileNotFoundException e) {
-        throw new RuntimeException(e);
-      }
-      Memtable aNewTable = new Memtable(this, commitLog); 
-      boolean success = memtableFlusher.add(now);
-      if (success){
-        boolean swap = memtable.compareAndSet(now, aNewTable);
-        if (!swap){
-          throw new RuntimeException("race detected");
-        }        
-      }
+      doFlush();
     }
   }
 
@@ -258,7 +268,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public SortedMap<AtomKey, AtomValue>  slice(String rowkey, String start, String end){
-    Token t = keyspace.getKeyspaceMetadata().getPartitioner().partition(rowkey);
+    Token t = keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey);
     SortedMap<AtomKey, AtomValue> fromMemtable = memtable.get().slice(t, start, end);
     for (SsTable table: this.sstable){
       try {
@@ -280,4 +290,51 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     }
     return fromMemtable;
   }
+
+  
+  @Override
+  public void open(String id) {
+    SsTableStreamWriter add = new SsTableStreamWriter(id, this);
+    try {
+      add.open();
+      streamSessions.put(id, add);
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    
+  }
+
+  @Override
+  public void write(Token token, SortedMap<AtomKey, AtomValue> columns, String id) {
+    try {
+      streamSessions.get(id).write(token, columns);
+      
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void close(String id) {
+    SsTableStreamWriter writer = streamSessions.get(id);
+    try {
+      writer.close();
+      SsTable table = new SsTable(this);
+      table.open(id, getKeyspace().getConfiguration());
+      sstable.add(table);
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    } finally {
+      this.streamSessions.remove(id);
+    }
+  }
+
+  @VisibleForTesting
+  public ConcurrentMap<String, SsTableStreamWriter> getStreamSessions() {
+    return streamSessions;
+  }
+  
+  
 }

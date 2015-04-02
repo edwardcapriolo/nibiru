@@ -20,7 +20,6 @@ public class TestCountingBufferOutputStream {
   @Test
   public void test() throws IOException{
     File tempFolder = testFolder.newFolder("sstable");
-    System.out.println("Test folder: " + testFolder.getRoot());
     CountingBufferedOutputStream i = new CountingBufferedOutputStream(new FileOutputStream(new File(tempFolder, "a")));
     i.writeAndCount('a');
     Assert.assertEquals(1,i.getWrittenOffset());
