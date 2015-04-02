@@ -72,32 +72,30 @@ public class SponsorCoordinator {
         InternodeClient protegeClient = new InternodeClient(protogeHost, server.getConfiguration().getTransportPort());
         Keyspace ks = server.getKeyspaces().get(joinKeyspace);
         replicateData(protegeClient, ks);
-
-        ObjectMapper om = new ObjectMapper();
-        TreeMap<String,String> t = om.convertValue( ks.getKeyspaceMetaData().getProperties().get(TokenRouter.TOKEN_MAP_KEY), TreeMap.class);
-        t.put(wantedToken, requestId);
-        Map<String,Object> send = ks.getKeyspaceMetaData().getProperties();
-        send.put(TokenRouter.TOKEN_MAP_KEY, t);
-        try {
-          metaDataClient.createOrUpdateKeyspace(joinKeyspace, send, true);
-        } catch (ClientException e) {
-          throw new RuntimeException(e);
-        }
+        updateTokenMap(ks, metaDataClient, wantedToken, requestId );
         try {
           Thread.sleep(10000); //wait here for propagations
         } catch (InterruptedException e) { }
         protege.compareAndSet( protegeDestination, null);
         protogeToken.set(null);
       }
-      
     };
     t.start();
-
-    if (res){
-      return new Response().withProperty("status", "ok");
-    } else { 
-      return new Response().withProperty("status", "fail")
-              .withProperty("reason", "already sponsoring") ;
+    return new Response().withProperty("status", "ok");
+  }
+  
+  private void updateTokenMap(Keyspace ks, MetaDataClient metaDataClient, String wantedToken, String requestId){
+    ObjectMapper om = new ObjectMapper();
+    @SuppressWarnings("unchecked")
+    TreeMap<String,String> t = om.convertValue(ks.getKeyspaceMetaData().getProperties().get(TokenRouter.TOKEN_MAP_KEY), 
+            TreeMap.class);
+    t.put(wantedToken, requestId);
+    Map<String,Object> send = ks.getKeyspaceMetaData().getProperties();
+    send.put(TokenRouter.TOKEN_MAP_KEY, t);
+    try {
+      metaDataClient.createOrUpdateKeyspace(ks.getKeyspaceMetaData().getName(), send, true);
+    } catch (ClientException e) {
+      throw new RuntimeException(e);
     }
   }
   
