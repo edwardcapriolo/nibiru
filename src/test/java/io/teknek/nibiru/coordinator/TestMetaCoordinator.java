@@ -1,5 +1,7 @@
 package io.teknek.nibiru.coordinator;
 
+import io.teknek.nibiru.ContactInformation;
+import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
@@ -10,6 +12,7 @@ import io.teknek.nibiru.transport.Response;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import junit.framework.Assert;
 
@@ -27,7 +30,7 @@ public class TestMetaCoordinator {
     Server s = TestUtil.aBasicServer(testFolder3);
     MetaDataClient c = new MetaDataClient(s.getConfiguration().getTransportHost(), 
             s.getConfiguration().getTransportPort());
-   Assert.assertEquals(Arrays.asList(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), 
+    Assert.assertEquals(Arrays.asList(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), 
             c.listStores(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(new HashMap(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
@@ -38,12 +41,22 @@ public class TestMetaCoordinator {
     c.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, expected, true);
     Assert.assertEquals(expected, c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(expected, s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getKeyspaceMetaData().getProperties());
-    
+    changeAndAssert(c, s);
+    assertContactInformation(c, s);
+    c.shutdown();
+    s.shutdown();
+  }
+  
+  private void changeAndAssert(MetaDataClient c, Server s) throws ClientException{
     Response change = new Response().withProperty("d", "e");
     c.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, change, true);
     Assert.assertEquals(change, c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(change, s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getKeyspaceMetaData().getProperties());
-    c.shutdown();
-    s.shutdown();
+  }
+  
+  private void assertContactInformation(MetaDataClient c, Server s) throws ClientException{
+    List<ContactInformation> d = c.getLocationForRowKey(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "abc");
+    Assert.assertEquals(d.get(0).getDestination().getDestinationId(), s.getServerId().getU().toString());
+    Assert.assertEquals(d.get(0).getTransportHost(), s.getConfiguration().getTransportHost());
   }
 }

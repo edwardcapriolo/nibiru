@@ -15,8 +15,10 @@
  */
 package io.teknek.nibiru.client;
 
+import io.teknek.nibiru.ContactInformation;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
+import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -27,6 +29,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 public class MetaDataClient extends Client {
 
@@ -152,6 +157,25 @@ public class MetaDataClient extends Client {
     try {
       Response response = post(m);
       return (Map<String,Object>) response.get("payload");
+    } catch (IOException | RuntimeException e) {
+      throw new ClientException(e);
+    }
+  }
+  
+  public List<ContactInformation> getLocationForRowKey(String keyspace, String store, String rowkey) throws ClientException{
+    Message m = new Message();
+    m.setKeyspace(keyspace);
+    m.setStore(store);
+    m.setPersonality(LocatorPersonality.PERSONALITY);
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("type", LocatorPersonality.LOCATE_ROW_KEY);
+    payload.put("rowkey", rowkey);
+    m.setPayload(payload);
+    TypeReference tf = new TypeReference<List<ContactInformation>>() {};
+    try {
+      Response response = post(m);
+      ObjectMapper om = new ObjectMapper();
+      return (List<ContactInformation>) om.convertValue(response.get("payload"), tf);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }

@@ -36,6 +36,7 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
+import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -48,6 +49,7 @@ public class Coordinator {
   //TODO. this needs to be a per column family value
   private final EventualCoordinator eventualCoordinator;
   private final SponsorCoordinator sponsorCoordinator;
+  private final Locator locator;
   
   private Hinter hinter;
   private Tracer tracer;
@@ -59,6 +61,7 @@ public class Coordinator {
             server.getMetaDataManager(), server.getClusterMembership(), server.getServerId());
     eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
     sponsorCoordinator = new SponsorCoordinator(server.getClusterMembership(), server.getMetaDataManager(), metaDataCoordinator, server);
+    locator = new Locator(server.getConfiguration(), server.getClusterMembership());
   }
   
   public void init(){
@@ -136,6 +139,10 @@ public class Coordinator {
     Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
     List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
             .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
+    if (LocatorPersonality.PERSONALITY.equals(message.getPersonality())){
+      return locator.locate(destinations);
+    }
+    
     
     if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
       //TODO they only need some of the messages by range

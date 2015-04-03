@@ -37,6 +37,23 @@ public abstract class ClusterMembership {
   public abstract List<ClusterMember> getLiveMembers();
   public abstract List<ClusterMember> getDeadMembers();
   
+  public String findHostnameForId(String id){
+    if (id.equalsIgnoreCase(serverId.getU().toString())){
+      return configuration.getTransportHost();
+    }
+    for (ClusterMember cm : getLiveMembers()){
+      if (id.equals(cm.getId())){
+        return cm.getHost();
+      }
+    }
+    for (ClusterMember cm : getDeadMembers()){
+      if (id.equals(cm.getId())){
+        return cm.getHost();
+      }
+    }
+    return null;
+  }
+  
   public static ClusterMembership createFrom(Configuration configuration, ServerId serverId){
     try {
       Constructor<?> cons = Class.forName(configuration.getClusterMembershipClass()).getConstructor(Configuration.class, ServerId.class);
