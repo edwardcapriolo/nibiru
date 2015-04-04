@@ -17,35 +17,32 @@ import junit.framework.Assert;
 
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.collect.ImmutableMap;
-
 public class TestUtil {
   
-  public static Map<String, Object> STANDARD_COLUMN_FAMILY = new Response()
+  public static   Map<String, Object> STANDARD_COLUMN_FAMILY(){ return  new Response()
+  .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());}
+  /*
+  public static final Map<String, Object> STANDARD_COLUMN_FAMILY = new Response()
   .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
+  */
 
-  /*
-  public static Map<String, Object> STANDARD_COLUMN_FAMILY = new ImmutableMap.Builder<String, Object>()
-  .put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName())
-  .build();*/
-  /*
-  public static Map<String, Object> STANDARD_KEY_VLUE = new ImmutableMap.Builder<String, Object>()
-          .put(StoreMetaData.IMPLEMENTING_CLASS, InMemoryKeyValue.class.getName())
-          .build(); */
-  
-  public static Map<String, Object> STANDARD_KEY_VLUE = new Response()
+  public static final Map<String, Object> STANDARD_KEY_VLUE = new Response()
   .withProperty(StoreMetaData.IMPLEMENTING_CLASS,InMemoryKeyValue.class.getName());
   
-  public static String PETS_COLUMN_FAMILY = "pets";
-  public static String DATA_KEYSPACE = "data";
-  public static String BOOKS_KEY_VALUE = "books";
+  public static final String PETS_COLUMN_FAMILY = "pets";
+  public static final String DATA_KEYSPACE = "data";
+  public static final String BOOKS_KEY_VALUE = "books";
   
   public static Server aBasicServer(TemporaryFolder testFolder){
-    Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
+    return aBasicServer(testFolder, 7070);
+  }
+  
+  public static Server aBasicServer(TemporaryFolder testFolder, int port){
+    Configuration configuration = TestUtil.aBasicConfiguration(testFolder, port);
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createOrUpdateKeyspace(DATA_KEYSPACE, new HashMap<String,Object>());
-    s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
+    s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY());
     s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
     return s;
   }
@@ -57,9 +54,14 @@ public class TestUtil {
   }
   
   public static Configuration aBasicConfiguration(TemporaryFolder testFolder){
+    return aBasicConfiguration(testFolder, 7070);
+  }
+  
+  public static Configuration aBasicConfiguration(TemporaryFolder testFolder, int port){
     File tempFolder = testFolder.newFolder("sstable");
     File commitlog = testFolder.newFolder("commitlog");
     Configuration configuration = new Configuration();
+    configuration.setTransportPort(port);
     configuration.setDataDirectory(tempFolder.getPath());
     configuration.setCommitlogDirectory(commitlog.getPath());
     return configuration;

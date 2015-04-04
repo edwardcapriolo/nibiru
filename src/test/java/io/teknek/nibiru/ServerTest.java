@@ -24,7 +24,7 @@ public class ServerTest {
   
   @Test
   public void aTest() throws IOException, InterruptedException{
-    Server s = TestUtil.aBasicServer(testFolder);
+    Server s = TestUtil.aBasicServer(testFolder, 9004);
     s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
@@ -48,12 +48,12 @@ public class ServerTest {
   public void serverIdTest() {
     UUID u1, u2;
     {
-      Server s = TestUtil.aBasicServer(testFolder);
+      Server s = TestUtil.aBasicServer(testFolder, 9006);
       u1 = s.getServerId().getU();
       s.shutdown();
     }
     {
-      Server j = TestUtil.aBasicServer(testFolder);
+      Server j = TestUtil.aBasicServer(testFolder, 9006);
       u2 = j.getServerId().getU();
       j.shutdown();
     }
@@ -66,7 +66,7 @@ public class ServerTest {
     Server s = new Server(configuration);
     s.init();
     s.getMetaDataManager().createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, new HashMap<String,Object>());
-    s.getMetaDataManager().createOrUpdateStore(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY);
+    s.getMetaDataManager().createOrUpdateStore(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY());
     s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
     s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setCommitlogFlushBytes(1);
     for (int i = 0; i < 3; i++) {
