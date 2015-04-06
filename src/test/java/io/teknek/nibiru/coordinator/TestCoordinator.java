@@ -4,6 +4,7 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
+import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.MetaDataClient;
@@ -101,8 +102,8 @@ public class TestCoordinator {
       s[i].init();
     }
     createMetaData(s);
-    ColumnFamilyClient cf = new ColumnFamilyClient(s[0].getConfiguration().getTransportHost(), s[0]
-            .getConfiguration().getTransportPort());
+    ColumnFamilyClient cf = new ColumnFamilyClient( new Client(s[0].getConfiguration().getTransportHost(), s[0]
+            .getConfiguration().getTransportPort(),10000,10000));
     Session clAll = cf.createBuilder().withKeyspace("abc").withStore("def")
             .withWriteConsistency(ConsistencyLevel.ALL, new HashMap())
             .withReadConsistency(ConsistencyLevel.ALL, new HashMap()).build();

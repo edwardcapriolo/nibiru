@@ -1,6 +1,7 @@
 package io.teknek.nibiru.cli;
 
 import io.teknek.nibiru.Val;
+import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.MetaDataClient;
@@ -25,7 +26,8 @@ public class Cli {
       String [] parts = line.split("\\s+");
       if  ("connect".equalsIgnoreCase(parts[0])){
         meta = new MetaDataClient(parts[1],Integer.parseInt(parts[2]));
-        client = new ColumnFamilyClient(parts[1],Integer.parseInt(parts[2]));
+        client = new ColumnFamilyClient(new Client(parts[1], Integer.parseInt(parts[2]), 10000,
+                10000));
       } else if  ("showcluster".equalsIgnoreCase(parts[0])){
         try {
           System.out.println(meta.getLiveMembers());

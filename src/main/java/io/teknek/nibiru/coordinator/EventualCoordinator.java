@@ -45,7 +45,7 @@ public class EventualCoordinator {
 
   private ExecutorService executor;
   private final Configuration configuration;
-  private ConcurrentMap<Destination,ColumnFamilyClient> mapping;
+  private ConcurrentMap<Destination,Client> mapping;
   private final ClusterMembership clusterMembership;
   private static final ObjectMapper OM = new ObjectMapper();
   private ExecutorService lastChance;
@@ -69,14 +69,14 @@ public class EventualCoordinator {
     }
     for (ClusterMember cm : clusterMembership.getLiveMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), configuration.getTransportPort());
+        Client cc = new Client(cm.getHost(), configuration.getTransportPort(),10000,10000);
         mapping.putIfAbsent(destination, cc);
         return cc;
       }
     }
     for (ClusterMember cm : clusterMembership.getDeadMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), configuration.getTransportPort());
+        Client cc = new Client(cm.getHost(), configuration.getTransportPort(),10000,10000);
         mapping.putIfAbsent(destination, cc);
         return cc;
       }
@@ -229,14 +229,7 @@ public class EventualCoordinator {
   public void shutdown(){
     executor.shutdown();
     lastChance.shutdown();
-    /*
-    try {
-      lastChance.awaitTermination(5, TimeUnit.SECONDS);
-      executor.awaitTermination(5, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }*/
-    for ( Entry<Destination, ColumnFamilyClient> i : mapping.entrySet()){
+    for (Entry<Destination, Client> i : mapping.entrySet()){
       i.getValue().shutdown();
     }
   }

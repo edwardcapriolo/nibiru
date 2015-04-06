@@ -18,22 +18,20 @@ import org.codehaus.jackson.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
 
 public class Session {
-  private final ColumnFamilyClient client;
+  private final Client client;
   private final String keyspace;
   private final String store;
   private final Consistency writeConsistency;
   private final Consistency readConsistency;
-  private final long timeoutMillis;
   private ObjectMapper MAPPER = new ObjectMapper();
   private final TraceTo traceTo;
   
-  Session(ColumnFamilyClient client, String keyspace, String store, Consistency writeConsistency, Consistency readConsistency, long timeoutMillis, TraceTo traceTo){
+  Session(Client client, String keyspace, String store, Consistency writeConsistency, Consistency readConsistency, TraceTo traceTo){
     this.client = client;
     this.keyspace = keyspace;
     this.store = store;
     this.writeConsistency = writeConsistency;
     this.readConsistency = readConsistency;
-    this.timeoutMillis = timeoutMillis;
     this.traceTo = traceTo;
   }
   
@@ -46,7 +44,7 @@ public class Session {
             .withProperty("type", "get")
             .withProperty("rowkey", rowkey)
             .withProperty("column", column)
-            .withProperty("timeout", timeoutMillis)
+            .withProperty("timeout", client.getSocketTimeoutMillis())
             .withProperty("consistency", readConsistency);
     if (traceTo != null){
       payload.withProperty(Tracer.TRACE_PROP, this.traceTo);
@@ -76,7 +74,7 @@ public class Session {
             .put("rowkey", rowkey)
             .put("start", start)
             .put("end", end)
-            .put("timeout", timeoutMillis)
+            .put("timeout", client.getSocketTimeoutMillis())
             .put("consistency", readConsistency)
             .build();
     m.setPayload(payload);
@@ -105,7 +103,7 @@ public class Session {
             .put("type", "delete")
             .put("rowkey", rowkey)
             .put("column", column)
-            .put("timeout", timeoutMillis)
+            .put("timeout", client.getSocketTimeoutMillis())
             .put("consistency", writeConsistency)
             .put("time", time).build();
     m.setPayload(payload);
@@ -135,7 +133,7 @@ public class Session {
             .put("column", column)
             .put("value", value)
             .put("time", time)
-            .put("timeout", timeoutMillis)
+            .put("timeout", client.getConnectionTimeoutMillis())
             .put("consistency", writeConsistency)
             .put("ttl", ttl).build();
     m.setPayload(payload);
@@ -164,7 +162,7 @@ public class Session {
             .put("rowkey", rowkey)
             .put("column", column)
             .put("value", value)
-            .put("timeout", timeoutMillis)
+            .put("timeout", client.getSocketTimeoutMillis())
             .put("consistency", writeConsistency)
             .put("time", time).build();
     m.setPayload(payload);

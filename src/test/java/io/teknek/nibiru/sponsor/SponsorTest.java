@@ -4,6 +4,7 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
+import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.client.MetaDataClient;
@@ -53,8 +54,8 @@ public class SponsorTest {
     createKeyspaceInformation(metaClient, servers);    
     Assert.assertEquals(servers[0].getClusterMembership().getLiveMembers().size(), 0);//We do not count ourselves
     
-    ColumnFamilyClient c = new ColumnFamilyClient(servers[0].getConfiguration().getTransportHost(), servers[0]
-            .getConfiguration().getTransportPort());
+    ColumnFamilyClient c = new ColumnFamilyClient(new Client(servers[0].getConfiguration().getTransportHost(), servers[0]
+            .getConfiguration().getTransportPort(),10000,10000));
     Session session = c.createBuilder().withKeyspace("abc")
             .withWriteConsistency(ConsistencyLevel.ALL, new HashMap())
             .withReadConsistency(ConsistencyLevel.ALL, new HashMap())

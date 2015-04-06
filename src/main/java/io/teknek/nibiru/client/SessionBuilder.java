@@ -7,20 +7,18 @@ import io.teknek.nibiru.TraceTo;
 import java.util.Map;
 
 public class SessionBuilder {
-  private final ColumnFamilyClient client;
+  private final Client client;
   private String keyspace;
   private String store;
   private Consistency writeConsistency;
   private Consistency readConsistency;
-  private long timeoutMillis;
   private TraceTo traceTo;
   
-  public SessionBuilder(ColumnFamilyClient client){
+  public SessionBuilder(Client client){
     this.client = client;
     //writeConsistency = new Consistency().withLevel(ConsistencyLevel.N).withParamater("must-ack", 1);
     writeConsistency = new Consistency().withLevel(ConsistencyLevel.IMPLIED);
     readConsistency = new Consistency().withLevel(ConsistencyLevel.IMPLIED);
-    timeoutMillis = 10000;
   }
   
   public SessionBuilder withKeyspace(String keyspace){
@@ -49,6 +47,6 @@ public class SessionBuilder {
   }
   
   public Session build(){
-    return new Session(client, keyspace, store, writeConsistency, readConsistency, timeoutMillis, traceTo);
+    return new Session(client, keyspace, store, writeConsistency, readConsistency, traceTo);
   }
 }

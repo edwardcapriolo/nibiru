@@ -34,7 +34,7 @@ public class BasicTransportTest {
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
     AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
     Assert.assertEquals("6", ((ColumnValue) x).getValue());
-    ColumnFamilyClient c = new ColumnFamilyClient("127.0.0.1", s.getConfiguration().getTransportPort());
+    ColumnFamilyClient c = new ColumnFamilyClient(new Client("127.0.0.1", s.getConfiguration().getTransportPort(),10000,10000));
     Session session = c.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE)
       .withStore(TestUtil.PETS_COLUMN_FAMILY)
       .build();

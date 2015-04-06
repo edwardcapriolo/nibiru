@@ -15,14 +15,20 @@
  */
 package io.teknek.nibiru.client;
 
-public class ColumnFamilyClient extends Client {
+public class ColumnFamilyClient  {
 
-  public ColumnFamilyClient(String host, int port) {
-    super(host, port);
+  private final Client client;
+  
+  public ColumnFamilyClient(Client client) {
+    this.client = client;
+  }
+  
+  public Client getClient() {
+    return client;
   }
 
   public SessionBuilder createBuilder(){
-    return new SessionBuilder(this);
+    return new SessionBuilder(client);
   }
 }
 

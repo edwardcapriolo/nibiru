@@ -33,7 +33,7 @@ public class HintReplayer extends AbstractPlugin implements Runnable {
   private ColumnFamilyPersonality hintCf;
   private final AtomicLong hintsDelivered = new AtomicLong();
   private final AtomicLong hintsFailed = new AtomicLong();
-  private ConcurrentMap<Destination,ColumnFamilyClient> mapping;
+  private ConcurrentMap<Destination,Client> mapping;
   
   public HintReplayer(Server server) {
     super(server);
@@ -65,14 +65,14 @@ public class HintReplayer extends AbstractPlugin implements Runnable {
     }
     for (ClusterMember cm : server.getClusterMembership().getLiveMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), server.getConfiguration().getTransportPort());
+        Client cc = new Client(cm.getHost(), server.getConfiguration().getTransportPort(),10000,10000);
         mapping.putIfAbsent(destination, cc);
         return cc;
       }
     }
     for (ClusterMember cm : server.getClusterMembership().getDeadMembers()){
       if (cm.getId().equals(destination.getDestinationId())){
-        ColumnFamilyClient cc = new ColumnFamilyClient(cm.getHost(), server.getConfiguration().getTransportPort());
+        Client cc = new Client(cm.getHost(), server.getConfiguration().getTransportPort(),10000,10000);
         mapping.putIfAbsent(destination, cc);
         return cc;
       }

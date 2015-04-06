@@ -37,31 +37,36 @@ public class Client {
   private DefaultHttpClient client = new DefaultHttpClient();
   private ClientConnectionManager mgr;
   
-  private String host;
-  private int port;
+  private static final int connectionTimeoutInMillis = 10000;
+  private static final int socketTimeoutInMillis = 10000;
   
+  private final String host;
+  private final int port;
+  private final int connectionTimeoutMillis;
+  private final int socketTimeoutMillis;
+  @Deprecated
   public Client(String host, int port){
+    this(host,port,connectionTimeoutInMillis, socketTimeoutInMillis);
+  }
+  
+  public Client(String host, int port, int connectionTimeoutMillis, int socketTimeoutMillis){
     this.host = host;
     this.port = port;
-    
+    this.connectionTimeoutMillis = connectionTimeoutMillis;
+    this.socketTimeoutMillis = socketTimeoutMillis;
     client = new DefaultHttpClient();
     mgr = client.getConnectionManager();
     HttpParams params = client.getParams();
-    int timeoutConnection = 50000;
-    HttpConnectionParams.setConnectionTimeout(params, timeoutConnection);
-    int timeoutSocket = 50000;
-    HttpConnectionParams.setSoTimeout(params, timeoutSocket);
-    
-    
+    HttpConnectionParams.setConnectionTimeout(params, connectionTimeoutMillis);
+    HttpConnectionParams.setSoTimeout(params, socketTimeoutMillis);
     client = new DefaultHttpClient(new ThreadSafeClientConnManager(params,
             mgr.getSchemeRegistry()), params);
-    
   }
   
-  public Response post( Message request)
+  
+  public Response post(Message request)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
-    
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
     input.setContentType("application/json");
     postRequest.setEntity(input);
@@ -69,16 +74,31 @@ public class Client {
     if (response.getStatusLine().getStatusCode() != 200) {
       throw new RuntimeException("Failed : HTTP error code : "
               + response.getStatusLine().getStatusCode());
-      
     }
     Response r = MAPPER.readValue(response.getEntity().getContent(), Response.class);
     response.getEntity().getContent().close();
-    
     return r;
   }
   
   public void shutdown(){
     mgr.shutdown();
   }
+
+  public String getHost() {
+    return host;
+  }
+
+  public int getPort() {
+    return port;
+  }
+
+  public int getConnectionTimeoutMillis() {
+    return connectionTimeoutMillis;
+  }
+
+  public int getSocketTimeoutMillis() {
+    return socketTimeoutMillis;
+  }
+  
 }
 
