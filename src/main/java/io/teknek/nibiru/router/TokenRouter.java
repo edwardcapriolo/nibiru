@@ -33,7 +33,7 @@ public class TokenRouter implements Router {
   public static final String REPLICATION_FACTOR = "replication_factor";
   
   @Override
-  public List<Destination> routesTo(Message message, ServerId local, Keyspace requestKeyspace,
+  public List<Destination> routesTo(ServerId local, Keyspace requestKeyspace,
           ClusterMembership clusterMembership, Token token) {
     //TODO this is not efficient we should cache this or refactor
     Map<String, String> tokenMap1 = (Map<String, String>) requestKeyspace

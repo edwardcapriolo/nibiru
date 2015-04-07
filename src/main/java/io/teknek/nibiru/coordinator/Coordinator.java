@@ -20,7 +20,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.jsontype.NamedType;
 import org.codehaus.jackson.type.TypeReference;
 
 import io.teknek.nibiru.Store;
@@ -30,10 +29,8 @@ import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.client.InternodeClient.AtomPair;
 import io.teknek.nibiru.engine.DirectSsTableWriter;
-import io.teknek.nibiru.engine.SsTableStreamWriter;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
-import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
@@ -138,7 +135,7 @@ public class Coordinator {
     }
     Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
     List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
-            .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
+            .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);
     if (LocatorPersonality.PERSONALITY.equals(message.getPersonality())){
       return locator.locate(destinations);
     }

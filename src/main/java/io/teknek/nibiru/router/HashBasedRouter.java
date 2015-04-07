@@ -29,7 +29,7 @@ public class HashBasedRouter implements Router {
   public static final String MAP = "MAP";
   
   @Override
-  public List<Destination> routesTo(Message message, ServerId local, Keyspace requestKeyspace, ClusterMembership clusterMembership, Token token) {
+  public List<Destination> routesTo(ServerId local, Keyspace requestKeyspace, ClusterMembership clusterMembership, Token token) {
     Number n = (Number) requestKeyspace.getKeyspaceMetaData().getProperties().get(MOD);
     int x = -1;
     if (n != null){
