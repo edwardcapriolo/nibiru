@@ -20,7 +20,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -30,41 +33,49 @@ public class TestCompactionManager {
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
   
+  private Server server;
+  
+  @Before
+  public void buildServer(){
+    server = TestUtil.aBasicServer(testFolder);
+  }
+  
+  @After
+  public void closeServer(){
+    server.shutdown();
+  }
+  
   @Test
   public void compactionTest() throws IOException, InterruptedException{
-    Server s = TestUtil.aBasicServer(testFolder);
-    s.getMetaDataManager().createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, new HashMap<String,Object>());
-    s.getMetaDataManager().createOrUpdateStore(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY());
-    s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
+    server.getMetaDataManager().createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, new HashMap<String,Object>());
+    server.getMetaDataManager().createOrUpdateStore(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY());
+    server.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
     for (int i = 0; i < 9; i++) {
-      s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
+      server.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
       Thread.sleep(1);
     }
-    AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "8", "age");
+    AtomValue x = server.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "8", "age");
     Thread.sleep(1000);
-    Assert.assertEquals(4, ((DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY))
+    Assert.assertEquals(4, ((DefaultColumnFamily) server.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY))
             .getMemtableFlusher().getFlushCount());
-    Assert.assertEquals(1, ((CompactionManager) s.getPlugins().get(CompactionManager.MY_NAME)).getNumberOfCompactions());
+    Assert.assertEquals(1, ((CompactionManager) server.getPlugins().get(CompactionManager.MY_NAME)).getNumberOfCompactions());
     Assert.assertEquals("4", ((ColumnValue) x).getValue());
     for (int i = 0; i < 9; i++) {
-      AtomValue y = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age");
+      AtomValue y = server.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age");
       Assert.assertEquals("4", ((ColumnValue) y).getValue());
     }
-    s.shutdown();
   }
     
   @Test
   public void cleanupTest() throws IOException, InterruptedException, ClientException{
-    Server s = TestUtil.aBasicServer(testFolder);
     for (int i = 0; i < 9; i++) {
-      s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
+      server.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
     }
-    forceFlushAndConfirmFilesOnDisk(s);
-    changeTheRouter(s);
-    assertSomeDatum(s);
-    runCleanup(s);
-    assertDatumAfterCompaction(s);
-    s.shutdown();
+    forceFlushAndConfirmFilesOnDisk(server);
+    changeTheRouter(server);
+    assertSomeDatum(server);
+    runCleanup(server);
+    assertDatumAfterCompaction(server);
   }
   
   private void runCleanup(Server s){
@@ -100,7 +111,7 @@ public class TestCompactionManager {
     Assert.assertEquals("4", res);
   }
   
-  public static class OnlyTheBestRouter implements Router{
+  public static class OnlyTheBestRouter implements Router {
     @Override
     public List<Destination> routesTo(ServerId local, Keyspace requestKeyspace,
             ClusterMembership clusterMembership, Token token) {
