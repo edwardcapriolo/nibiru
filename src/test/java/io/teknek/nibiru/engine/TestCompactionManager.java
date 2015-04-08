@@ -45,7 +45,7 @@ public class TestCompactionManager {
       w2.flushToDisk("2", ks1.getStores().get("abc"), m2);
       s2.open("2", ks1.getConfiguration());
     }
-    CompactionManager.compact(new SsTable[] { s, s2 }, "3");
+    CompactionManager.compact(new SsTable[] { s, s2 }, "3", null, null, false, null);
     SsTable ss = new SsTable(ks1.getStores().get("abc"));
     ss.open("3", ks1.getConfiguration());
     Assert.assertEquals("e", ((ColumnValue) ss.get(   ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column3")).getValue());

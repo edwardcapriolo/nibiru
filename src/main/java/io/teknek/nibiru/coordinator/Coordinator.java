@@ -114,6 +114,10 @@ public class Coordinator {
    
   }
   
+  public List<Destination> destinationsForToken(Token token, Keyspace keyspace){
+    return keyspace.getKeyspaceMetaData().getRouter()
+            .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);
+  }
   //ah switchboad logic
   public Response handle(Message message) { 
     if (DirectSsTableWriter.PERSONALITY.equals(message.getPersonality())){
@@ -134,8 +138,10 @@ public class Coordinator {
       throw new RuntimeException(message.getStore() + " is not found");
     }
     Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
-    List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
-            .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);
+    
+    /*List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
+            .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);*/
+    List<Destination> destinations = destinationsForToken(token, keyspace);
     if (LocatorPersonality.PERSONALITY.equals(message.getPersonality())){
       return locator.locate(destinations);
     }
@@ -197,6 +203,10 @@ public class Coordinator {
 
   public SponsorCoordinator getSponsorCoordinator() {
     return sponsorCoordinator;
+  }
+
+  public Destination getDestinationLocal() {
+    return destinationLocal;
   }
 
 }
