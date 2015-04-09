@@ -67,7 +67,7 @@ public class TestCompactionManager {
   }
     
   @Test
-  public void cleanupTest() throws IOException, InterruptedException, ClientException{
+  public void cleanupTest() throws IOException, InterruptedException, ClientException {
     for (int i = 0; i < 9; i++) {
       server.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, i+"", "age", "4", 1);
     }
