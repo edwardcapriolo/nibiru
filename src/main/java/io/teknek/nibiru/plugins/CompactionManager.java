@@ -15,10 +15,13 @@
  */
 package io.teknek.nibiru.plugins;
 
+import io.teknek.nibiru.Destination;
+import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
+import io.teknek.nibiru.coordinator.Coordinator;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.engine.SsTable;
 import io.teknek.nibiru.engine.SsTableStreamReader;
@@ -32,6 +35,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class CompactionManager extends AbstractPlugin implements Runnable {
@@ -40,6 +44,7 @@ public class CompactionManager extends AbstractPlugin implements Runnable {
   private AtomicLong numberOfCompactions = new AtomicLong(0);
   private volatile boolean goOn = true;
   private Thread thread;
+  private volatile boolean cleanOutOfTokenRange = false;
   
   public CompactionManager(Server server){
     super(server);
@@ -71,35 +76,75 @@ public class CompactionManager extends AbstractPlugin implements Runnable {
           if (!(columnFamilies.getValue() instanceof DefaultColumnFamily)){
             continue;
           }
-          Set<SsTable> tables = ((DefaultColumnFamily) columnFamilies.getValue()).getSstable();
-          if (tables.size() >= columnFamilies.getValue().getStoreMetadata().getMaxCompactionThreshold()){
-            SsTable [] ssArray = tables.toArray(new SsTable[] {});
-            try {
-              String newName = getNewSsTableName();
-              SsTable s = compact(ssArray, newName);
-              tables.add(s);
-              for (SsTable table : ssArray){
-                tables.remove(table);
-              }
-              numberOfCompactions.incrementAndGet();
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
+          DefaultColumnFamily defaultColumnFamily = ((DefaultColumnFamily) columnFamilies.getValue());
+          maxCompactionThresholdCompaction(keyspace, defaultColumnFamily);
         }
-      } // end for
+      } 
       try {
-        Thread.sleep(1L);
+        Thread.sleep(100L);
       } catch (InterruptedException e) {
       }
-    } // end while
+    } 
   }
 
-  public  String getNewSsTableName(){
+  public void cleanupCompaction(Keyspace keyspace, DefaultColumnFamily defaultColumnFamily){
+    Set<SsTable> tables = new TreeSet<>(defaultColumnFamily.getSstable());//duplicate because we will mute the collection
+    for (SsTable table : tables){
+      String newName = getNewSsTableName();
+      try {
+        SsTable [] ssArray = {table};
+        SsTable s = compact(ssArray, newName, server.getServerId(), server.getCoordinator(), true, keyspace);
+        defaultColumnFamily.getSstable().add(s);
+        defaultColumnFamily.getSstable().remove(table);
+        //todo delete old
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  public void majorCompaction(Keyspace keyspace, DefaultColumnFamily defaultColumnFamily){
+    Set<SsTable> tables = new TreeSet<>(defaultColumnFamily.getSstable());//duplicate because we will mute the collection
+    SsTable [] ssArray = tables.toArray(new SsTable[] {});
+    try {
+      String newName = getNewSsTableName();
+      SsTable s = compact(ssArray, newName, server.getServerId(), server.getCoordinator(), cleanOutOfTokenRange, keyspace);
+      defaultColumnFamily.getSstable().add(s);
+      for (SsTable table : ssArray){
+        defaultColumnFamily.getSstable().remove(table);
+      }
+      numberOfCompactions.incrementAndGet();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  public void maxCompactionThresholdCompaction(Keyspace keyspace, DefaultColumnFamily defaultColumnFamily){
+    Set<SsTable> tables = defaultColumnFamily.getSstable();
+    if (tables.size() >= defaultColumnFamily.getStoreMetadata().getMaxCompactionThreshold()){
+      SsTable [] ssArray = tables.toArray(new SsTable[] {});
+      try {
+        String newName = getNewSsTableName();
+        SsTable s = compact(ssArray, newName, server.getServerId(), server.getCoordinator(), cleanOutOfTokenRange, keyspace);
+        tables.add(s);
+        for (SsTable table : ssArray){
+          tables.remove(table);
+          //TODO table.delete ?
+        }
+        numberOfCompactions.incrementAndGet();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+    
+  public static String getNewSsTableName(){
     return String.valueOf(System.nanoTime());
   }
   
-  public static SsTable compact(SsTable [] ssTables, String newName) throws IOException {
+  public static SsTable compact(SsTable [] ssTables, String newName, ServerId serverId,
+          Coordinator coordinator, boolean cleanOutOfRange, Keyspace keyspace) throws IOException {
+    
     DefaultColumnFamily columnFamily = (DefaultColumnFamily) ssTables[0].getColumnFamily();
     SsTableStreamReader[] readers = new SsTableStreamReader[ssTables.length];
     SsTableStreamWriter newSsTable = new SsTableStreamWriter(newName, 
@@ -121,7 +166,13 @@ public class CompactionManager extends AbstractPlugin implements Runnable {
           merge(allColumns, columns);
         }
       }
-      newSsTable.write(lowestToken, allColumns);
+      if (cleanOutOfRange){
+        if (coordinator.destinationsForToken(lowestToken, keyspace).contains(coordinator.getDestinationLocal())){
+          newSsTable.write(lowestToken, allColumns);
+        }
+      } else {
+        newSsTable.write(lowestToken, allColumns);
+      }
       advance(lowestToken, readers, currentTokens);
     }
     newSsTable.close();
