@@ -7,6 +7,7 @@ import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.client.ClientException;
+import io.teknek.nibiru.client.ColumnFamilyAdminClient;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMembership;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
@@ -78,10 +79,24 @@ public class TestCompactionManager {
     assertDatumAfterCompaction(server);
   }
   
-  private void runCleanup(Server s){
-    CompactionManager cm = ((CompactionManager) s.getPlugins().get(CompactionManager.MY_NAME));
-    cm.cleanupCompaction(s.getKeyspaces().get(TestUtil.DATA_KEYSPACE), (DefaultColumnFamily) 
-            s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY));
+  private void runCleanup(Server s) throws ClientException {
+    boolean local = false;
+    if (local) {
+      CompactionManager cm = ((CompactionManager) s.getPlugins().get(CompactionManager.MY_NAME));
+      cm.cleanupCompaction(
+              s.getKeyspaces().get(TestUtil.DATA_KEYSPACE),
+              (DefaultColumnFamily) s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores()
+                      .get(TestUtil.PETS_COLUMN_FAMILY));
+    } else {
+      ColumnFamilyAdminClient c = new ColumnFamilyAdminClient(s.getConfiguration()
+              .getTransportHost(), s.getConfiguration().getTransportPort());
+      c.cleanup(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY);
+      try {
+        Thread.sleep(2000);
+      } catch (InterruptedException e) {
+      }
+      c.shutdown();
+    }
   }
   
   private void changeTheRouter(Server s) throws ClientException{

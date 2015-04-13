@@ -31,6 +31,7 @@ import io.teknek.nibiru.client.InternodeClient.AtomPair;
 import io.teknek.nibiru.engine.DirectSsTableWriter;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
+import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
@@ -118,8 +119,13 @@ public class Coordinator {
     return keyspace.getKeyspaceMetaData().getRouter()
             .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);
   }
+  
   //ah switchboad logic
-  public Response handle(Message message) { 
+  public Response handle(Message message) {
+    if (ColumnFamilyAdminPersonality.PERSONALITY.equals(message.getPersonality())){
+      ColumnFamilyAdminCoordinator d = new ColumnFamilyAdminCoordinator(this.server);
+      return d.handleMessage(message);
+    }
     if (DirectSsTableWriter.PERSONALITY.equals(message.getPersonality())){
       return handleStreamRequest(message);
     }
@@ -138,9 +144,6 @@ public class Coordinator {
       throw new RuntimeException(message.getStore() + " is not found");
     }
     Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
-    
-    /*List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
-            .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);*/
     List<Destination> destinations = destinationsForToken(token, keyspace);
     if (LocatorPersonality.PERSONALITY.equals(message.getPersonality())){
       return locator.locate(destinations);
