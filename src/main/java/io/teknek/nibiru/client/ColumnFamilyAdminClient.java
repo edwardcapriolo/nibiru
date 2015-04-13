@@ -1,7 +1,6 @@
 package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
-import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
