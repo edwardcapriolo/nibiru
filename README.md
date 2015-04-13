@@ -21,3 +21,12 @@ If you want to launch an instance of nibiru we have configuration files that wil
     mvn exec:java -Dexec.mainClass="io.teknek.nibiru.Server" -Dexec.args="src/test/resources/nibiru_1.xml"
     mvn exec:java -Dexec.mainClass="io.teknek.nibiru.Server" -Dexec.args="src/test/resources/nibiru_2.xml"
 
+There is a simple CLI that wraps a facade around many of the client functions in the database.
+
+    mvn exec:java -Dexec.mainClass="io.teknek.nibiru.cli.Cli"  
+
+    Welcome to a very minimal Cli type 'connect <host> <port>' to get started 
+    ok> 
+    connect localhost 7070
+    ok>
+ 
