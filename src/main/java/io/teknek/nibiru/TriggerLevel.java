@@ -1,7 +1,7 @@
 package io.teknek.nibiru;
 
 public enum TriggerLevel {
-  /** Request will block while trigger is executing **/
+  /** Request will block while trigger is executing, trigger can timeout, **/
   BLOCKING,
   /** Request will not block while trigger is executing. 
    * Triggers operations may be dropped if back pressure**/

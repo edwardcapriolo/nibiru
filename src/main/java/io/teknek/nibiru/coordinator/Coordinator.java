@@ -163,20 +163,26 @@ public class Coordinator {
       }
     }
     long timeoutInMs = determineTimeout(columnFamily, message);
+    long requestStart = System.currentTimeMillis();
 
     if (ColumnFamilyPersonality.PERSONALITY.equals(message.getPersonality())) {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       ResultMerger merger = new HighestTimestampResultMerger();
       Response response = eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger, getHinterForMessage(message, columnFamily));
-      triggerManager.executeTriggers(message, response, keyspace, columnFamily);
+      if (!response.containsKey("exception")){
+        response = triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
+      }
       return response;
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getPersonality())) {
       LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
       ResultMerger merger = new MajorityValueResultMerger();
       Response response = eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger, null);
-      triggerManager.executeTriggers(message, response, keyspace, columnFamily);
+      triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
+      if (!response.containsKey("exception")){
+        response = triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
+      }
       return response;
     } else {
       throw new UnsupportedOperationException(message.getPersonality());

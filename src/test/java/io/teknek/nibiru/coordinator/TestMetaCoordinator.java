@@ -10,6 +10,7 @@ import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.transport.Response;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,8 @@ public class TestMetaCoordinator {
             c.listStores(TestUtil.DATA_KEYSPACE)); 
     Assert.assertEquals(new HashMap(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     
-    Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()), 
+    Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
+            DefaultColumnFamily.class.getName()).withProperty(StoreMetaData.COORDINATOR_TRIGGERS, new ArrayList()), 
             c.getStoreMetadata(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY));
     
     Response expected = new Response().withProperty("a", "b");
