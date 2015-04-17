@@ -21,6 +21,7 @@ import io.teknek.nibiru.plugins.CompactionManager;
 import io.teknek.nibiru.plugins.HintReplayer;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ public class Configuration {
   private Map<String,Object> clusterMembershipProperties;
   private boolean httpDumpOnStop = false;
   private List<String> plugins = Arrays.asList(CompactionManager.class.getName(), HintReplayer.class.getName());
+  private Map<String,Map<String,String>> pluginProperties = new HashMap<String,Map<String,String>>();
   
   public Configuration(){
   }
@@ -108,6 +110,14 @@ public class Configuration {
 
   public void setPlugins(List<String> plugins) {
     this.plugins = plugins;
+  }
+
+  public Map<String, Map<String, String>> getPluginProperties() {
+    return pluginProperties;
+  }
+
+  public void setPluginProperties(Map<String, Map<String, String>> pluginProperties) {
+    this.pluginProperties = pluginProperties;
   }  
   
 }
