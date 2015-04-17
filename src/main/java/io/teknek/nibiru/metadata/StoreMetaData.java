@@ -15,13 +15,19 @@
  */
 package io.teknek.nibiru.metadata;
 
+import io.teknek.nibiru.TriggerDefinition;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class StoreMetaData {
   public static final String IMPLEMENTING_CLASS = "implementing_class"; 
   
-  //TODO properties are column family specific we could rafactor the metadata so that 
+  //TODO properties are column family specific we could refactor the metadata so that 
   //these constants are closer to the table type
   public static final String ENABLE_HINTS = "enable_hints";
   public static final String FLUSH_NUMBER_OF_ROW_KEYS = "flush_number_of_row_keys";
@@ -32,21 +38,13 @@ public class StoreMetaData {
   public static final String IN_MEMORY_CF = "in_memory_cf";
   public static final String OPERATION_TIMEOUT_IN_MS = "operation_timeout_ms";
   public static final String TOMBSTONE_GRACE_MS = "tombstone_grace_ms";
+  public static final String COORDINATOR_TRIGGERS = "coordinator_triggers";
   
   private String name;
-  private Map<String,Object> properties;
-  
-  //private long tombstoneGraceMillis;
-  //private int flushNumberOfRowKeys = 10000;
-  //private int keyCachePerSsTable = 1000;
-  //private int maxCompactionThreshold = 4;
-  //private long commitlogFlushBytes = 1000;
-  //private long indexInterval = 1000;
-  //private boolean inMemoryColumnFamily = false;
-  //private long operationTimeoutInMs = 5000;
+  private ConcurrentMap<String,Object> properties;
   
   public StoreMetaData(){
-    properties = new HashMap<String,Object>();
+    properties = new ConcurrentHashMap<String,Object>();
   }
 
   public String getName() {
@@ -57,6 +55,20 @@ public class StoreMetaData {
     this.name = name;
   }
 
+  public List<TriggerDefinition> getCoordinatorTriggers(){
+    List<TriggerDefinition> def = (List<TriggerDefinition>) properties.get(COORDINATOR_TRIGGERS);
+    if (def == null){
+      properties.putIfAbsent(COORDINATOR_TRIGGERS, new ArrayList<>());
+      return (List<TriggerDefinition>) properties.get(COORDINATOR_TRIGGERS);
+    } else {
+      return def;
+    }
+  }
+  
+  public void setCoordinatorTriggers(List<TriggerDefinition> triggers){
+    properties.put(COORDINATOR_TRIGGERS, triggers);
+  }
+  
   public long getTombstoneGraceMillis() {
     Number res = (Number) properties.get(TOMBSTONE_GRACE_MS);
     if (res == null){
@@ -143,7 +155,7 @@ public class StoreMetaData {
   }
 
   public void setProperties(Map<String, Object> properties) {
-    this.properties = properties;
+    this.properties = new ConcurrentHashMap<>(properties);
   }
 
   public boolean isInMemoryColumnFamily() {

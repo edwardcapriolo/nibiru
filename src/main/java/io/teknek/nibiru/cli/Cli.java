@@ -22,6 +22,8 @@ public class Cli {
     Session session = null;
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     String line;
+    System.out.println("Welcome to a very minimal Cli type 'connect <host> <port>' to get started ");
+    System.out.println("ok> ");
     while ((line = br.readLine()) != null){
       String [] parts = line.split("\\s+");
       if  ("connect".equalsIgnoreCase(parts[0])){
