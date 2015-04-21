@@ -30,5 +30,9 @@ public class ColumnFamilyClient  {
   public SessionBuilder createBuilder(){
     return new SessionBuilder(client);
   }
+  
+  public void shutdown(){
+    client.shutdown();
+  }
 }
 

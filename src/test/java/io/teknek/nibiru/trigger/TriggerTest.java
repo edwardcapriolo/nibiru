@@ -29,19 +29,29 @@ import org.junit.rules.TemporaryFolder;
 
 public class TriggerTest {
 
+  private static final String PET_AGE_CF = "petage";
+  
   @Rule
   public TemporaryFolder node1Folder = new TemporaryFolder();
   
   private Server server; 
+  private ColumnFamilyClient client;
+  private MetaDataClient meta;
   
   @Before
   public void buildServer(){
     server = TestUtil.aBasicServer(node1Folder);
+    client = new ColumnFamilyClient( new Client(server.getConfiguration().getTransportHost(), 
+            server.getConfiguration().getTransportPort(), 10000, 10000));
+    meta = new MetaDataClient(server.getConfiguration().getTransportHost(), 
+            server.getConfiguration().getTransportPort());
   }
   
   @After
   public void closeServer(){
     server.shutdown();
+    client.shutdown();
+    meta.shutdown();
   }
   
   @Test
@@ -52,24 +62,12 @@ public class TriggerTest {
     td.setTriggerClass(PrintlnCoordinatorTrigger.class.getName());
     td.setTriggerLevel(TriggerLevel.BLOCKING);
     defs.add(td);
-    ColumnFamilyClient client = new ColumnFamilyClient( new Client(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort()));
-    MetaDataClient meta = new MetaDataClient(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort());
     Session s = client.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE).withStore(TestUtil.PETS_COLUMN_FAMILY).build();
     s.put("a", "b", "c", 1L);
-    System.out.println( s.get("a", "b"));
-    meta.shutdown();
   }
-  
-  
-  private static final String PET_AGE_CF = "petage";
   
   @Test
   public void reverseIndexTrigger() throws ClientException{
-    
-    MetaDataClient meta = new MetaDataClient(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort());
     meta.createOrUpdateStore(
             TestUtil.DATA_KEYSPACE,
             PET_AGE_CF,
@@ -82,24 +80,17 @@ public class TriggerTest {
     td.setTriggerLevel(TriggerLevel.BLOCKING);
     List<TriggerDefinition> defs = server.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores()
             .get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().getCoordinatorTriggers();
-    defs.add(td);
-    
-    ColumnFamilyClient client = new ColumnFamilyClient( new Client(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort()));
-    
+    defs.add(td); 
     Session s = client.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE).withStore(TestUtil.PETS_COLUMN_FAMILY).build();
     s.put("rover", "age", "5", 1L);
     s.put("sandy", "age", "3", 1L);
     s.put("spot", "age", "5", 1L);
-    
     
     Session s1 = client.createBuilder().withKeyspace(TestUtil.DATA_KEYSPACE).withStore(PET_AGE_CF).build();
     SortedMap<String,Val> res = s1.slice("5", "a", "zzzzzzzzzzzzzzzzz");
     Assert.assertEquals(2, res.size());
     Assert.assertEquals("rover", res.firstKey());
     Assert.assertEquals("spot", res.lastKey());
-    
-    meta.shutdown();
   }
   
   public static class PetAgeReverseTrigger implements CoordinatorTrigger {
@@ -123,7 +114,5 @@ public class TriggerTest {
       }
     }    
   }
-  
-  
   
 }
