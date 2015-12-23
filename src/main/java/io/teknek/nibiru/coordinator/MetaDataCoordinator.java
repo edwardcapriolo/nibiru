@@ -81,43 +81,39 @@ public class MetaDataCoordinator {
   }
     
   public Response handleSystemMessage(final Message message){
-    if (message instanceof ListLiveMembersMessage){
-      return handleListLiveMembersMessage((ListLiveMembersMessage) message);
+    if (message instanceof ListLiveMembers){
+      return handleListLiveMembersMessage((ListLiveMembers) message);
     } else if (message instanceof CreateOrUpdateKeyspace) { 
       return handleCreateOrUpdateKeyspace((CreateOrUpdateKeyspace) message);
-    } else if (MetaPersonality.LIST_KEYSPACES.equals(message.getPayload().get("type"))){
-      return handleListKeyspaces(message);
+    } else if (message instanceof ListKeyspaces){
+      return handleListKeyspaces((ListKeyspaces) message);
     } else if (MetaPersonality.CREATE_OR_UPDATE_STORE.equals(message.getPayload().get("type"))){
       return handleCreateOrUpdateStore(message);
-    } else if (MetaPersonality.LIST_STORES.equals(message.getPayload().get("type"))){
-      return handleListStores(message);
-    } else if (MetaPersonality.GET_KEYSPACE_METADATA.equals(message.getPayload().get("type"))){ 
-      return handleGetKeyspaceMetaData(message);
-    } else if (MetaPersonality.GET_STORE_METADATA.equals(message.getPayload().get("type"))){ 
-      return handleGetStoreMetaData(message);
+    } else if (message instanceof ListStores){
+      return handleListStores((ListStores) message);
+    } else if (message instanceof GetKeyspaceMetaData){ 
+      return handleGetKeyspaceMetaData((GetKeyspaceMetaData) message);
+    } else if (message instanceof GetStoreMetaData){ 
+      return handleGetStoreMetaData((GetStoreMetaData) message);
     } else {
       throw new IllegalArgumentException(this.getClass().getName() + " could not process " + message);
     }
   }
   
-  private Response handleListStores(Message message) {
-    String keyspace = (String) message.getPayload().get("keyspace");
-    //TODO: keyspace does not exist?
+  private Response handleListStores(ListStores message) {
+    String keyspace = message.getKeyspace();
     return new Response().withProperty("payload", metaDataManager.listStores(keyspace));
   }
 
-  private Response handleGetKeyspaceMetaData(Message message) {
-    String keyspace = (String) message.getPayload().get("keyspace");
-    //TODO: keyspace does not exist?
-    Response r = new Response().withProperty("payload", metaDataManager.getKeyspaceMetadata(keyspace).getProperties());
+  private Response handleGetKeyspaceMetaData(GetKeyspaceMetaData message) {
+    Response r = new Response().withProperty("payload", 
+            metaDataManager.getKeyspaceMetadata(message.getKeyspace()).getProperties());
     return r;
   }
   
-  private Response handleGetStoreMetaData(Message message) {
-    String keyspace = (String) message.getPayload().get("keyspace");
-    String store = (String) message.getPayload().get("store");
-    //TODO: keyspace does not exist?
-    Response r = new Response().withProperty("payload", metaDataManager.getStoreMetadata(keyspace, store).getProperties());
+  private Response handleGetStoreMetaData(GetStoreMetaData message) {
+    Response r = new Response().withProperty("payload", 
+            metaDataManager.getStoreMetadata(message.getKeyspace(), message.getStore()).getProperties());
     return r;
   }
   
@@ -151,7 +147,7 @@ public class MetaDataCoordinator {
     return new Response();
   }
   
-  private Response handleListKeyspaces(final Message message){
+  private Response handleListKeyspaces(final ListKeyspaces message){
     return new Response().withProperty("payload", metaDataManager.listKeyspaces());
   }
   
@@ -190,19 +186,7 @@ public class MetaDataCoordinator {
     return new Response();
   }
   
-  private Response handleListLiveMembersMessage(final ListLiveMembersMessage message){
-    List<ClusterMember> copy = new ArrayList<>();
-    copy.addAll(clusterMembership.getLiveMembers());
-    ClusterMember me = new ClusterMember();
-    me.setHeatbeat(0);
-    me.setHost(configuration.getTransportHost());
-    me.setPort(1);//TODO 
-    me.setId(serverId.getU().toString());
-    copy.add(me);
-    return new Response().withProperty("payload", copy);
-  }
-  
-  private Response handleListLiveMembersMessage(final Message message){
+  private Response handleListLiveMembersMessage(final ListLiveMembers message){
     List<ClusterMember> copy = new ArrayList<>();
     copy.addAll(clusterMembership.getLiveMembers());
     ClusterMember me = new ClusterMember();

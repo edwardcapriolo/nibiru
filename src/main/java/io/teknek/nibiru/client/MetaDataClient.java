@@ -22,6 +22,10 @@ import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
+import io.teknek.nibiru.transport.metadata.GetKeyspaceMetaData;
+import io.teknek.nibiru.transport.metadata.GetStoreMetaData;
+import io.teknek.nibiru.transport.metadata.ListKeyspaces;
+import io.teknek.nibiru.transport.metadata.ListStores;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,7 +49,7 @@ public class MetaDataClient extends Client {
   }
 
   public List<ClusterMember> getLiveMembers() throws ClientException {
-    Message m = new io.teknek.nibiru.transport.metadata.ListLiveMembersMessage();
+    Message m = new io.teknek.nibiru.transport.metadata.ListLiveMembers();
     try {
       Response response = post(m); 
       List<Map> payloadAsMap = (List<Map>) response.get("payload");
@@ -60,19 +64,6 @@ public class MetaDataClient extends Client {
   }
   
   public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties, boolean isClient) throws ClientException {
-    /*
-    Message m = new Message();
-    m.setKeyspace("system");
-    m.setStore(null);
-    m.setPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String,Object> payload = new HashMap<>();
-            payload.put("type", MetaPersonality.CREATE_OR_UPDATE_KEYSPACE);
-            payload.put("keyspace", keyspace);
-            payload.put("properties", properties);
-            if(!isClient){
-              payload.put("reroute", "");
-            }
-    m.setPayload(payload);*/
     CreateOrUpdateKeyspace k = new CreateOrUpdateKeyspace();
     k.setKeyspace("system");
     k.setTargetKeyspace(keyspace);
@@ -106,12 +97,7 @@ public class MetaDataClient extends Client {
   }
   
   public Collection<String> listKeyspaces() throws ClientException {
-    Message m = new Message();
-    m.setKeyspace("system");
-    m.setPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("type", MetaPersonality.LIST_KEYSPACES);
-    m.setPayload(payload);
+    ListKeyspaces m = new ListKeyspaces();
     try {
       Response response = post(m);
       return (Collection<String>) response.get("payload");
@@ -121,13 +107,8 @@ public class MetaDataClient extends Client {
   }
   
   public Collection<String> listStores(String keyspace) throws ClientException {
-    Message m = new Message();
-    m.setKeyspace("system");
-    m.setPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("keyspace", keyspace);
-    payload.put("type", MetaPersonality.LIST_STORES);
-    m.setPayload(payload);
+   ListStores m = new ListStores();
+   m.setKeyspace(keyspace);
     try {
       Response response = post(m);
       return (Collection<String>) response.get("payload");
@@ -137,13 +118,8 @@ public class MetaDataClient extends Client {
   }
   
   public Map<String,Object> getKeyspaceMetadata(String keyspace) throws ClientException {
-    Message m = new Message();
-    m.setKeyspace("system");
-    m.setPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("keyspace", keyspace);
-    payload.put("type", MetaPersonality.GET_KEYSPACE_METADATA);
-    m.setPayload(payload);
+    GetKeyspaceMetaData  m = new GetKeyspaceMetaData();
+    m.setKeyspace(keyspace);
     try {
       Response response = post(m);
       return (Map<String,Object>) response.get("payload");
@@ -154,14 +130,9 @@ public class MetaDataClient extends Client {
   
   
   public Map<String,Object> getStoreMetadata(String keyspace, String store) throws ClientException {
-    Message m = new Message();
-    m.setKeyspace("system");
-    m.setPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("keyspace", keyspace);
-    payload.put("store", store);
-    payload.put("type", MetaPersonality.GET_STORE_METADATA);
-    m.setPayload(payload);
+    GetStoreMetaData m = new GetStoreMetaData();
+    m.setKeyspace(keyspace);
+    m.setStore(store);
     try {
       Response response = post(m);
       return (Map<String,Object>) response.get("payload");
