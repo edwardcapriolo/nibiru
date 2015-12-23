@@ -21,7 +21,6 @@ import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.*;
@@ -87,8 +86,8 @@ public class MetaDataCoordinator {
       return handleCreateOrUpdateKeyspace((CreateOrUpdateKeyspace) message);
     } else if (message instanceof ListKeyspaces){
       return handleListKeyspaces((ListKeyspaces) message);
-    } else if (MetaPersonality.CREATE_OR_UPDATE_STORE.equals(message.getPayload().get("type"))){
-      return handleCreateOrUpdateStore(message);
+    } else if (message instanceof CreateOrUpdateStore){
+      return handleCreateOrUpdateStore((CreateOrUpdateStore) message);
     } else if (message instanceof ListStores){
       return handleListStores((ListStores) message);
     } else if (message instanceof GetKeyspaceMetaData){ 
@@ -118,21 +117,17 @@ public class MetaDataCoordinator {
   }
   
   
-  private Response handleCreateOrUpdateStore(final Message message){
-    metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
-            (String) message.getPayload().get("store"),
-            (Map<String,Object>) message.getPayload());
-    if (!message.getPayload().containsKey("reroute")){
-      message.getPayload().put("reroute", "");
+  private Response handleCreateOrUpdateStore(final CreateOrUpdateStore message){
+    metaDataManager.createOrUpdateStore(message.getKeyspace(), message.getStore(), message.getProperties());
+    if (message.isShouldReroute()){
+      message.setShouldReroute(false);
       List<Callable<Void>> calls = new ArrayList<>();
       for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
         final MetaDataClient c = clientForClusterMember(clusterMember);
         Callable<Void> call = new Callable<Void>(){
           public Void call() throws Exception {
             c.createOrUpdateStore(
-                    (String) message.getPayload().get("keyspace"),
-                    (String) message.getPayload().get("store"),
-                    (Map<String,Object>) message.getPayload());
+                    message.getKeyspace(), message.getStore(), message.getProperties(), false);
             return null;
           }};
         calls.add(call); 
@@ -141,10 +136,11 @@ public class MetaDataCoordinator {
         List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
         //todo return results to client
       } catch (InterruptedException e) {
-
+        e.printStackTrace();
       }
+      
     }
-    return new Response();
+    return new Response();  
   }
   
   private Response handleListKeyspaces(final ListKeyspaces message){

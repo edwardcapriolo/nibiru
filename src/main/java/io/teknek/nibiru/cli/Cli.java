@@ -64,7 +64,7 @@ public class Cli {
         try {
           Map m = new HashMap<String,Object>();
           m.put("implementing_class", DefaultColumnFamily.class.getName());
-          meta.createOrUpdateStore(parts[1], parts[2], m);
+          meta.createOrUpdateStore(parts[1], parts[2], m, true);
         } catch (ClientException e) {
           System.out.println(e);
         }

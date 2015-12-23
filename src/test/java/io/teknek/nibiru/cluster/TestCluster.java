@@ -74,7 +74,7 @@ public class TestCluster {
     }
     Map<String,Object> stuff = new HashMap<String,Object>();
     stuff.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-    c.createOrUpdateStore("abc", "def", stuff);
+    c.createOrUpdateStore("abc", "def", stuff, true);
     Thread.sleep(1000);
     for (Server server : s){
       Assert.assertNotNull(server.getKeyspaces().get("abc").getStores().get("def"));

@@ -22,6 +22,7 @@ import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
+import io.teknek.nibiru.transport.metadata.CreateOrUpdateStore;
 import io.teknek.nibiru.transport.metadata.GetKeyspaceMetaData;
 import io.teknek.nibiru.transport.metadata.GetStoreMetaData;
 import io.teknek.nibiru.transport.metadata.ListKeyspaces;
@@ -78,7 +79,15 @@ public class MetaDataClient extends Client {
     }
   }
   
-  public void createOrUpdateStore(String keyspace, String store,  Map<String,Object> properties) throws ClientException {
+  public void createOrUpdateStore(String keyspace, String store,  Map<String,Object> properties, boolean isClient) throws ClientException {
+    CreateOrUpdateStore m = new CreateOrUpdateStore();
+    m.setKeyspace(keyspace);
+    m.setStore(store);
+    m.setProperties(properties);
+    if (isClient){
+      m.setShouldReroute(true);
+    }
+    /*
     Message m = new Message();
     m.setKeyspace("system");
     m.setStore(null);
@@ -89,6 +98,7 @@ public class MetaDataClient extends Client {
     payload.put("store", store);
     payload.putAll(properties);
     m.setPayload(payload);
+    */
     try {
       Response response = post(m);
     } catch (IOException | RuntimeException e) {
