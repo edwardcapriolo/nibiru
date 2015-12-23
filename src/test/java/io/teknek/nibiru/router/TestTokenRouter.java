@@ -54,11 +54,11 @@ public class TestTokenRouter {
     meta.setProperties(props);
     keyspace.setKeyspaceMetadata(meta);
     Partitioner p = new NaturalPartitioner();
-    Assert.assertEquals("id1", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("a")).get(0).getDestinationId());
-    Assert.assertEquals("id1", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("aa")).get(0).getDestinationId());
-    Assert.assertEquals("id2", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("h")).get(0).getDestinationId());
-    Assert.assertEquals("id3", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("i")).get(0).getDestinationId());
-    Assert.assertEquals("id1", token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("z")).get(0).getDestinationId());
+    Assert.assertEquals("id1", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("a")).get(0).getDestinationId());
+    Assert.assertEquals("id1", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("aa")).get(0).getDestinationId());
+    Assert.assertEquals("id2", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("h")).get(0).getDestinationId());
+    Assert.assertEquals("id3", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("i")).get(0).getDestinationId());
+    Assert.assertEquals("id1", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("z")).get(0).getDestinationId());
   }
     
   @Test
@@ -73,15 +73,15 @@ public class TestTokenRouter {
     keyspace.setKeyspaceMetadata(meta);
     Partitioner p = new NaturalPartitioner();
     Assert.assertEquals(Arrays.asList(new Destination("id1"), new Destination("id2")),
-            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("a")));
+            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("a")));
     Assert.assertEquals(Arrays.asList(new Destination("id1"), new Destination("id2")),
-            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("aa")));
+            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("aa")));
     Assert.assertEquals(Arrays.asList(new Destination("id2"), new Destination("id3")),
-            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("h")));
+            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("h")));
     Assert.assertEquals(Arrays.asList(new Destination("id3"), new Destination("id1")),
-            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("i")));
+            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("i")));
     Assert.assertEquals(Arrays.asList(new Destination("id1"), new Destination("id2")),
-            token.routesTo(null, null, keyspace, threeLiveNodes(), p.partition("z")));
+            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("z")));
   }
   
 }

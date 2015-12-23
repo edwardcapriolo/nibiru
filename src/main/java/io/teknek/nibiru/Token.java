@@ -22,6 +22,11 @@ public class Token implements Comparable<Token>{
   public Token(){
     
   }
+  
+  public Token(String token,String rowkey){
+    this.token = token;
+    this.rowkey = rowkey;
+  }
 
   public String getToken() {
     return token;

@@ -20,7 +20,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.jsontype.NamedType;
 import org.codehaus.jackson.type.TypeReference;
 
 import io.teknek.nibiru.Store;
@@ -30,16 +29,16 @@ import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.client.InternodeClient.AtomPair;
 import io.teknek.nibiru.engine.DirectSsTableWriter;
-import io.teknek.nibiru.engine.SsTableStreamWriter;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
-import io.teknek.nibiru.engine.atom.ColumnKey;
+import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.MetaDataMessage;
+import io.teknek.nibiru.trigger.TriggerManager;
 
 public class Coordinator {
 
@@ -51,6 +50,7 @@ public class Coordinator {
   private final EventualCoordinator eventualCoordinator;
   private final SponsorCoordinator sponsorCoordinator;
   private final Locator locator;
+  private final TriggerManager triggerManager;
   
   private Hinter hinter;
   private Tracer tracer;
@@ -63,6 +63,7 @@ public class Coordinator {
     eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
     sponsorCoordinator = new SponsorCoordinator(server.getClusterMembership(), server.getMetaDataManager(), metaDataCoordinator, server);
     locator = new Locator(server.getConfiguration(), server.getClusterMembership());
+    triggerManager = new TriggerManager(server);
   }
   
   public void init(){
@@ -72,6 +73,7 @@ public class Coordinator {
     eventualCoordinator.init();
     hinter = createHinter();
     tracer = new Tracer();
+    triggerManager.init();
   }
   
   public static ColumnFamilyPersonality getHintCf(Server server){
@@ -87,6 +89,7 @@ public class Coordinator {
   public void shutdown(){
     metaDataCoordinator.shutdown();
     eventualCoordinator.shutdown();
+    triggerManager.shutdown();
   }
 
   public Response handleStreamRequest(Message m){
@@ -118,16 +121,24 @@ public class Coordinator {
    
   }
   
+  public List<Destination> destinationsForToken(Token token, Keyspace keyspace){
+    return keyspace.getKeyspaceMetaData().getRouter()
+            .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);
+  }
+  
   //ah switchboad logic
-  public Response handle(Message message) { 
+  public Response handle(Message message) {
+    if (ColumnFamilyAdminPersonality.PERSONALITY.equals(message.getPersonality())){
+      ColumnFamilyAdminCoordinator d = new ColumnFamilyAdminCoordinator(this.server);
+      return d.handleMessage(message);
+    }
     if (DirectSsTableWriter.PERSONALITY.equals(message.getPersonality())){
       return handleStreamRequest(message);
     }
     if (message.getPayload().containsKey("sponsor_request")){
       return sponsorCoordinator.handleSponsorRequest(message);
     }
-    
-    if (SYSTEM_KEYSPACE.equals(message.getKeyspace()) || message instanceof MetaDataMessage ) {
+    if (message instanceof MetaDataMessage ) {
       return metaDataCoordinator.handleSystemMessage(message);
     }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
@@ -139,8 +150,7 @@ public class Coordinator {
       throw new RuntimeException(message.getStore() + " is not found");
     }
     Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
-    List<Destination> destinations = keyspace.getKeyspaceMetaData().getRouter()
-            .routesTo(message, server.getServerId(), keyspace, server.getClusterMembership(), token);
+    List<Destination> destinations = destinationsForToken(token, keyspace);
     if (LocatorPersonality.PERSONALITY.equals(message.getPersonality())){
       return locator.locate(destinations);
     }
@@ -154,23 +164,32 @@ public class Coordinator {
       }
     }
     long timeoutInMs = determineTimeout(columnFamily, message);
+    long requestStart = System.currentTimeMillis();
 
     if (ColumnFamilyPersonality.PERSONALITY.equals(message.getPersonality())) {
       LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
       ResultMerger merger = new HighestTimestampResultMerger();
-      return eventualCoordinator.handleMessage(token, message, destinations, 
+      Response response = eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger, getHinterForMessage(message, columnFamily));
+      if (!response.containsKey("exception")){
+        response = triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
+      }
+      return response;
     } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getPersonality())) {
       LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
       ResultMerger merger = new MajorityValueResultMerger();
-      return eventualCoordinator.handleMessage(token, message, destinations, 
+      Response response = eventualCoordinator.handleMessage(token, message, destinations, 
               timeoutInMs, destinationLocal, action, merger, null);
+      triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
+      if (!response.containsKey("exception")){
+        response = triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
+      }
+      return response;
     } else {
       throw new UnsupportedOperationException(message.getPersonality());
     }
 
   }
-  
   
   public Tracer getTracer(){
     return this.tracer;
@@ -202,6 +221,10 @@ public class Coordinator {
 
   public SponsorCoordinator getSponsorCoordinator() {
     return sponsorCoordinator;
+  }
+
+  public Destination getDestinationLocal() {
+    return destinationLocal;
   }
 
 }
