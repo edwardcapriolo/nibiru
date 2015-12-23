@@ -21,9 +21,9 @@ import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.metadata.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,62 +80,54 @@ public class MetaDataCoordinator {
   }
     
   public Response handleSystemMessage(final Message message){
-    if (MetaPersonality.LIST_LIVE_MEMBERS.equals(message.getPayload().get("type"))){
-      return handleListLiveMembersMessage(message);
-    } else if (MetaPersonality.LIST_KEYSPACES.equals(message.getPayload().get("type"))){
-      return handleListKeyspaces(message);
-    } else if (MetaPersonality.CREATE_OR_UPDATE_KEYSPACE.equals(message.getPayload().get("type"))){
-      return handleCreateOrUpdateKeyspace(message);
-    } else if (MetaPersonality.CREATE_OR_UPDATE_STORE.equals(message.getPayload().get("type"))){
-      return handleCreateOrUpdateStore(message);
-    } else if (MetaPersonality.LIST_STORES.equals(message.getPayload().get("type"))){
-      return handleListStores(message);
-    } else if (MetaPersonality.GET_KEYSPACE_METADATA.equals(message.getPayload().get("type"))){ 
-      return handleGetKeyspaceMetaData(message);
-    } else if (MetaPersonality.GET_STORE_METADATA.equals(message.getPayload().get("type"))){ 
-      return handleGetStoreMetaData(message);
+    if (message instanceof ListLiveMembers){
+      return handleListLiveMembersMessage((ListLiveMembers) message);
+    } else if (message instanceof CreateOrUpdateKeyspace) { 
+      return handleCreateOrUpdateKeyspace((CreateOrUpdateKeyspace) message);
+    } else if (message instanceof ListKeyspaces){
+      return handleListKeyspaces((ListKeyspaces) message);
+    } else if (message instanceof CreateOrUpdateStore){
+      return handleCreateOrUpdateStore((CreateOrUpdateStore) message);
+    } else if (message instanceof ListStores){
+      return handleListStores((ListStores) message);
+    } else if (message instanceof GetKeyspaceMetaData){ 
+      return handleGetKeyspaceMetaData((GetKeyspaceMetaData) message);
+    } else if (message instanceof GetStoreMetaData){ 
+      return handleGetStoreMetaData((GetStoreMetaData) message);
     } else {
       throw new IllegalArgumentException(this.getClass().getName() + " could not process " + message);
     }
   }
   
-  private Response handleListStores(Message message) {
-    String keyspace = (String) message.getPayload().get("keyspace");
-    //TODO: keyspace does not exist?
+  private Response handleListStores(ListStores message) {
+    String keyspace = message.getKeyspace();
     return new Response().withProperty("payload", metaDataManager.listStores(keyspace));
   }
 
-  private Response handleGetKeyspaceMetaData(Message message) {
-    String keyspace = (String) message.getPayload().get("keyspace");
-    //TODO: keyspace does not exist?
-    Response r = new Response().withProperty("payload", metaDataManager.getKeyspaceMetadata(keyspace).getProperties());
+  private Response handleGetKeyspaceMetaData(GetKeyspaceMetaData message) {
+    Response r = new Response().withProperty("payload", 
+            metaDataManager.getKeyspaceMetadata(message.getKeyspace()).getProperties());
     return r;
   }
   
-  private Response handleGetStoreMetaData(Message message) {
-    String keyspace = (String) message.getPayload().get("keyspace");
-    String store = (String) message.getPayload().get("store");
-    //TODO: keyspace does not exist?
-    Response r = new Response().withProperty("payload", metaDataManager.getStoreMetadata(keyspace, store).getProperties());
+  private Response handleGetStoreMetaData(GetStoreMetaData message) {
+    Response r = new Response().withProperty("payload", 
+            metaDataManager.getStoreMetadata(message.getKeyspace(), message.getStore()).getProperties());
     return r;
   }
   
   
-  private Response handleCreateOrUpdateStore(final Message message){
-    metaDataManager.createOrUpdateStore((String) message.getPayload().get("keyspace"),
-            (String) message.getPayload().get("store"),
-            (Map<String,Object>) message.getPayload());
-    if (!message.getPayload().containsKey("reroute")){
-      message.getPayload().put("reroute", "");
+  private Response handleCreateOrUpdateStore(final CreateOrUpdateStore message){
+    metaDataManager.createOrUpdateStore(message.getKeyspace(), message.getStore(), message.getProperties());
+    if (message.isShouldReroute()){
+      message.setShouldReroute(false);
       List<Callable<Void>> calls = new ArrayList<>();
       for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
         final MetaDataClient c = clientForClusterMember(clusterMember);
         Callable<Void> call = new Callable<Void>(){
           public Void call() throws Exception {
             c.createOrUpdateStore(
-                    (String) message.getPayload().get("keyspace"),
-                    (String) message.getPayload().get("store"),
-                    (Map<String,Object>) message.getPayload());
+                    message.getKeyspace(), message.getStore(), message.getProperties(), false);
             return null;
           }};
         calls.add(call); 
@@ -144,34 +136,35 @@ public class MetaDataCoordinator {
         List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
         //todo return results to client
       } catch (InterruptedException e) {
-
+        e.printStackTrace();
       }
+      
     }
-    return new Response();
+    return new Response();  
   }
   
-  private Response handleListKeyspaces(final Message message){
+  private Response handleListKeyspaces(final ListKeyspaces message){
     return new Response().withProperty("payload", metaDataManager.listKeyspaces());
   }
   
-  private Response handleCreateOrUpdateKeyspace(final Message message){
+  private Response handleCreateOrUpdateKeyspace(final CreateOrUpdateKeyspace message){
+    
     metaDataManager.createOrUpdateKeyspace(
-            (String) message.getPayload().get("keyspace"), 
-            (Map<String,Object>) message.getPayload().get("properties"));
-    if (!message.getPayload().containsKey("reroute")){
-      message.getPayload().put("reroute", "");
+            (String) message.getTargetKeyspace(), 
+            (Map<String,Object>) message.getProperties());
+    //TODO this is hokey
+    if (message.isShouldReRoute()){
+      message.setShouldReRoute(false);
       List<Callable<Void>> calls = new ArrayList<>();
       for (ClusterMember clusterMember : clusterMembership.getLiveMembers()){
         final MetaDataClient c = clientForClusterMember(clusterMember);
         Callable<Void> call = new Callable<Void>(){
           public Void call() throws Exception {
             try {
-            c.createOrUpdateKeyspace(
-                    (String) message.getPayload().get("keyspace"), 
-
-                    (Map<String,Object>) message.getPayload().get("properties"), false
+              c.createOrUpdateKeyspace(
+                    (String) message.getTargetKeyspace(), 
+                    (Map<String,Object>) message.getProperties(), false
                     );
-           
             } catch (RuntimeException ex){
               ex.printStackTrace();
             }
@@ -182,13 +175,14 @@ public class MetaDataCoordinator {
       try {
         List<Future<Void>> res = metaExecutor.invokeAll(calls, 10, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-
+        System.err.println(e);
       }
     }
+    
     return new Response();
   }
   
-  private Response handleListLiveMembersMessage(final Message message){
+  private Response handleListLiveMembersMessage(final ListLiveMembers message){
     List<ClusterMember> copy = new ArrayList<>();
     copy.addAll(clusterMembership.getLiveMembers());
     ClusterMember me = new ClusterMember();

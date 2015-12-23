@@ -37,6 +37,7 @@ import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.metadata.MetaDataMessage;
 import io.teknek.nibiru.trigger.TriggerManager;
 
 public class Coordinator {
@@ -137,7 +138,7 @@ public class Coordinator {
     if (message.getPayload().containsKey("sponsor_request")){
       return sponsorCoordinator.handleSponsorRequest(message);
     }
-    if (SYSTEM_KEYSPACE.equals(message.getKeyspace())) {
+    if (message instanceof MetaDataMessage ) {
       return metaDataCoordinator.handleSystemMessage(message);
     }
     Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());

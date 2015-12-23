@@ -66,7 +66,7 @@ public class TestCluster {
     Thread.sleep(11000);
     Assert.assertEquals(2 , s[2].getClusterMembership().getLiveMembers().size());
     Assert.assertEquals("127.0.0.1", s[2].getClusterMembership().getLiveMembers().get(0).getHost());
-    MetaDataClient c = new MetaDataClient("127.0.0.1", s[1].getConfiguration().getTransportPort());
+    MetaDataClient c = new MetaDataClient("127.0.0.1", s[1].getConfiguration().getTransportPort(), 20000, 20000);
     c.createOrUpdateKeyspace("abc", new HashMap<String,Object>(), true);
     Thread.sleep(1000);
     for (Server server : s){
@@ -74,7 +74,7 @@ public class TestCluster {
     }
     Map<String,Object> stuff = new HashMap<String,Object>();
     stuff.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-    c.createOrUpdateStore("abc", "def", stuff);
+    c.createOrUpdateStore("abc", "def", stuff, true);
     Thread.sleep(1000);
     for (Server server : s){
       Assert.assertNotNull(server.getKeyspaces().get("abc").getStores().get("def"));

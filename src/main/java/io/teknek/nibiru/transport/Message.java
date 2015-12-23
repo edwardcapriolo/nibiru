@@ -15,16 +15,43 @@
  */
 package io.teknek.nibiru.transport;
 
+import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
+import io.teknek.nibiru.transport.metadata.CreateOrUpdateStore;
+import io.teknek.nibiru.transport.metadata.GetKeyspaceMetaData;
+import io.teknek.nibiru.transport.metadata.GetStoreMetaData;
+import io.teknek.nibiru.transport.metadata.ListKeyspaces;
+import io.teknek.nibiru.transport.metadata.ListLiveMembers;
+import io.teknek.nibiru.transport.metadata.ListStores;
+
+import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+import org.codehaus.jackson.annotate.JsonSubTypes.Type;
+
+@JsonTypeInfo(  
+        use = JsonTypeInfo.Id.NAME,  
+        include = JsonTypeInfo.As.PROPERTY,  
+        property = "type") 
+
+    @JsonSubTypes({  
+        @Type(value = ListLiveMembers.class, name = "ListLiveMembers"),
+        @Type(value = CreateOrUpdateKeyspace.class, name = "CreateOrUpdateKeyspace"),
+        @Type(value = GetStoreMetaData.class, name = "GetStoreMetaData"),
+        @Type(value = ListStores.class, name = "ListStores"),
+        @Type(value = ListKeyspaces.class, name = "ListKeyspaces"),
+        @Type(value = GetKeyspaceMetaData.class, name = "GetKeyspaceMetaData"),
+        @Type(value = CreateOrUpdateStore.class, name = "CreateOrUpdateStore"),
+         })
 public class Message {
-  private String keyspace;
-  private String store;
-  private String personality;
-  private Map<String,Object> payload;
+  protected String keyspace;
+  protected String store;
+  protected String personality;
+  protected Map<String,Object> payload;
   
   public Message(){
-    
+    payload = new HashMap<String,Object>();
   }
   
   public String getKeyspace() {

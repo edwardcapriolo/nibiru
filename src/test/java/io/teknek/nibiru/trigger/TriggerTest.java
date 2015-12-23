@@ -72,7 +72,7 @@ public class TriggerTest {
             TestUtil.DATA_KEYSPACE,
             PET_AGE_CF,
             new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS,
-                    DefaultColumnFamily.class.getName()));
+                    DefaultColumnFamily.class.getName()), true);
     
     //We need a way to do this from the metaclient
     TriggerDefinition td = new TriggerDefinition();

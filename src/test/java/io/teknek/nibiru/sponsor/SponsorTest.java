@@ -95,7 +95,7 @@ public class SponsorTest {
     props.put(KeyspaceMetaData.ROUTER_CLASS, TokenRouter.class.getName());
     metaClient.createOrUpdateKeyspace("abc", props, true);
     metaClient.createOrUpdateStore("abc", "def", new Response()
-    .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
+    .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()), true);
   }
   
   private void insertDataOverClient(Session session) throws ClientException {

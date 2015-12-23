@@ -65,7 +65,7 @@ public class TestCoordinator {
     c.createOrUpdateKeyspace("abc", props,true);
     Map <String,Object> x = new HashMap<String,Object>();
     x.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-    c.createOrUpdateStore("abc", "def", x);
+    c.createOrUpdateStore("abc", "def", x, true);
     Thread.sleep(10);
     for (int i = 0; i < s.length; i++) {
       Assert.assertTrue(s[i].getKeyspaces().containsKey("abc"));

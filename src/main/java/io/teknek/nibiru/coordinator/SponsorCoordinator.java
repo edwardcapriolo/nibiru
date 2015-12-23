@@ -109,7 +109,7 @@ public class SponsorCoordinator {
         metaDataClient.createOrUpdateKeyspace(keyspace, d.getProperties(), false);
         for (String store : metaDataManager.listStores(keyspace)) {
           metaDataClient.createOrUpdateStore(keyspace, store,
-                  metaDataManager.getStoreMetadata(keyspace, store).getProperties());
+                  metaDataManager.getStoreMetadata(keyspace, store).getProperties(), false);
         }
       }
     } catch (ClientException e) {
