@@ -17,11 +17,11 @@ package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.ContactInformation;
 import io.teknek.nibiru.cluster.ClusterMember;
-import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,17 +35,17 @@ import org.codehaus.jackson.type.TypeReference;
 
 public class MetaDataClient extends Client {
 
+  @Deprecated
   public MetaDataClient(String host, int port) {
     super(host, port);
   }
+  
+  public MetaDataClient(String host, int port, int c, int s) {
+    super(host, port, c, s);
+  }
 
   public List<ClusterMember> getLiveMembers() throws ClientException {
-    Message m = new Message();
-    m.setKeyspace("system");
-    m.setPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String,Object> payload = new HashMap<>();
-    payload.put("type", MetaPersonality.LIST_LIVE_MEMBERS);
-    m.setPayload(payload);
+    Message m = new io.teknek.nibiru.transport.metadata.ListLiveMembersMessage();
     try {
       Response response = post(m); 
       List<Map> payloadAsMap = (List<Map>) response.get("payload");
@@ -60,6 +60,7 @@ public class MetaDataClient extends Client {
   }
   
   public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties, boolean isClient) throws ClientException {
+    /*
     Message m = new Message();
     m.setKeyspace("system");
     m.setStore(null);
@@ -71,9 +72,16 @@ public class MetaDataClient extends Client {
             if(!isClient){
               payload.put("reroute", "");
             }
-    m.setPayload(payload);
+    m.setPayload(payload);*/
+    CreateOrUpdateKeyspace k = new CreateOrUpdateKeyspace();
+    k.setKeyspace("system");
+    k.setTargetKeyspace(keyspace);
+    if(isClient){
+      k.setShouldReRoute(true);
+    }
+    k.setProperties(properties);
     try {
-      Response response = post(m);
+      Response response = post(k);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
     }

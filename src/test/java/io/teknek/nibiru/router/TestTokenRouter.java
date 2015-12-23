@@ -34,12 +34,14 @@ public class TestTokenRouter {
       public void init() {}
       public void shutdown() {}
       public List<ClusterMember> getLiveMembers() {
-       return Arrays.asList( new ClusterMember("127.0.0.1", 2000, 1, "id1"), 
+       return Arrays.asList( 
+               new ClusterMember("127.0.0.1", 2000, 1, "id1"), 
                new ClusterMember("127.0.0.2", 2000, 1, "id2"),
                new ClusterMember("127.0.0.3", 2000, 1, "id3"));
       }
-      public List<ClusterMember> getDeadMembers() { return null; }};
-      return mock;
+      public List<ClusterMember> getDeadMembers() { return null; }
+    };
+    return mock;
   }
   
   @Test

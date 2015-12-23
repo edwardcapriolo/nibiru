@@ -15,16 +15,33 @@
  */
 package io.teknek.nibiru.transport;
 
+import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
+import io.teknek.nibiru.transport.metadata.ListLiveMembersMessage;
+
+import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+import org.codehaus.jackson.annotate.JsonSubTypes.Type;
+
+@JsonTypeInfo(  
+        use = JsonTypeInfo.Id.NAME,  
+        include = JsonTypeInfo.As.PROPERTY,  
+        property = "type") 
+
+    @JsonSubTypes({  
+        @Type(value = ListLiveMembersMessage.class, name = "ListLiveMembersMessage"),
+        @Type(value = CreateOrUpdateKeyspace.class, name = "CreateOrUpdateKeyspace"),
+         })
 public class Message {
-  private String keyspace;
-  private String store;
-  private String personality;
-  private Map<String,Object> payload;
+  protected String keyspace;
+  protected String store;
+  protected String personality;
+  protected Map<String,Object> payload;
   
   public Message(){
-    
+    payload = new HashMap<String,Object>();
   }
   
   public String getKeyspace() {

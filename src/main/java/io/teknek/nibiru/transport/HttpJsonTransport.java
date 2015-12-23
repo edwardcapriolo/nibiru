@@ -82,10 +82,11 @@ public class HttpJsonTransport {
       public void handle(String target, Request request, HttpServletRequest servletRequest,
               HttpServletResponse response) throws IOException, ServletException {
         String url = request.getRequestURI();
-        Message message = MAPPER.readValue(request.getInputStream(), Message.class);
+        
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=utf-8");
         try {
+          Message message = MAPPER.readValue(request.getInputStream(), Message.class);
           if (message.getPayload() != null && message.getPayload().get(Tracer.TRACE_PROP) != null){
             message.getPayload().put(Tracer.TRACE_PROP, 
                     MAPPER.convertValue(message.getPayload().get(Tracer.TRACE_PROP), TraceTo.class)
@@ -95,7 +96,7 @@ public class HttpJsonTransport {
             coordinator.getTracer().trace(message, "message resived by %s" , "http transport"); 
           }
           MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
-        } catch (RuntimeException ex){
+        } catch (Exception ex){
           ex.printStackTrace();
           LOGGER.debug(ex);
           Response r = new Response();

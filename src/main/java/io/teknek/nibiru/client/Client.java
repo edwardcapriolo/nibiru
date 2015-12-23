@@ -16,6 +16,7 @@
 package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.transport.Message;
+
 import io.teknek.nibiru.transport.Response;
 
 import java.io.IOException;
@@ -44,9 +45,10 @@ public class Client {
   private final int port;
   private final int connectionTimeoutMillis;
   private final int socketTimeoutMillis;
+  
   @Deprecated
   public Client(String host, int port){
-    this(host,port,connectionTimeoutInMillis, socketTimeoutInMillis);
+    this(host, port, connectionTimeoutInMillis, socketTimeoutInMillis);
   }
   
   public Client(String host, int port, int connectionTimeoutMillis, int socketTimeoutMillis){
@@ -62,8 +64,7 @@ public class Client {
     client = new DefaultHttpClient(new ThreadSafeClientConnManager(params,
             mgr.getSchemeRegistry()), params);
   }
-  
-  
+    
   public Response post(Message request)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
