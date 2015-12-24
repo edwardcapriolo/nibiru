@@ -37,6 +37,7 @@ import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.keyvalue.KeyValueMessage;
 import io.teknek.nibiru.transport.metadata.MetaDataMessage;
 import io.teknek.nibiru.trigger.TriggerManager;
 
@@ -175,7 +176,7 @@ public class Coordinator {
         response = triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
       }
       return response;
-    } else if (KeyValuePersonality.KEY_VALUE_PERSONALITY.equals(message.getPersonality())) {
+    } else if ( message instanceof KeyValueMessage) {
       LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
       ResultMerger merger = new MajorityValueResultMerger();
       Response response = eventualCoordinator.handleMessage(token, message, destinations, 
