@@ -47,13 +47,15 @@ public class ServerTest {
   @Test
   public void serverIdTest() {
     UUID u1, u2;
+    Configuration c ;
     {
       Server s = TestUtil.aBasicServer(testFolder, 9006);
+      c = s.getConfiguration();
       u1 = s.getServerId().getU();
       s.shutdown();
     }
     {
-      Server j = TestUtil.aBasicServer(testFolder, 9006);
+      Server j = TestUtil.theSameBasicServer(c);
       u2 = j.getServerId().getU();
       j.shutdown();
     }
