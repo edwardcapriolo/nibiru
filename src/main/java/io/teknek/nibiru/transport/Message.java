@@ -15,6 +15,8 @@
  */
 package io.teknek.nibiru.transport;
 
+import io.teknek.nibiru.transport.keyvalue.Get;
+import io.teknek.nibiru.transport.keyvalue.Set;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateStore;
 import io.teknek.nibiru.transport.metadata.GetKeyspaceMetaData;
@@ -35,7 +37,8 @@ import org.codehaus.jackson.annotate.JsonSubTypes.Type;
         include = JsonTypeInfo.As.PROPERTY,  
         property = "type") 
 
-    @JsonSubTypes({  
+    @JsonSubTypes({
+        //metadata
         @Type(value = ListLiveMembers.class, name = "ListLiveMembers"),
         @Type(value = CreateOrUpdateKeyspace.class, name = "CreateOrUpdateKeyspace"),
         @Type(value = GetStoreMetaData.class, name = "GetStoreMetaData"),
@@ -43,6 +46,10 @@ import org.codehaus.jackson.annotate.JsonSubTypes.Type;
         @Type(value = ListKeyspaces.class, name = "ListKeyspaces"),
         @Type(value = GetKeyspaceMetaData.class, name = "GetKeyspaceMetaData"),
         @Type(value = CreateOrUpdateStore.class, name = "CreateOrUpdateStore"),
+        //keyvalue
+        @Type(value = Set.class, name = "Set"),
+        @Type(value = Get.class, name = "Get"),
+        
          })
 public class Message {
   protected String keyspace;

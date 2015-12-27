@@ -18,6 +18,8 @@ package io.teknek.nibiru.client;
 import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.keyvalue.Get;
+import io.teknek.nibiru.transport.keyvalue.Set;
 
 import java.io.IOException;
 import java.util.Map;
@@ -31,7 +33,8 @@ public class KeyValueClient extends Client {
     super(host, port);
   }
 
-  public void put(String keyspace, String columnFamily, String key, String value) throws ClientException {
+  public void put(String keyspace, String store, String key, String value) throws ClientException {
+    /*
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(columnFamily);
@@ -40,7 +43,12 @@ public class KeyValueClient extends Client {
             .put("type", "put")
             .put("rowkey", key)
             .put("value", value).build();
-    m.setPayload(payload);
+    m.setPayload(payload); */
+    Set m = new Set();
+    m.setKeyspace(keyspace);
+    m.setStore(store);
+    m.setKey(key);
+    m.setValue(value);
     try {
       Response response = post(m);
     } catch (IOException | RuntimeException e) {
@@ -48,19 +56,13 @@ public class KeyValueClient extends Client {
     }
   }
   
-  public String get(String keyspace, String columnFamily, String key) throws ClientException {
-    Message m = new Message();
+  public String get(String keyspace, String store, String key) throws ClientException {
+    Get m = new Get();
+    m.setKey(key);
     m.setKeyspace(keyspace);
-    m.setStore(columnFamily);
-    m.setPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", "get")
-            .put("rowkey", key)
-            .build();
-    m.setPayload(payload);
+    m.setStore(store);
     try {
       Response response = post(m);
-      
       return (String) response.get("payload");
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);
