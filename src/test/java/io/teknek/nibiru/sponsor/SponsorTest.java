@@ -15,14 +15,16 @@ import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.router.TokenRouter;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.tunit.TUnit;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
 
-import org.junit.Ignore;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -38,7 +40,7 @@ public class SponsorTest {
 
   @Test
   public void test() throws ClientException, InterruptedException{
-    Server[] servers = new Server[2];
+    final Server[] servers = new Server[2];
     TemporaryFolder [] tempFolders = { node1Folder, node2Folder};
     Configuration [] cs = new Configuration[2];
     for (int i = 0; i < cs.length; i++) {
@@ -49,7 +51,7 @@ public class SponsorTest {
     }
     servers[0].init();
         
-    MetaDataClient metaClient = new MetaDataClient(servers[0].getConfiguration().getTransportHost(), servers[0]
+    final MetaDataClient metaClient = new MetaDataClient(servers[0].getConfiguration().getTransportHost(), servers[0]
             .getConfiguration().getTransportPort());
     createKeyspaceInformation(metaClient, servers);    
     Assert.assertEquals(servers[0].getClusterMembership().getLiveMembers().size(), 0);//We do not count ourselves
@@ -63,22 +65,23 @@ public class SponsorTest {
     for (int k = 0; k < 10; k++) {
       session.put(k+"", k+"", k+"", 1);
     }
-    
     servers[1].init(); 
-    Thread.sleep(10000);
-    Assert.assertEquals(servers[0].getClusterMembership().getLiveMembers().size(), 1);
+    TUnit.assertThat( new Callable(){
+      public Object call() throws Exception {
+        return servers[0].getClusterMembership().getLiveMembers().size();
+      }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(1);
     
     servers[1].join("abc", "127.0.0.1", "5");
     Thread.sleep(1000);
     Assert.assertEquals(servers[1].getServerId().getU().toString(), 
             servers[0].getCoordinator().getSponsorCoordinator().getProtege().getDestinationId());
-    
     insertDataOverClient(session);
     assertDataIsDistributed(servers);
-    
-    Thread.sleep(5000);
-    Map<String,String> keyspaceMembers = (Map<String, String>) metaClient.getKeyspaceMetadata("abc").get(TokenRouter.TOKEN_MAP_KEY);
-    Assert.assertEquals(2, keyspaceMembers.size());
+    TUnit.assertThat( new Callable(){
+      public Object call() throws Exception {
+        Map<String,String> keyspaceMembers = (Map<String, String>) metaClient.getKeyspaceMetadata("abc").get(TokenRouter.TOKEN_MAP_KEY);
+        return keyspaceMembers.size();
+      }}).afterWaitingAtMost(5, TimeUnit.SECONDS).isEqualTo(2);
     
     for (int i = 0; i < cs.length; i++) {
       servers[i].shutdown();
