@@ -55,8 +55,18 @@ public class SSTableTest {
   }
   
   public static Configuration getBasicConfiguration(TemporaryFolder testFolder){
-    File tempFolder = testFolder.newFolder("sstable");
-    File commitlog = testFolder.newFolder("commitlog");
+    File tempFolder;
+    try {
+      tempFolder = testFolder.newFolder("sstable");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    File commitlog;
+    try {
+      commitlog = testFolder.newFolder("commitlog");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     Configuration configuration = new Configuration();
     configuration.setDataDirectory(tempFolder.getPath());
     configuration.setCommitlogDirectory(commitlog.getPath());

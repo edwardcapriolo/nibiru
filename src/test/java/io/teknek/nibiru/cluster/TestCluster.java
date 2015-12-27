@@ -5,8 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
 
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
@@ -15,7 +16,9 @@ import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.StoreMetaData;
+import io.teknek.tunit.TUnit;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -33,9 +36,10 @@ public class TestCluster {
   @Rule
   public TemporaryFolder node3Folder = new TemporaryFolder();
   
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Test
   public void letTwoNodesDiscoverEachOther() throws InterruptedException, ClientException{
-    Server [] s = new Server[3];
+    final Server [] s = new Server[3];
     {
       Configuration conf = TestUtil.aBasicConfiguration(node1Folder);
       Map<String,Object> clusterProperties = new HashMap<>();
@@ -63,14 +67,20 @@ public class TestCluster {
     for (Server server : s){
       server.init();
     }
-    Thread.sleep(11000);
+    TUnit.assertThat( new Callable(){
+      public Object call() throws Exception {
+        return s[2].getClusterMembership().getLiveMembers().size();
+      }}).afterWaitingAtMost(11, TimeUnit.SECONDS).isEqualTo(2);
     Assert.assertEquals(2 , s[2].getClusterMembership().getLiveMembers().size());
     Assert.assertEquals("127.0.0.1", s[2].getClusterMembership().getLiveMembers().get(0).getHost());
     MetaDataClient c = new MetaDataClient("127.0.0.1", s[1].getConfiguration().getTransportPort(), 20000, 20000);
     c.createOrUpdateKeyspace("abc", new HashMap<String,Object>(), true);
-    Thread.sleep(1000);
-    for (Server server : s){
-      Assert.assertNotNull(server.getKeyspaces().get("abc"));
+    for (final Server server : s) {
+      TUnit.assertThat(new Callable() {
+        public Object call() throws Exception {
+          return server.getKeyspaces().get("abc") != null;
+        }
+      }).afterWaitingAtMost(1000, TimeUnit.MILLISECONDS).isEqualTo(true);
     }
     Map<String,Object> stuff = new HashMap<String,Object>();
     stuff.put(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());

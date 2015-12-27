@@ -9,6 +9,7 @@ import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.transport.Response;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +47,15 @@ public class TestUtil {
     s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
     return s;
   }
+  
+  public static Server theSameBasicServer(Configuration conf){
+    Server s = new Server(conf);
+    s.init();
+    s.getMetaDataManager().createOrUpdateKeyspace(DATA_KEYSPACE, new HashMap<String,Object>());
+    s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, PETS_COLUMN_FAMILY, TestUtil.STANDARD_COLUMN_FAMILY());
+    s.getMetaDataManager().createOrUpdateStore(DATA_KEYSPACE, BOOKS_KEY_VALUE, TestUtil.STANDARD_KEY_VLUE);
+    return s;
+  }
 
   public static Map<String,Object> gossipPropertiesFor127Seed(){
     Map<String, Object> clusterProperties = new HashMap<>();
@@ -58,8 +68,19 @@ public class TestUtil {
   }
   
   public static Configuration aBasicConfiguration(TemporaryFolder testFolder, int port){
-    File tempFolder = testFolder.newFolder("sstable");
-    File commitlog = testFolder.newFolder("commitlog");
+    File tempFolder;
+    try {
+      
+      tempFolder = testFolder.newFolder("sstable");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    File commitlog;
+    try {
+      commitlog = testFolder.newFolder("commitlog");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     Configuration configuration = new Configuration();
     configuration.setTransportPort(port);
     configuration.setDataDirectory(tempFolder.getPath());
