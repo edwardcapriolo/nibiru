@@ -1,4 +1,5 @@
-nibiru
+
+nibiru ![Build status](https://travis-ci.org/edwardcapriolo/nibiru.svg?branch=master)
 ======
 
 Nibiru is a NoSql database designed for maximum plugablitily and configurability. 
