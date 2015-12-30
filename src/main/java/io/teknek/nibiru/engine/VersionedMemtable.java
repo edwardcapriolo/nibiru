@@ -3,8 +3,12 @@ package io.teknek.nibiru.engine;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import io.teknek.nibiru.Store;
@@ -139,10 +143,34 @@ public class VersionedMemtable extends AbstractMemtable{
     }
     return highest;
   }
+  
   @Override
   public SortedMap<AtomKey, AtomValue> slice(Token rowkey, String start, String end) {
-    // TODO Auto-generated method stub
-    return null;
+    SortedMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> row = data.get(rowkey);
+    if (row == null){
+      return new TreeMap<AtomKey,AtomValue>();
+    }
+    ConcurrentLinkedQueue<AtomValue> tombstoneList = row.get(new RowTombstoneKey());
+    TombstoneValue tomb = null;
+    if (tombstoneList != null){
+      tomb = highestTombstone(tombstoneList);
+    }
+    ConcurrentNavigableMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> i = 
+            data.get(rowkey).subMap(new ColumnKey(start), new ColumnKey(end));
+    SortedMap<AtomKey,AtomValue> results = new TreeMap<>();
+    for (Entry<AtomKey, ConcurrentLinkedQueue<AtomValue>> j : i.entrySet()) {
+      AtomValue v = highest(j.getValue());
+      if (! (v instanceof TombstoneValue)){
+        if (tomb == null){
+          results.put(j.getKey(), v);
+        } else {
+          if (tomb.getTime()< v.getTime()){
+            results.put(j.getKey(), v);  
+          }
+        }
+      }
+    }
+    return results;
   }
 
   @Override

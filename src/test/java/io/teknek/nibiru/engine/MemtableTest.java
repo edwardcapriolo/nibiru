@@ -43,24 +43,7 @@ public class MemtableTest extends AbstractMemtableTest {
     ks1.getKeyspaceMetaData().setPartitioner(new Md5Partitioner());
     return ks1;
   }
-  
-  @Test
-  public void test(){
-    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
-            DefaultColumnFamily.class.getName()));
-    AbstractMemtable m = makeMemtable(ks1);
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
-    Assert.assertEquals("c", ((ColumnValue)m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2")).getValue());
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
-    Assert.assertEquals("d", ((ColumnValue)m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2")).getValue());
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "c", "d", 1, 0L);
-    SortedMap<AtomKey, AtomValue> results =  m.slice(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "a", "z");
-    TestUtil.compareColumnValue(new ColumnValue("d", 2,0,0), results.get(new ColumnKey("column2")));
-    TestUtil.compareColumnValue(new ColumnValue("d", 1,0,0), results.get(new ColumnKey("c")));
-    
-  }
-    
+      
   @Test
   public void aSliceWithTomb(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
