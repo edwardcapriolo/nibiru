@@ -62,26 +62,6 @@ public class MemtableTest extends AbstractMemtableTest {
   }
   
   @Test
-  public void testDeleting(){
-    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createStore("abc", new Response()
-    .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable(ks1.getStores().get("abc"),
-            new CommitLog(ks1.getStores().get("abc")));
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "c", "d", 1, 0L);
-    m.delete(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", 3);
-    Assert.assertEquals(new ColumnValue(null,3, System.currentTimeMillis(), 0).getValue(), 
-            ((ColumnValue) m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2")).getValue()  );
-    m.delete(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), 4);
-    Assert.assertEquals(4, 
-            ((TombstoneValue) m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2")).getTime()  );
-    Assert.assertEquals(4, 
-            ((TombstoneValue) m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "c")).getTime() );
-    Assert.assertEquals(4, ((TombstoneValue)m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "k")).getTime()) ;
-  }
-  
-  @Test
   public void testDeletingM5d(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 

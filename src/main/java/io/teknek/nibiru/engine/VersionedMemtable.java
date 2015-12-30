@@ -81,6 +81,9 @@ public class VersionedMemtable extends AbstractMemtable{
     } else {
       TombstoneValue v = highestTombstone(findTomb);
       ConcurrentLinkedQueue<AtomValue> i = foundRow.get(new ColumnKey(column));
+      if (i == null){
+        return v;
+      }
       AtomValue k = highest(i);
       if (v.getTime() >= k.getTime()){
         return v;
@@ -161,9 +164,21 @@ public class VersionedMemtable extends AbstractMemtable{
   }
 
   @Override
-  public void delete(Token rowkey, String column, long time) {
-    // TODO Auto-generated method stub
-    
+  public void delete(Token row, String column, long time) {
+    TombstoneValue v = new TombstoneValue(time);
+    ColumnKey k = new ColumnKey(column);
+    ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> columns 
+    = new ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>>();
+    ConcurrentLinkedQueue<AtomValue> i = new ConcurrentLinkedQueue<AtomValue>();
+    i.add(v);
+    columns.put(k, i);
+    ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> rowAlreadyExisted = data.putIfAbsent(row, columns);
+    if (rowAlreadyExisted != null){
+      ConcurrentLinkedQueue<AtomValue> columnAlreadyExisted = rowAlreadyExisted.putIfAbsent(k, i);
+      if (columnAlreadyExisted != null){
+        columnAlreadyExisted.add(v);
+      }
+    } 
   }
 
   @Override
