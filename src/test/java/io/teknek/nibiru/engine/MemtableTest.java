@@ -60,21 +60,7 @@ public class MemtableTest extends AbstractMemtableTest {
     TestUtil.compareColumnValue(new ColumnValue("d", 1,0,0), results.get(new ColumnKey("c")));
     
   }
-  
-  @Test
-  public void testDeletingM5d(){
-    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
-            DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "c", "d", 1, 0L);
-    m.delete(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", 3);
-    TestUtil.compareColumnValue(
-            new ColumnValue(null,3, System.currentTimeMillis(), 0), 
-            m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2"));
-  }
-  
+    
   @Test
   public void aSliceWithTomb(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);

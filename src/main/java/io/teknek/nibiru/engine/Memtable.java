@@ -17,8 +17,6 @@ package io.teknek.nibiru.engine;
 
 
 import io.teknek.nibiru.Store;
-import io.teknek.nibiru.TimeSource;
-import io.teknek.nibiru.TimeSourceImpl;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
@@ -30,6 +28,7 @@ import io.teknek.nibiru.engine.atom.TombstoneValue;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -120,7 +119,7 @@ public class Memtable extends AbstractMemtable {
       if (tomb == null) {
         return rowkeyAndColumns.get(new ColumnKey(column));
       } else { 
-        ColumnValue foundColumn = (ColumnValue) rowkeyAndColumns.get(new ColumnKey(column));
+        AtomValue foundColumn = rowkeyAndColumns.get(new ColumnKey(column));
         if (foundColumn == null) {
           return tomb;
         } else {
@@ -169,28 +168,41 @@ public class Memtable extends AbstractMemtable {
     delete.put(new RowTombstoneKey(), new TombstoneValue(time));
     ConcurrentSkipListMap<AtomKey, AtomValue> returned = data.putIfAbsent(row, delete);
     if (returned != null){
-      //todo race here for newer tombstone
       returned.put(new RowTombstoneKey(), new TombstoneValue(time));
     }
-    
-    /*
-    ConcurrentSkipListMap<AtomKey, AtomValue> cols = data.get(row);
-    if (cols != null) {
-      cols.put(new RowTombstoneKey(), new TombstoneValue(time));
-    }
-    for (Map.Entry<AtomKey, AtomValue> col : cols.entrySet()){
-      //TODO
-      if (col.getValue().getTime() < time){
-        cols.remove(col.getKey());
-      }
-    }*/
   }
   
-  public void delete (Token rowkey, String column, long time){
+  public void delete (Token row, String column, long time){
+    TombstoneValue v = new TombstoneValue(time);
+    ColumnKey k = new ColumnKey(column);
+    ConcurrentSkipListMap<AtomKey, AtomValue> delete = new ConcurrentSkipListMap<AtomKey, AtomValue>(); 
+    delete.put(k, v);
+    ConcurrentSkipListMap<AtomKey, AtomValue> returned = data.putIfAbsent(row, delete);
+    if (returned !=null){
+      returned.put(k, v);
+    }
+    /*
     if ("".equals(column)){
       throw new RuntimeException ("'' is not a valid column");
     }
     put(rowkey, column, null, time, 0L);
+    */
+    /*
+     *     TombstoneValue v = new TombstoneValue(time);
+    ColumnKey k = new ColumnKey(column);
+    ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> columns 
+    = new ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>>();
+    ConcurrentLinkedQueue<AtomValue> i = new ConcurrentLinkedQueue<AtomValue>();
+    i.add(v);
+    columns.put(k, i);
+    ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> rowAlreadyExisted = data.putIfAbsent(row, columns);
+    if (rowAlreadyExisted != null){
+      ConcurrentLinkedQueue<AtomValue> columnAlreadyExisted = rowAlreadyExisted.putIfAbsent(k, i);
+      if (columnAlreadyExisted != null){
+        columnAlreadyExisted.add(v);
+      }
+    } 
+     */
   }
 
   public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> getData() {
