@@ -16,19 +16,20 @@ import io.teknek.nibiru.transport.Response;
 
 import java.util.HashMap;
 import java.util.SortedMap;
-import junit.framework.Assert;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.collect.ImmutableMap;
+public class MemtableTest extends AbstractMemtableTest {
+  
+  @Override
+  public AbstractMemtable makeMemtable(Keyspace ks1) {
+    Memtable m = new Memtable( ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+    return m;
+  }
 
-public class MemtableTest {
-  
-  @Rule
-  public TemporaryFolder testFolder = new TemporaryFolder();
-  
   public static Keyspace keyspaceWithNaturalPartitioner(TemporaryFolder testFolder){
     Keyspace ks1 = new Keyspace(SSTableTest.getBasicConfiguration(testFolder));
     ks1.setKeyspaceMetadata(new KeyspaceMetaData("testks", new HashMap<String,Object>()));
@@ -46,10 +47,9 @@ public class MemtableTest {
   @Test
   public void test(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    //ks1.createColumnFamily("abc", Maps.newHashMap( ColumnFamilyMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
     ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
             DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable( ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+    AbstractMemtable m = makeMemtable(ks1);
     m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", ((ColumnValue)m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2")).getValue());
     m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
@@ -64,8 +64,6 @@ public class MemtableTest {
   @Test
   public void testDeleting(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    /*ks1.createStore("abc", new ImmutableMap.Builder<String,Object>()
-            .put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());*/
     ks1.createStore("abc", new Response()
     .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
     Memtable m = new Memtable(ks1.getStores().get("abc"),
@@ -94,22 +92,6 @@ public class MemtableTest {
     m.delete(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", 3);
     TestUtil.compareColumnValue(
             new ColumnValue(null,3, System.currentTimeMillis(), 0), 
-            m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2"));
-  }
-  
-  
-  
-  @Test
-  public void testRowDelete(){
-    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
-            DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable(ks1.getStores().get("abc"),new CommitLog(ks1.getStores().get("abc")));
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0l);
-    m.delete(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), 2);
-    Assert.assertTrue(m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2") instanceof TombstoneValue);
-    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 3, 0L);
-    TestUtil.compareColumnValue( new ColumnValue("c",3, System.currentTimeMillis(), 0), 
             m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2"));
   }
   

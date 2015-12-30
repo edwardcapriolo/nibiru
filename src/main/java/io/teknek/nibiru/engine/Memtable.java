@@ -27,30 +27,19 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-public class Memtable implements Comparable<Memtable>{
+public class Memtable extends AbstractMemtable {
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey,AtomValue>> data;
-  private TimeSource timeSource;
-  private final Store columnFamily;
-  private final long myId;
-  private static AtomicLong MEMTABLE_ID = new AtomicLong();
-  private final CommitLog commitLog;
   
   public Memtable(Store columnFamily, CommitLog commitLog){
+    super(columnFamily, commitLog);
     data = new ConcurrentSkipListMap<>();
-    timeSource = new TimeSourceImpl();
-    this.columnFamily = columnFamily;
-    myId = MEMTABLE_ID.getAndIncrement();
-    this.commitLog = commitLog;
   }
   
   public int size(){
@@ -208,32 +197,6 @@ public class Memtable implements Comparable<Memtable>{
     return data;
   }
 
-  //VisibileForTesting
-  public TimeSource getTimeSource() {
-    return timeSource;
-  }
-  
-  //VisibileForTesting
-  public void setTimeSource(TimeSource timeSource) {
-    this.timeSource = timeSource;
-  }
 
-  @Override
-  public int compareTo(Memtable o) {
-    if (o == this){
-      return 0;
-    }
-    if (this.myId == o.myId){
-      return 0;
-    } else if (this.myId < o.myId){
-      return -1;
-    } else {
-      return 1;
-    }
-  }
-
-  public CommitLog getCommitLog() {
-    return commitLog;
-  }
   
 }

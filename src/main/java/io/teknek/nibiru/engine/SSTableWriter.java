@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 public class SSTableWriter {
 
-  public void flushToDisk(String id, Store columnFamily, Memtable m) throws IOException{
+  public void flushToDisk(String id, Store columnFamily, AbstractMemtable m) throws IOException{
     SsTableStreamWriter w = new SsTableStreamWriter(id, columnFamily);
     w.open();
     for (Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> i : m.getData().entrySet()){

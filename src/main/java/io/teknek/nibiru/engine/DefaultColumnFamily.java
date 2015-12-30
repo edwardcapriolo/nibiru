@@ -43,7 +43,7 @@ import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 
 public class DefaultColumnFamily extends Store implements ColumnFamilyPersonality, DirectSsTableWriter {
 
-  private final AtomicReference<Memtable> memtable;
+  private final AtomicReference<AbstractMemtable> memtable;
   private final MemtableFlusher memtableFlusher;
   private final Set<SsTable> sstable = new ConcurrentSkipListSet<>();
   private ConcurrentMap<String, SsTableStreamWriter> streamSessions = new ConcurrentHashMap<>();
@@ -57,7 +57,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
-    memtable = new AtomicReference<Memtable>(new Memtable(this, commitLog));
+    memtable = new AtomicReference<AbstractMemtable>(new Memtable(this, commitLog));
     memtableFlusher = new MemtableFlusher(this);
     memtableFlusher.start();
   }
@@ -138,7 +138,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   @Deprecated
-  public Memtable getMemtable() {
+  public AbstractMemtable getMemtable() {
     return memtable.get();
   }
 
@@ -182,7 +182,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   
   public AtomValue get(String rowkey, String column){
     AtomValue lastValue = memtable.get().get(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column);
-    for (Memtable m: memtableFlusher.getMemtables()){
+    for (AbstractMemtable m: memtableFlusher.getMemtables()){
       AtomValue thisValue = m.get(keyspace.getKeyspaceMetaData().getPartitioner().partition(rowkey), column);
       lastValue = applyRules(lastValue, thisValue);
     }
@@ -230,7 +230,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   public void doFlush(){
-    Memtable now = memtable.get();
+    AbstractMemtable now = memtable.get();
     CommitLog commitLog = new CommitLog(this);
     try {
       commitLog.open();
@@ -248,7 +248,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   }
   
   void considerFlush(){
-    Memtable now = memtable.get();
+    AbstractMemtable now = memtable.get();
     if (storeMetadata.getFlushNumberOfRowKeys() != 0 
             && now.size() >= storeMetadata.getFlushNumberOfRowKeys()){
       doFlush();

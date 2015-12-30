@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MemtableFlusher implements Runnable {
-  private ConcurrentSkipListSet<Memtable> memtables = new ConcurrentSkipListSet<>();
+  private ConcurrentSkipListSet<AbstractMemtable> memtables = new ConcurrentSkipListSet<>();
   private DefaultColumnFamily columnFamily;
   private Thread myThread;
   private AtomicLong flushes;
@@ -31,11 +31,11 @@ public class MemtableFlusher implements Runnable {
     flushes = new AtomicLong(0);
   }
   
-  public boolean add(Memtable memtable){
+  public boolean add(AbstractMemtable memtable){
     return memtables.add(memtable);
   }
 
-  public ConcurrentSkipListSet<Memtable> getMemtables() {
+  public ConcurrentSkipListSet<AbstractMemtable> getMemtables() {
     return memtables;
   }
 
@@ -45,7 +45,7 @@ public class MemtableFlusher implements Runnable {
   }
   
   public void doBlockingFlush(){
-    for (Memtable memtable : memtables){
+    for (AbstractMemtable memtable : memtables){
       SSTableWriter ssTableWriter = new SSTableWriter();
       try {
         //TODO: a timeuuid would be better here
