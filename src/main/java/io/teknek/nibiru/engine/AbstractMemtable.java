@@ -15,7 +15,6 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 
 public abstract class AbstractMemtable implements Comparable<AbstractMemtable>{
   private static AtomicLong MEMTABLE_ID = new AtomicLong();
-  
   protected CommitLog commitLog;
   protected Store store;
   protected final long myId;

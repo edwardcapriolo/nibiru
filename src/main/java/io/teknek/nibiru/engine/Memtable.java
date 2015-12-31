@@ -25,12 +25,12 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -201,8 +201,12 @@ public class Memtable extends AbstractMemtable {
 
       @Override
       public MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>> next() {
-        // TODO Auto-generated method stub
-        return null;
+        Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> row = dataIterator.next();
+        Map<AtomKey, Iterator<AtomValue>> reform = new TreeMap<>();
+        for (Entry<AtomKey, AtomValue> i : row.getValue().entrySet()){
+          reform.put(i.getKey(), Arrays.asList(i.getValue()).iterator());
+        }
+        return new MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>(row.getKey(), reform);
       }
 
       @Override
