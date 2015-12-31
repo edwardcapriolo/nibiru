@@ -25,6 +25,8 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -181,34 +183,33 @@ public class Memtable extends AbstractMemtable {
     if (returned !=null){
       returned.put(k, v);
     }
-    /*
-    if ("".equals(column)){
-      throw new RuntimeException ("'' is not a valid column");
-    }
-    put(rowkey, column, null, time, 0L);
-    */
-    /*
-     *     TombstoneValue v = new TombstoneValue(time);
-    ColumnKey k = new ColumnKey(column);
-    ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> columns 
-    = new ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>>();
-    ConcurrentLinkedQueue<AtomValue> i = new ConcurrentLinkedQueue<AtomValue>();
-    i.add(v);
-    columns.put(k, i);
-    ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> rowAlreadyExisted = data.putIfAbsent(row, columns);
-    if (rowAlreadyExisted != null){
-      ConcurrentLinkedQueue<AtomValue> columnAlreadyExisted = rowAlreadyExisted.putIfAbsent(k, i);
-      if (columnAlreadyExisted != null){
-        columnAlreadyExisted.add(v);
-      }
-    } 
-     */
   }
 
   public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> getData() {
     return data;
   }
 
+  @Override
+  public Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>> getDataIterator() {
+    final Iterator<Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>>> dataIterator = data.entrySet().iterator();
+    return new Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>>() {
 
+      @Override
+      public boolean hasNext() {
+        return dataIterator.hasNext();
+      }
+
+      @Override
+      public MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>> next() {
+        // TODO Auto-generated method stub
+        return null;
+      }
+
+      @Override
+      public void remove() {
+        // TODO Auto-generated method stub 
+      }
+    };
+  }
   
 }

@@ -1,8 +1,11 @@
 package io.teknek.nibiru.engine;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -31,8 +34,7 @@ public class VersionedMemtable extends AbstractMemtable{
 
   @Override
   public int size() {
-    // TODO Auto-generated method stub
-    return 0;
+    return data.size();
   }
 
   @Override
@@ -109,7 +111,15 @@ public class VersionedMemtable extends AbstractMemtable{
     return t;
   }
 
-  private AtomValue highest(ConcurrentLinkedQueue<AtomValue> columns){
+  public static AtomValue highest(Iterator<AtomValue> columns){
+    Queue<AtomValue> q = new ArrayDeque<AtomValue>();
+    while (columns.hasNext()){
+      q.add(columns.next());
+    }
+    return highest(q);
+  }
+  
+  public static AtomValue highest(Queue<AtomValue> columns){
     AtomValue head = columns.peek();
     if (columns.size() == 1){ //optimization
       return head;
@@ -215,4 +225,32 @@ public class VersionedMemtable extends AbstractMemtable{
     return null;
   }
 
+  @Override
+  public Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>> getDataIterator() {
+    final Iterator<Entry<Token, ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>>>> i = data.entrySet().iterator();
+    return new Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>>() {
+
+      @Override
+      public boolean hasNext() {
+        return i.hasNext();
+      }
+
+      @Override
+      public MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>> next() {
+        Entry<Token, ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>>> b = i.next();
+        ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>> l = b.getValue();
+        SortedMap<AtomKey, Iterator<AtomValue>> m = new TreeMap<AtomKey, Iterator<AtomValue>>();
+        for (Entry<AtomKey, ConcurrentLinkedQueue<AtomValue>> x : l.entrySet()){
+          m.put(x.getKey(), x.getValue().iterator());
+        }
+        return new MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>> (b.getKey(), m);
+      }
+
+      @Override
+      public void remove() {
+        
+      }
+    };
+  }
+  
 }

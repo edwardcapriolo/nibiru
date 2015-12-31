@@ -46,6 +46,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
   private final AtomicReference<AbstractMemtable> memtable;
   private final MemtableFlusher memtableFlusher;
   private final Set<SsTable> sstable = new ConcurrentSkipListSet<>();
+  private final StoreMetaData storeMetaData;
   private ConcurrentMap<String, SsTableStreamWriter> streamSessions = new ConcurrentHashMap<>();
   
   public DefaultColumnFamily(Keyspace keyspace, StoreMetaData cfmd){
@@ -57,11 +58,19 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
-    memtable = new AtomicReference<AbstractMemtable>(new Memtable(this, commitLog));
+    storeMetaData = cfmd;
+    memtable = new AtomicReference<AbstractMemtable>(createFromConfiguration(this, commitLog));
     memtableFlusher = new MemtableFlusher(this);
     memtableFlusher.start();
   }
 
+  public AbstractMemtable createFromConfiguration(DefaultColumnFamily defaultCf, CommitLog commitLog){
+    if (storeMetadata.getMemtableClass() == null){
+      return new VersionedMemtable(defaultCf, commitLog);
+    } 
+    //TODO lazyshit
+    return new VersionedMemtable(defaultCf, commitLog);
+  }
   public void init() throws IOException {
     File sstableDirectory = SsTableStreamWriter.pathToSsTableDataDirectory
             (keyspace.getConfiguration(), storeMetadata);
@@ -237,7 +246,8 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
-    Memtable aNewTable = new Memtable(this, commitLog); 
+    //VersionedMemtable aNewTable = new VersionedMemtable(this, commitLog);
+    AbstractMemtable aNewTable = this.createFromConfiguration(this, commitLog);
     boolean success = memtableFlusher.add(now);
     if (success){
       boolean swap = memtable.compareAndSet(now, aNewTable);

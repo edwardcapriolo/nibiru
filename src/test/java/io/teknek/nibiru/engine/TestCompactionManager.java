@@ -8,8 +8,8 @@ import io.teknek.nibiru.transport.Response;
 
 import java.io.IOException;
 
-import junit.framework.Assert;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -25,7 +25,7 @@ public class TestCompactionManager {
     ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
     SsTable s = new SsTable(ks1.getStores().get("abc"));
     {
-      Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+      AbstractMemtable m = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
       m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
       m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
       m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column3", "e", 2, 0L);
@@ -36,7 +36,7 @@ public class TestCompactionManager {
     }
     SsTable s2 = new SsTable(ks1.getStores().get("abc"));
     {
-      Memtable m2 = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+      AbstractMemtable m2 = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
       m2.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column1", "c", 1, 0L);
       m2.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row2"), "column1", "f", 3, 0L);
       SSTableWriter w2 = new SSTableWriter();
