@@ -21,16 +21,29 @@ import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class SSTableWriter {
 
-  public void flushToDisk(String id, Store columnFamily, Memtable m) throws IOException{
+  public void flushToDisk(String id, Store columnFamily, AbstractMemtable m) throws IOException{
     SsTableStreamWriter w = new SsTableStreamWriter(id, columnFamily);
     w.open();
+    /*
     for (Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> i : m.getData().entrySet()){
       w.write(i.getKey(), i.getValue());
+    }*/
+    Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>> i = m.getDataIterator();
+    while (i.hasNext()){
+      MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>> l = i.next();
+      SortedMap<AtomKey,AtomValue> newMap = new TreeMap<AtomKey,AtomValue>();
+      for (Entry<AtomKey, Iterator<AtomValue>> j : l.getRight().entrySet()){
+        newMap.put(j.getKey(), VersionedMemtable.highest(j.getValue()));
+      }
+      w.write(l.getLeft(), newMap);
     }
     w.close();
   }

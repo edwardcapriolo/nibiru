@@ -14,8 +14,9 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import junit.framework.Assert;
 
+
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -33,7 +34,7 @@ public class SSTableTest {
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     //ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     ks1.createStore("abc", new Response().withProperty( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+    AbstractMemtable m = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0L);
     Assert.assertEquals("c", ((ColumnValue)m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2")).getValue());
     m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "d", 2, 0L);
@@ -77,7 +78,7 @@ public class SSTableTest {
   public void aBiggerTest() throws IOException, InterruptedException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     ks1.createStore("abc", new Response().withProperty( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+    AbstractMemtable m = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     
     for (int i = 0; i < 100000; i++) {
       NumberFormat nf = new DecimalFormat("00000");
@@ -134,7 +135,7 @@ public class SSTableTest {
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     //ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     ks1.createStore("abc", new Response().withProperty( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+    AbstractMemtable m = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     for (int i = 0; i < 100; i++) {
       NumberFormat nf = new DecimalFormat("00000");
       for (int j = 0;j< 100; j++) {
@@ -160,7 +161,7 @@ public class SSTableTest {
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
     //ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     ks1.createStore("abc", new Response().withProperty( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
-    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+    AbstractMemtable m = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     Token t = ks1.getKeyspaceMetaData().getPartitioner().partition("arow");
     m.put(t, "acolumn", "avalue", 1, 0L);
     m.delete(ks1.getKeyspaceMetaData().getPartitioner().partition("arow"), 2);

@@ -17,8 +17,6 @@ package io.teknek.nibiru.engine;
 
 
 import io.teknek.nibiru.Store;
-import io.teknek.nibiru.TimeSource;
-import io.teknek.nibiru.TimeSourceImpl;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
@@ -27,30 +25,22 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-public class Memtable implements Comparable<Memtable>{
+public class Memtable extends AbstractMemtable {
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey,AtomValue>> data;
-  private TimeSource timeSource;
-  private final Store columnFamily;
-  private final long myId;
-  private static AtomicLong MEMTABLE_ID = new AtomicLong();
-  private final CommitLog commitLog;
   
   public Memtable(Store columnFamily, CommitLog commitLog){
+    super(columnFamily, commitLog);
     data = new ConcurrentSkipListMap<>();
-    timeSource = new TimeSourceImpl();
-    this.columnFamily = columnFamily;
-    myId = MEMTABLE_ID.getAndIncrement();
-    this.commitLog = commitLog;
   }
   
   public int size(){
@@ -131,7 +121,7 @@ public class Memtable implements Comparable<Memtable>{
       if (tomb == null) {
         return rowkeyAndColumns.get(new ColumnKey(column));
       } else { 
-        ColumnValue foundColumn = (ColumnValue) rowkeyAndColumns.get(new ColumnKey(column));
+        AtomValue foundColumn = rowkeyAndColumns.get(new ColumnKey(column));
         if (foundColumn == null) {
           return tomb;
         } else {
@@ -180,60 +170,50 @@ public class Memtable implements Comparable<Memtable>{
     delete.put(new RowTombstoneKey(), new TombstoneValue(time));
     ConcurrentSkipListMap<AtomKey, AtomValue> returned = data.putIfAbsent(row, delete);
     if (returned != null){
-      //todo race here for newer tombstone
       returned.put(new RowTombstoneKey(), new TombstoneValue(time));
     }
-    
-    /*
-    ConcurrentSkipListMap<AtomKey, AtomValue> cols = data.get(row);
-    if (cols != null) {
-      cols.put(new RowTombstoneKey(), new TombstoneValue(time));
-    }
-    for (Map.Entry<AtomKey, AtomValue> col : cols.entrySet()){
-      //TODO
-      if (col.getValue().getTime() < time){
-        cols.remove(col.getKey());
-      }
-    }*/
   }
   
-  public void delete (Token rowkey, String column, long time){
-    if ("".equals(column)){
-      throw new RuntimeException ("'' is not a valid column");
+  public void delete (Token row, String column, long time){
+    TombstoneValue v = new TombstoneValue(time);
+    ColumnKey k = new ColumnKey(column);
+    ConcurrentSkipListMap<AtomKey, AtomValue> delete = new ConcurrentSkipListMap<AtomKey, AtomValue>(); 
+    delete.put(k, v);
+    ConcurrentSkipListMap<AtomKey, AtomValue> returned = data.putIfAbsent(row, delete);
+    if (returned !=null){
+      returned.put(k, v);
     }
-    put(rowkey, column, null, time, 0L);
   }
 
   public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> getData() {
     return data;
   }
 
-  //VisibileForTesting
-  public TimeSource getTimeSource() {
-    return timeSource;
-  }
-  
-  //VisibileForTesting
-  public void setTimeSource(TimeSource timeSource) {
-    this.timeSource = timeSource;
-  }
-
   @Override
-  public int compareTo(Memtable o) {
-    if (o == this){
-      return 0;
-    }
-    if (this.myId == o.myId){
-      return 0;
-    } else if (this.myId < o.myId){
-      return -1;
-    } else {
-      return 1;
-    }
-  }
+  public Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>> getDataIterator() {
+    final Iterator<Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>>> dataIterator = data.entrySet().iterator();
+    return new Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>>() {
 
-  public CommitLog getCommitLog() {
-    return commitLog;
+      @Override
+      public boolean hasNext() {
+        return dataIterator.hasNext();
+      }
+
+      @Override
+      public MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>> next() {
+        Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> row = dataIterator.next();
+        Map<AtomKey, Iterator<AtomValue>> reform = new TreeMap<>();
+        for (Entry<AtomKey, AtomValue> i : row.getValue().entrySet()){
+          reform.put(i.getKey(), Arrays.asList(i.getValue()).iterator());
+        }
+        return new MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>(row.getKey(), reform);
+      }
+
+      @Override
+      public void remove() {
+        // TODO Auto-generated method stub 
+      }
+    };
   }
   
 }

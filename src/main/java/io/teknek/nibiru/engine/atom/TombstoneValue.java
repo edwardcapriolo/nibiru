@@ -20,4 +20,9 @@ public class TombstoneValue extends AtomValue {
     sb.append(String.valueOf(time));
     return sb.toString().getBytes();
   }
+
+  @Override
+  public String toString() {
+    return "TombstoneValue [time=" + time + "]";
+  }
 }

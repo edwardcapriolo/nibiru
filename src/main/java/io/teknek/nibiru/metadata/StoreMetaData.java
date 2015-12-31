@@ -18,7 +18,6 @@ package io.teknek.nibiru.metadata;
 import io.teknek.nibiru.TriggerDefinition;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +38,7 @@ public class StoreMetaData {
   public static final String OPERATION_TIMEOUT_IN_MS = "operation_timeout_ms";
   public static final String TOMBSTONE_GRACE_MS = "tombstone_grace_ms";
   public static final String COORDINATOR_TRIGGERS = "coordinator_triggers";
+  public static final String MEMTABLE_CLASS = "memtable_class";
   
   private String name;
   private ConcurrentMap<String,Object> properties;
@@ -136,6 +136,16 @@ public class StoreMetaData {
   public void setImplementingClass(String implementingClass) {
     properties.put(IMPLEMENTING_CLASS, implementingClass);
   }
+  
+  
+  public String getMemtableClass() {
+    return (String) properties.get(StoreMetaData.MEMTABLE_CLASS);
+  }
+
+  public void setMemtableClass(String memtableClass) {
+    properties.put(MEMTABLE_CLASS, memtableClass);
+  }
+  
 
   public long getIndexInterval() {
     Number res = (Number) properties.get(INDEX_INTERVAL);
