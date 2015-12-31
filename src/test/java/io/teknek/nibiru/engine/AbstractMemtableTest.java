@@ -99,4 +99,18 @@ public abstract class AbstractMemtableTest {
     Assert.assertEquals(4, ((TombstoneValue)m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "k")).getTime()) ;
   }
   
+  @Test
+  public void aSliceWithTomb(){
+    Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
+    ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
+            DefaultColumnFamily.class.getName()));
+    Memtable m = new Memtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
+    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1L , 0L);
+    m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column3", "d", 4L, 0L);
+    m.delete(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), 3);
+    SortedMap<AtomKey, AtomValue> result = m.slice(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "a", "z");
+    Assert.assertTrue( result.get(result.firstKey()) instanceof TombstoneValue );
+    TestUtil.compareColumnValue(new ColumnValue("d", 4, 0, 0), result.get(result.lastKey()));
+  }
+  
 }

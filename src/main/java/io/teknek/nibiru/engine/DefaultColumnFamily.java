@@ -18,6 +18,8 @@ package io.teknek.nibiru.engine;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -68,9 +70,15 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
     if (storeMetadata.getMemtableClass() == null){
       return new VersionedMemtable(defaultCf, commitLog);
     } 
-    //TODO lazyshit
-    return new VersionedMemtable(defaultCf, commitLog);
+    try {
+      Constructor c = Class.forName(storeMetadata.getMemtableClass()).getConstructor(DefaultColumnFamily.class, CommitLog.class );
+      AbstractMemtable m = (AbstractMemtable) c.newInstance(defaultCf, commitLog);
+      return m;
+    } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
   }
+  
   public void init() throws IOException {
     File sstableDirectory = SsTableStreamWriter.pathToSsTableDataDirectory
             (keyspace.getConfiguration(), storeMetadata);
