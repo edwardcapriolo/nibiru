@@ -25,20 +25,10 @@ public class KeyValueClient extends Client {
 
   
   public KeyValueClient(String host, int port) {
-    super(host, port);
+    super(host, port, 10000, 10000);
   }
 
   public void put(String keyspace, String store, String key, String value) throws ClientException {
-    /*
-    Message m = new Message();
-    m.setKeyspace(keyspace);
-    m.setStore(columnFamily);
-    m.setPersonality(KeyValuePersonality.KEY_VALUE_PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", "put")
-            .put("rowkey", key)
-            .put("value", value).build();
-    m.setPayload(payload); */
     Set m = new Set();
     m.setKeyspace(keyspace);
     m.setStore(store);

@@ -86,7 +86,7 @@ public class Session {
       if (response.containsKey("exception")){
         throw new ClientException((String) response.get("exception"));
       }
-      TypeReference tr = new TypeReference<SortedMap<String,Val>>(){};
+      TypeReference<SortedMap<String,Val>> tr = new TypeReference<SortedMap<String,Val>>(){};
       return MAPPER.convertValue(response.get("payload"), tr);
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);

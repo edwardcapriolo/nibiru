@@ -86,18 +86,6 @@ public class MetaDataClient extends Client {
     if (isClient){
       m.setShouldReroute(true);
     }
-    /*
-    Message m = new Message();
-    m.setKeyspace("system");
-    m.setStore(null);
-    m.setPersonality(MetaPersonality.META_PERSONALITY);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("type", MetaPersonality.CREATE_OR_UPDATE_STORE);
-    payload.put("keyspace", keyspace);
-    payload.put("store", store);
-    payload.putAll(properties);
-    m.setPayload(payload);
-    */
     try {
       Response response = post(m);
     } catch (IOException | RuntimeException e) {
@@ -159,7 +147,7 @@ public class MetaDataClient extends Client {
     payload.put("type", LocatorPersonality.LOCATE_ROW_KEY);
     payload.put("rowkey", rowkey);
     m.setPayload(payload);
-    TypeReference tf = new TypeReference<List<ContactInformation>>() {};
+    TypeReference<List<ContactInformation>> tf = new TypeReference<List<ContactInformation>>() {};
     try {
       Response response = post(m);
       ObjectMapper om = new ObjectMapper();
