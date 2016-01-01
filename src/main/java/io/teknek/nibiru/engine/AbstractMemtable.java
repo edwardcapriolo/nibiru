@@ -3,7 +3,6 @@ package io.teknek.nibiru.engine;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.teknek.nibiru.Store;
@@ -33,10 +32,7 @@ public abstract class AbstractMemtable implements Comparable<AbstractMemtable>{
   public abstract SortedMap<AtomKey,AtomValue> slice(Token rowkey, String start, String end);
   public abstract void delete(Token row, long time);
   public abstract void delete (Token rowkey, String column, long time);
-  
-  //TODO more generic
-  public abstract ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> getData();
-  
+    
   public abstract Iterator<MemtablePair<Token, Map<AtomKey,Iterator<AtomValue>>>> getDataIterator();
 
   @Override

@@ -220,12 +220,6 @@ public class VersionedMemtable extends AbstractMemtable{
   }
 
   @Override
-  public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> getData() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
   public Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>> getDataIterator() {
     final Iterator<Entry<Token, ConcurrentSkipListMap<AtomKey, ConcurrentLinkedQueue<AtomValue>>>> i = data.entrySet().iterator();
     return new Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>>() {

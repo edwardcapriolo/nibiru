@@ -185,10 +185,6 @@ public class Memtable extends AbstractMemtable {
     }
   }
 
-  public ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey, AtomValue>> getData() {
-    return data;
-  }
-
   @Override
   public Iterator<MemtablePair<Token, Map<AtomKey, Iterator<AtomValue>>>> getDataIterator() {
     final Iterator<Entry<Token, ConcurrentSkipListMap<AtomKey, AtomValue>>> dataIterator = data.entrySet().iterator();

@@ -71,7 +71,7 @@ public class DefaultColumnFamily extends Store implements ColumnFamilyPersonalit
       return new VersionedMemtable(defaultCf, commitLog);
     } 
     try {
-      Constructor c = Class.forName(storeMetadata.getMemtableClass()).getConstructor(DefaultColumnFamily.class, CommitLog.class );
+      Constructor<?> c = Class.forName(storeMetadata.getMemtableClass()).getConstructor(DefaultColumnFamily.class, CommitLog.class );
       AbstractMemtable m = (AbstractMemtable) c.newInstance(defaultCf, commitLog);
       return m;
     } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
