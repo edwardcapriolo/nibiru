@@ -55,6 +55,7 @@ public class StoreMetaData {
     this.name = name;
   }
 
+  @SuppressWarnings("unchecked")
   public List<TriggerDefinition> getCoordinatorTriggers(){
     List<TriggerDefinition> def = (List<TriggerDefinition>) properties.get(COORDINATOR_TRIGGERS);
     if (def == null){
@@ -208,7 +209,5 @@ public class StoreMetaData {
   public String toString() {
     return "StoreMetaData [name=" + name + ", properties=" + properties + "]";
   }
-  
-  
   
 }

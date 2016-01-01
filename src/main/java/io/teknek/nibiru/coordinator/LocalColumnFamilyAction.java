@@ -21,7 +21,6 @@ import java.util.TreeMap;
 
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;

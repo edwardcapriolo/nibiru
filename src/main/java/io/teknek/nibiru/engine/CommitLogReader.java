@@ -16,13 +16,11 @@
 package io.teknek.nibiru.engine;
 
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.io.BufferGroup;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;

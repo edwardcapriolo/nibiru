@@ -25,7 +25,6 @@ import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.transport.Message; 
 
 public class TokenRouter implements Router {
 
@@ -36,6 +35,7 @@ public class TokenRouter implements Router {
   public List<Destination> routesTo(ServerId local, Keyspace requestKeyspace,
           ClusterMembership clusterMembership, Token token) {
     //TODO this is not efficient we should cache this or refactor
+    @SuppressWarnings("unchecked")
     Map<String, String> tokenMap1 = (Map<String, String>) requestKeyspace
             .getKeyspaceMetaData().getProperties().get(TOKEN_MAP_KEY);
     TreeMap<String,String> tokenMap = new TreeMap<String,String>(tokenMap1); 
@@ -68,13 +68,3 @@ public class TokenRouter implements Router {
   }
 
 }
-/*
-/*
-String serverId = tokenMap.ceilingKey(token.getToken());
-if (serverId == null){
-  serverId = tokenMap.firstKey();
-}
-Destination d = new Destination();
-d.setDestinationId(serverId);
-List<Destination> x = Arrays.asList(d);
-return x;*/

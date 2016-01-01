@@ -13,7 +13,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.client.Client;
-import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.coordinator.Coordinator;
 import io.teknek.nibiru.engine.atom.AtomKey;

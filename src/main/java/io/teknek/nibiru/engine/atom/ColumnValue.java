@@ -1,7 +1,5 @@
 package io.teknek.nibiru.engine.atom;
 
-import java.nio.ByteBuffer;
-
 import org.apache.http.util.ByteArrayBuffer;
 
 import io.teknek.nibiru.engine.SsTableReader;

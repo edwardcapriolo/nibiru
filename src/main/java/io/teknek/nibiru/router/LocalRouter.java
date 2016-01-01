@@ -20,7 +20,6 @@ import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.transport.Message;
 
 import java.util.Arrays;
 import java.util.List;

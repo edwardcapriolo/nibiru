@@ -12,11 +12,10 @@ import io.teknek.nibiru.transport.Response;
 
 public class Locator implements LocatorPersonality {
 
-  private final Configuration configuration;
+ 
   private final ClusterMembership clusterMembership;
   
   public Locator(Configuration configuration, ClusterMembership clusterMembership){
-    this.configuration = configuration;
     this.clusterMembership = clusterMembership;
   }
 

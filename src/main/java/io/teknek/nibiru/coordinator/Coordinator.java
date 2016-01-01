@@ -33,7 +33,6 @@ import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.personality.KeyValuePersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
@@ -52,10 +51,8 @@ public class Coordinator {
   private final SponsorCoordinator sponsorCoordinator;
   private final Locator locator;
   private final TriggerManager triggerManager;
-  
   private Hinter hinter;
   private Tracer tracer;
-  
   
   public Coordinator(Server server) {
     this.server = server;

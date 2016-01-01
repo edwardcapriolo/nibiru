@@ -18,6 +18,7 @@ public class ConfigurationClusterMembership extends ClusterMembership {
     super(configuration, serverId);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void init() {
     live = new ArrayList<ClusterMember>();

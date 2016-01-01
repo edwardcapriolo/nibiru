@@ -46,6 +46,7 @@ public class XmlStorage implements MetaDataStorage {
     
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Map<String, KeyspaceAndStoreMetaData> read(Configuration configuration) {
     XMLDecoder d;

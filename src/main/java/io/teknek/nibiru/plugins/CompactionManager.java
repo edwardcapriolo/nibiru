@@ -15,7 +15,6 @@
  */
 package io.teknek.nibiru.plugins;
 
-import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;

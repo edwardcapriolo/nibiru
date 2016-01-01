@@ -22,7 +22,6 @@ import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.transport.Message;
 
 public interface Router {
   
@@ -33,12 +32,6 @@ public interface Router {
    * @param requestKeyspace
    * @return all hosts a given request can be routed to
    */
-  public List<Destination> routesTo(ServerId local, Keyspace requestKeyspace, ClusterMembership clusterMembership, Token token);
-    /*
-    String rk = (String) m.getPayload().get("rowkey");//todo t
-    Token partition = keyspace.getKeyspaceMetadata().getPartitioner().partition(rk);
-    //List[uuid/host/{token}] keyspace.getTopology()
-    return null;
-    */
+  List<Destination> routesTo(ServerId local, Keyspace requestKeyspace, ClusterMembership clusterMembership, Token token);
   
 }

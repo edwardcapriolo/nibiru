@@ -20,7 +20,7 @@ public class ConfigurationGenerator {
     configuration.setTransportHost("127.0.0.1");
     Map<String, Object> clusterProperties = new HashMap<>();
     configuration.setClusterMembershipProperties(clusterProperties);
-    List<String> l = new ArrayList();
+    List<String> l = new ArrayList<>();
     l.add("127.0.0.1");
     clusterProperties.put(GossipClusterMembership.HOSTS, l);
     File f = new File ("/tmp/nibiru.xml");

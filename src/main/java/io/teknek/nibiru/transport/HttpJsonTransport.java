@@ -81,7 +81,7 @@ public class HttpJsonTransport {
       @Override
       public void handle(String target, Request request, HttpServletRequest servletRequest,
               HttpServletResponse response) throws IOException, ServletException {
-        String url = request.getRequestURI();
+        //String url = request.getRequestURI();
         
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=utf-8");

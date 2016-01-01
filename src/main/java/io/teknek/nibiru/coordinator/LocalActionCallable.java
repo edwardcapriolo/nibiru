@@ -2,7 +2,6 @@ package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.transport.Response;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 
 public class LocalActionCallable extends CompletableCallable implements Callable<Response>{

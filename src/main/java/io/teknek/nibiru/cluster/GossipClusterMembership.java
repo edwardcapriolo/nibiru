@@ -45,6 +45,7 @@ public class GossipClusterMembership extends ClusterMembership{
     super(configuration, serverId);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void init() {
     ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();

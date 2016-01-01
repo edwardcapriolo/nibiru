@@ -21,7 +21,6 @@ import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.client.Client;
-import io.teknek.nibiru.client.ColumnFamilyClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
 import io.teknek.nibiru.transport.Message;
