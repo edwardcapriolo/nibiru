@@ -51,6 +51,7 @@ public class Client {
     this(host, port, connectionTimeoutInMillis, socketTimeoutInMillis);
   }
   
+  @SuppressWarnings("deprecation")
   public Client(String host, int port, int connectionTimeoutMillis, int socketTimeoutMillis){
     this.host = host;
     this.port = port;
@@ -102,4 +103,3 @@ public class Client {
   }
   
 }
-

@@ -18,7 +18,6 @@ package io.teknek.nibiru.client;
 import io.teknek.nibiru.ContactInformation;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.personality.LocatorPersonality;
-import io.teknek.nibiru.personality.MetaPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
