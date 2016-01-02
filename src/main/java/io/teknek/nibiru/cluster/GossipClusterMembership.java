@@ -25,7 +25,6 @@ import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
-import com.google.code.gossip.LogLevel;
 import com.google.code.gossip.RemoteGossipMember;
 import com.google.code.gossip.event.GossipListener;
 import com.google.code.gossip.event.GossipState;
@@ -63,7 +62,7 @@ public class GossipClusterMembership extends ClusterMembership{
     }
     try { 
       gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU()
-              .toString(), LogLevel.DEBUG, startupMembers, settings, new GossipListener() {
+              .toString(), startupMembers, settings, new GossipListener() {
         @Override
         public void gossipEvent(GossipMember member, GossipState state) {
           LOGGER.info(serverId.getU() + " " + member + state); 
