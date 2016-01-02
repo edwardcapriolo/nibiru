@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
+import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
@@ -42,7 +43,6 @@ import io.teknek.nibiru.trigger.TriggerManager;
 
 public class Coordinator {
 
-  private static final String SYSTEM_KEYSPACE = "system";  
   private final Server server;
   private Destination destinationLocal;
   private final MetaDataCoordinator metaDataCoordinator;
@@ -75,7 +75,7 @@ public class Coordinator {
   }
   
   public static ColumnFamilyPersonality getHintCf(Server server){
-    Store cf = server.getKeyspaces().get("system").getStores().get("hints");
+    Store cf = server.getKeyspaces().get(MetaDataManager.SYSTEM_KEYSPACE).getStores().get("hints");
     ColumnFamilyPersonality pers = (ColumnFamilyPersonality) cf;
     return pers;
   }

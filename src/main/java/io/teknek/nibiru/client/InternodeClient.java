@@ -1,5 +1,6 @@
 package io.teknek.nibiru.client;
 
+import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.DirectSsTableWriter;
@@ -113,7 +114,7 @@ public class InternodeClient {
   
   public void join(String keyspace, String sponsorId, ServerId me, String wantedToken, String transportHost) {
     Message m = new Message();
-    m.setKeyspace("system");
+    m.setKeyspace(MetaDataManager.SYSTEM_KEYSPACE);
     Map<String, Object> payload = new HashMap<>();
     payload.put("keyspace", keyspace);
     payload.put("sponsor_request", "");

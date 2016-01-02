@@ -102,7 +102,7 @@ public class SponsorCoordinator {
   private void replicateMetaData(MetaDataClient metaDataClient) {
     try {
       for (String keyspace : metaDataManager.listKeyspaces()) {
-        if (keyspace.equals("system")) {
+        if (keyspace.equals(MetaDataManager.SYSTEM_KEYSPACE)) {
           continue;
         }
         KeyspaceMetaData d = metaDataManager.getKeyspaceMetadata(keyspace);
