@@ -16,6 +16,7 @@
 package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.ContactInformation;
+import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.Message;
@@ -65,7 +66,7 @@ public class MetaDataClient extends Client {
   
   public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties, boolean isClient) throws ClientException {
     CreateOrUpdateKeyspace k = new CreateOrUpdateKeyspace();
-    k.setKeyspace("system");
+    k.setKeyspace(MetaDataManager.SYSTEM_KEYSPACE);
     k.setTargetKeyspace(keyspace);
     if(isClient){
       k.setShouldReRoute(true);

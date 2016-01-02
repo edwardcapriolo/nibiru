@@ -33,6 +33,7 @@ import io.teknek.nibiru.router.LocalRouter;
 
 public class MetaDataManager {
 
+  public static final String SYSTEM_KEYSPACE = "system";
   private MetaDataStorage metaDataStorage;
   private final Server server;
   private final Configuration configuration;
@@ -54,7 +55,7 @@ public class MetaDataManager {
   private void addSystemKeyspace(){
     Keyspace system = new Keyspace(configuration);
     KeyspaceMetaData ksmd = new KeyspaceMetaData();
-    ksmd.setName("system");
+    ksmd.setName(SYSTEM_KEYSPACE);
     ksmd.setPartitioner( new NaturalPartitioner());
     ksmd.setRouter(new LocalRouter());
     system.setKeyspaceMetadata(ksmd);
@@ -63,7 +64,7 @@ public class MetaDataManager {
       properties.put("implementing_class", DefaultColumnFamily.class.getName());
       system.createStore("hints", properties);
     }
-    server.getKeyspaces().put("system", system);
+    server.getKeyspaces().put(SYSTEM_KEYSPACE, system);
   }
 
   
