@@ -53,10 +53,11 @@ public class VersionedMemtable extends AbstractMemtable{
         optimize(columnAlreadyExisted);
       }
     } 
-    
   }
   
   private void optimize(ConcurrentLinkedQueue<AtomValue> columnAlreadyExisted){
+    if (columnAlreadyExisted.size()==1)
+      return ;
     long oldest = Long.MIN_VALUE;
     for (AtomValue val : columnAlreadyExisted){
       if (val.getTime() > oldest){
@@ -124,7 +125,7 @@ public class VersionedMemtable extends AbstractMemtable{
       return head;
     }
     long oldest = Long.MIN_VALUE;
-    List<AtomValue> oldestList = new ArrayList<>(3);
+    List<AtomValue> oldestList = new ArrayList<>(2);
     for (AtomValue val : columns){
       if (val.getTime() > oldest){
         oldest = val.getTime();

@@ -31,7 +31,7 @@ public abstract class AbstractMemtable implements Comparable<AbstractMemtable>{
   public abstract AtomValue get(Token row, String column);
   public abstract SortedMap<AtomKey,AtomValue> slice(Token rowkey, String start, String end);
   public abstract void delete(Token row, long time);
-  public abstract void delete (Token rowkey, String column, long time);
+  public abstract void delete(Token rowkey, String column, long time);
     
   public abstract Iterator<MemtablePair<Token, Map<AtomKey,Iterator<AtomValue>>>> getDataIterator();
 

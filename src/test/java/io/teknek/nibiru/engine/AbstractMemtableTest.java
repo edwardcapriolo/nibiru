@@ -49,6 +49,32 @@ public abstract class AbstractMemtableTest {
     Assert.assertEquals("d", ((ColumnValue)m.get(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2")).getValue());
   }
   
+  @Ignore
+  @Test
+  public void lotsOfInsertsTest(){
+    Keyspace ks1 = AbstractMemtableTest.keyspaceWithNaturalPartitioner(testFolder);
+    ks1.createStore("abc", new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
+            DefaultColumnFamily.class.getName()));
+    AbstractMemtable m = makeMemtable(ks1);
+    {
+      long start = System.currentTimeMillis();
+      for (int i = 0 ; i < 1000000; i++){
+        m.put(ks1.getKeyspaceMetaData().getPartitioner().partition(String.valueOf(i)), "column2", "c", 1, 0L);
+      }
+      System.out.println("10000 inserts" + (System.currentTimeMillis() - start));
+    }
+    {
+      long start = System.currentTimeMillis();
+      for (int i = 0 ; i < 1000000; i++){
+        //m.put(ks1.getKeyspaceMetaData().getPartitioner().partition(String.valueOf(i)), "column2", "c", 1, 0L);
+        AtomValue o = m.get(ks1.getKeyspaceMetaData().getPartitioner().partition(String.valueOf(i)), "column2");
+        Assert.assertNotNull(o);
+        
+      }
+      System.out.println("10000 gets" + (System.currentTimeMillis() - start));
+    }
+  }
+  
   @Test
   public void test(){
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
