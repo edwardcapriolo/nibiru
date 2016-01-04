@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
+import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
@@ -130,7 +131,7 @@ public class Coordinator {
   }
   
   //ah switchboad logic
-  public Response handle(Message message) {
+  public BaseResponse handle(Message message) {
     if (message instanceof RpcMessage){
       return rpcCoordinator.processMessage((RpcMessage) message);
     }

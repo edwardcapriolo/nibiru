@@ -8,8 +8,10 @@ import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.RpcClient;
 import io.teknek.nibiru.coordinator.RpcCoordinator;
 import io.teknek.nibiru.engine.atom.ColumnKey;
+import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.rpc.BlockingRpc;
+import io.teknek.nibiru.transport.rpc.BlockingRpcResponse;
 import io.teknek.nit.NitDesc;
 import io.teknek.nit.NitDesc.NitSpec;
 
@@ -63,8 +65,8 @@ public class TestRpcCoordinator {
     BlockingRpc rpc = new BlockingRpc();
     rpc.setTimeoutInMillis(10000);
     rpc.setNitDesc(simpleCallable());
-    Response r = coordinator.processMessage(rpc);
-    Assert.assertEquals(new Response().withProperty("payload", 5), r);
+    BlockingRpcResponse r = (BlockingRpcResponse) coordinator.processMessage(rpc);
+    Assert.assertEquals(5, r.getRpcResult());
     coordinator.shutdown();
   }
   
@@ -72,8 +74,8 @@ public class TestRpcCoordinator {
   public void endToEndTest() throws ClientException{
     Server s = TestUtil.aBasicServer(testFolder);
     RpcClient rpcClient = new RpcClient("127.0.0.1", s.getConfiguration().getTransportPort(), 10000, 10000);
-    Response resp = rpcClient.blockingRpc(simpleCallable(), 10000, TimeUnit.MILLISECONDS);
-    Assert.assertEquals(new Response().withProperty("payload", 5), resp);
+    BlockingRpcResponse resp = rpcClient.blockingRpc(simpleCallable(), 10000, TimeUnit.MILLISECONDS);
+    Assert.assertEquals(5, resp.getRpcResult());
     s.shutdown();
   }
   
@@ -81,10 +83,9 @@ public class TestRpcCoordinator {
   public void complexInReturn() throws ClientException{
     Server s = TestUtil.aBasicServer(testFolder);
     RpcClient rpcClient = new RpcClient("127.0.0.1", s.getConfiguration().getTransportPort(), 10000, 10000);
-    Response resp = rpcClient.blockingRpc(complexReturnCallable(), 10000, TimeUnit.MILLISECONDS);
+    BlockingRpcResponse resp = rpcClient.blockingRpc(complexReturnCallable(), 10000, TimeUnit.MILLISECONDS);
     ObjectMapper om = new ObjectMapper();
-    Assert.assertEquals( om.convertValue( resp.get("payload"), SomeWhackyType.class).getClass(), SomeWhackyType.class);
-    Assert.assertEquals( om.convertValue( resp.get("payload"), SomeWhackyType.class).getY(), "yo");
+    Assert.assertEquals( om.convertValue( resp.getRpcResult(), SomeWhackyType.class).getY(), "yo");
     s.shutdown();
   }
   

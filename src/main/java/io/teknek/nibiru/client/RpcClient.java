@@ -3,6 +3,7 @@ package io.teknek.nibiru.client;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.keyvalue.Set;
 import io.teknek.nibiru.transport.rpc.BlockingRpc;
+import io.teknek.nibiru.transport.rpc.BlockingRpcResponse;
 import io.teknek.nit.NitDesc;
 
 import java.io.IOException;
@@ -14,12 +15,15 @@ public class RpcClient extends Client{
     super(host, port, connectionTimeoutMillis, socketTimeoutMillis);
   }
 
-  public Response blockingRpc(NitDesc desc, long duration, TimeUnit unit) throws ClientException {
+  public BlockingRpcResponse blockingRpc(NitDesc desc, long duration, TimeUnit unit) throws ClientException {
     BlockingRpc m = new BlockingRpc();
     m.setNitDesc(desc);
     m.setTimeoutInMillis(unit.toMillis(duration));
     try {
-      Response response = post(m);
+      BlockingRpcResponse response = (BlockingRpcResponse) post(m, BlockingRpcResponse.class);
+      if (response.getException() != null){
+        throw new RuntimeException(response.getException());
+      }
       return response;
     } catch (IOException | RuntimeException e) {
       throw new ClientException(e);

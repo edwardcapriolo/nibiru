@@ -15,6 +15,7 @@
  */
 package io.teknek.nibiru.client;
 
+import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.transport.Message;
 
 import io.teknek.nibiru.transport.Response;
@@ -81,6 +82,23 @@ public class Client {
     response.getEntity().getContent().close();
     return r;
   }
+  
+  public BaseResponse post(Message request, Class expectedReturn)
+          throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
+    HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
+    ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
+    input.setContentType("application/json");
+    postRequest.setEntity(input);
+    HttpResponse response = client.execute(postRequest);
+    if (response.getStatusLine().getStatusCode() != 200) {
+      throw new RuntimeException("Failed : HTTP error code : "
+              + response.getStatusLine().getStatusCode());
+    }
+    BaseResponse r = MAPPER.readValue(response.getEntity().getContent(), expectedReturn);
+    response.getEntity().getContent().close();
+    return r;
+  }
+  
   
   public void shutdown(){
     mgr.shutdown();

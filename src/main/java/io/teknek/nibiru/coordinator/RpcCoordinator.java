@@ -9,8 +9,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.teknek.nibiru.Configuration;
+import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.rpc.BlockingRpc;
+import io.teknek.nibiru.transport.rpc.BlockingRpcResponse;
 import io.teknek.nibiru.transport.rpc.RpcMessage;
 import io.teknek.nit.NitException;
 import io.teknek.nit.NitFactory;
@@ -39,7 +41,7 @@ public class RpcCoordinator {
     }
   }
   
-  public Response processMessage(final RpcMessage message){
+  public BaseResponse processMessage(final RpcMessage message){
     if (message instanceof BlockingRpc){
       BlockingRpc rpc = (BlockingRpc) message;
       try {
@@ -48,14 +50,22 @@ public class RpcCoordinator {
           Future f = executor.submit((Callable) o);
           try {
             Object result = f.get(rpc.getTimeoutInMillis(), TimeUnit.MILLISECONDS);
-            return new Response().withProperty("payload", result);
+            BlockingRpcResponse r = new BlockingRpcResponse();
+            r.setRpcResult(result);
+            //return new Response().withProperty("payload", result);
+            return r;
           } catch (InterruptedException | ExecutionException | TimeoutException e) {
             f.cancel(true);
+            BlockingRpcResponse r = new BlockingRpcResponse();
+            r.setException(e.getMessage());
+            return r;
           }
         }
-        return new Response();
+        throw new RuntimeException("Can not process "+ message);
       } catch (NitException e) {
-        return new Response();
+        BlockingRpcResponse r = new BlockingRpcResponse();
+        r.setException(e.getMessage());
+        return r;
       }
     } else throw new RuntimeException("Can not process "+ message);
   }

@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 package io.teknek.nibiru.transport;
+import io.teknek.nibiru.transport.rpc.BlockingRpcResponse;
+
 import java.util.HashMap;
 
-@SuppressWarnings("serial")
-public class Response extends HashMap<String,Object>{
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+import org.codehaus.jackson.annotate.JsonSubTypes.Type;
+
+public class Response extends HashMap<String,Object> implements BaseResponse{
 
   public Response withProperty(String key, Object value){
     this.put(key, value);
