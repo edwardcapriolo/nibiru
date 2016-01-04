@@ -24,6 +24,7 @@ import io.teknek.nibiru.transport.metadata.GetStoreMetaData;
 import io.teknek.nibiru.transport.metadata.ListKeyspaces;
 import io.teknek.nibiru.transport.metadata.ListLiveMembers;
 import io.teknek.nibiru.transport.metadata.ListStores;
+import io.teknek.nibiru.transport.rpc.BlockingRpc;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,7 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.codehaus.jackson.annotate.JsonSubTypes.Type;
 
 @JsonTypeInfo(  
-        use = JsonTypeInfo.Id.NAME,  
+        use = JsonTypeInfo.Id.CLASS,  
         include = JsonTypeInfo.As.PROPERTY,  
         property = "type") 
 
@@ -49,7 +50,8 @@ import org.codehaus.jackson.annotate.JsonSubTypes.Type;
         //keyvalue
         @Type(value = Set.class, name = "Set"),
         @Type(value = Get.class, name = "Get"),
-        
+        //rpc
+        @Type(value = BlockingRpc.class, name = "BlockingRpc"),
          })
 public class Message {
   protected String keyspace;
