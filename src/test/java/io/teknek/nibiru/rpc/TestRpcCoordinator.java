@@ -16,6 +16,7 @@ import io.teknek.nit.NitDesc;
 import io.teknek.nit.NitDesc.NitSpec;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,8 +75,9 @@ public class TestRpcCoordinator {
   public void endToEndTest() throws ClientException{
     Server s = TestUtil.aBasicServer(testFolder);
     RpcClient rpcClient = new RpcClient("127.0.0.1", s.getConfiguration().getTransportPort(), 10000, 10000);
-    BlockingRpcResponse resp = rpcClient.blockingRpc(simpleCallable(), 10000, TimeUnit.MILLISECONDS);
-    Assert.assertEquals(5, resp.getRpcResult());
+    TypeReference<BlockingRpcResponse<Integer>> t = new TypeReference<BlockingRpcResponse<Integer>> (){};
+    BlockingRpcResponse<Integer> resp = rpcClient.blockingRpc(simpleCallable(), 10000, TimeUnit.MILLISECONDS, t);
+    Assert.assertEquals(new Integer(5), resp.getRpcResult());
     s.shutdown();
   }
   
@@ -83,9 +85,12 @@ public class TestRpcCoordinator {
   public void complexInReturn() throws ClientException{
     Server s = TestUtil.aBasicServer(testFolder);
     RpcClient rpcClient = new RpcClient("127.0.0.1", s.getConfiguration().getTransportPort(), 10000, 10000);
-    BlockingRpcResponse resp = rpcClient.blockingRpc(complexReturnCallable(), 10000, TimeUnit.MILLISECONDS);
+    TypeReference<BlockingRpcResponse<SomeWhackyType>> t = new TypeReference<BlockingRpcResponse<SomeWhackyType>> (){};
+    //TypeReference<SomeWhackyType> t = new TypeReference<SomeWhackyType> (){};
+    BlockingRpcResponse<SomeWhackyType> resp = rpcClient.blockingRpc(complexReturnCallable(), 10000, TimeUnit.MILLISECONDS, t);
     ObjectMapper om = new ObjectMapper();
     Assert.assertEquals( om.convertValue( resp.getRpcResult(), SomeWhackyType.class).getY(), "yo");
+    Assert.assertEquals( resp.getRpcResult().getY(), "yo");
     s.shutdown();
   }
   

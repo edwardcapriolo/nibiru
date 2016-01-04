@@ -32,10 +32,17 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.type.TypeReference;
 
 public class Client {
 
   protected ObjectMapper MAPPER = new ObjectMapper();
+  {
+    MAPPER.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+  
+  
   private DefaultHttpClient client = new DefaultHttpClient();
   private ClientConnectionManager mgr;
   
@@ -83,7 +90,7 @@ public class Client {
     return r;
   }
   
-  public BaseResponse post(Message request, Class expectedReturn)
+  public BaseResponse post(Message request,  TypeReference tr)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
@@ -94,7 +101,7 @@ public class Client {
       throw new RuntimeException("Failed : HTTP error code : "
               + response.getStatusLine().getStatusCode());
     }
-    BaseResponse r = MAPPER.readValue(response.getEntity().getContent(), expectedReturn);
+    BaseResponse r = MAPPER.readValue(response.getEntity().getContent(), tr);
     response.getEntity().getContent().close();
     return r;
   }

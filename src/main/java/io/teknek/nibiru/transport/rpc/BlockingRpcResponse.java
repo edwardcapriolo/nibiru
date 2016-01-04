@@ -1,12 +1,11 @@
 package io.teknek.nibiru.transport.rpc;
 
 import io.teknek.nibiru.transport.BaseResponse;
-import io.teknek.nibiru.transport.Response;
 
-public class BlockingRpcResponse implements BaseResponse {
+public class BlockingRpcResponse<T> implements BaseResponse {
 
   private String exception;
-  private Object rpcResult;
+  private T rpcResult;
 
   public  BlockingRpcResponse(){
     
@@ -20,11 +19,11 @@ public class BlockingRpcResponse implements BaseResponse {
     this.exception = exception;
   }
 
-  public Object getRpcResult() {
+  public T getRpcResult() {
     return rpcResult;
   }
 
-  public void setRpcResult(Object rpcResult) {
+  public void setRpcResult(T rpcResult) {
     this.rpcResult = rpcResult;
   }
   

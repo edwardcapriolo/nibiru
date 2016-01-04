@@ -26,6 +26,7 @@ import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.coordinator.Coordinator;
 import io.teknek.nibiru.coordinator.Tracer;
+import org.codehaus.jackson.map.DeserializationConfig;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -43,6 +44,9 @@ public class HttpJsonTransport {
   private final Configuration configuration;
   private final AtomicBoolean RUNNING = new AtomicBoolean(false);
   private final Coordinator coordinator; 
+  {
+    MAPPER.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
   
   public HttpJsonTransport(Configuration configuration, Coordinator cordinator){
     this.configuration = configuration;
