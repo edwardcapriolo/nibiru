@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
+import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Destination;
@@ -39,6 +40,7 @@ import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.keyvalue.KeyValueMessage;
 import io.teknek.nibiru.transport.metadata.MetaDataMessage;
+import io.teknek.nibiru.transport.rpc.RpcMessage;
 import io.teknek.nibiru.trigger.TriggerManager;
 
 public class Coordinator {
@@ -49,6 +51,7 @@ public class Coordinator {
   //TODO. this needs to be a per column family value
   private final EventualCoordinator eventualCoordinator;
   private final SponsorCoordinator sponsorCoordinator;
+  private final RpcCoordinator rpcCoordinator;
   private final Locator locator;
   private final TriggerManager triggerManager;
   private Hinter hinter;
@@ -61,6 +64,7 @@ public class Coordinator {
     eventualCoordinator = new EventualCoordinator(server.getClusterMembership(), server.getConfiguration());
     sponsorCoordinator = new SponsorCoordinator(server.getClusterMembership(), server.getMetaDataManager(), metaDataCoordinator, server);
     locator = new Locator(server.getConfiguration(), server.getClusterMembership());
+    rpcCoordinator = new RpcCoordinator(server.getConfiguration());
     triggerManager = new TriggerManager(server);
   }
   
@@ -72,6 +76,7 @@ public class Coordinator {
     hinter = createHinter();
     tracer = new Tracer();
     triggerManager.init();
+    rpcCoordinator.init();
   }
   
   public static ColumnFamilyPersonality getHintCf(Server server){
@@ -88,6 +93,7 @@ public class Coordinator {
     metaDataCoordinator.shutdown();
     eventualCoordinator.shutdown();
     triggerManager.shutdown();
+    rpcCoordinator.shutdown();
   }
 
   public Response handleStreamRequest(Message m){
@@ -125,7 +131,10 @@ public class Coordinator {
   }
   
   //ah switchboad logic
-  public Response handle(Message message) {
+  public BaseResponse handle(Message message) {
+    if (message instanceof RpcMessage){
+      return rpcCoordinator.processMessage((RpcMessage) message);
+    }
     if (ColumnFamilyAdminPersonality.PERSONALITY.equals(message.getPersonality())){
       ColumnFamilyAdminCoordinator d = new ColumnFamilyAdminCoordinator(this.server);
       return d.handleMessage(message);

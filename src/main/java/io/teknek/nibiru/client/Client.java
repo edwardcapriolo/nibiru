@@ -15,6 +15,7 @@
  */
 package io.teknek.nibiru.client;
 
+import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.transport.Message;
 
 import io.teknek.nibiru.transport.Response;
@@ -31,10 +32,17 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.type.TypeReference;
 
 public class Client {
 
   protected ObjectMapper MAPPER = new ObjectMapper();
+  {
+    MAPPER.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+  
+  
   private DefaultHttpClient client = new DefaultHttpClient();
   private ClientConnectionManager mgr;
   
@@ -81,6 +89,23 @@ public class Client {
     response.getEntity().getContent().close();
     return r;
   }
+  
+  public BaseResponse post(Message request,  TypeReference tr)
+          throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
+    HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
+    ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
+    input.setContentType("application/json");
+    postRequest.setEntity(input);
+    HttpResponse response = client.execute(postRequest);
+    if (response.getStatusLine().getStatusCode() != 200) {
+      throw new RuntimeException("Failed : HTTP error code : "
+              + response.getStatusLine().getStatusCode());
+    }
+    BaseResponse r = MAPPER.readValue(response.getEntity().getContent(), tr);
+    response.getEntity().getContent().close();
+    return r;
+  }
+  
   
   public void shutdown(){
     mgr.shutdown();
