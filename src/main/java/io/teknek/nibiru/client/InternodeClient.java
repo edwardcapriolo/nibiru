@@ -5,12 +5,14 @@ import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.engine.DirectSsTableWriter;
 import io.teknek.nibiru.engine.atom.AtomKey;
+import io.teknek.nibiru.engine.atom.AtomPair;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.directsstable.Close;
 import io.teknek.nibiru.transport.directsstable.Open;
 import io.teknek.nibiru.transport.directsstable.Write;
+import io.teknek.nibiru.transport.sponsor.SponsorMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,30 +45,6 @@ public class InternodeClient {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-  }
-  public static class AtomPair{
-    private AtomKey key;
-    private AtomValue value;
-    public AtomPair(){
-      
-    }
-    public AtomPair(AtomKey k , AtomValue v){
-      key=k;
-      value=v;
-    }
-    public AtomKey getKey() {
-      return key;
-    }
-    public void setKey(AtomKey key) {
-      this.key = key;
-    }
-    public AtomValue getValue() {
-      return value;
-    }
-    public void setValue(AtomValue value) {
-      this.value = value;
-    }
-    
   }
   public void transmit(String keyspace, String store, Token token, SortedMap<AtomKey,AtomValue> columns, String id){
     Write w = new Write();
@@ -118,18 +96,13 @@ public class InternodeClient {
   }
   
   public void join(String keyspace, String sponsorId, ServerId me, String wantedToken, String transportHost) {
-    Message m = new Message();
-    m.setKeyspace(MetaDataManager.SYSTEM_KEYSPACE);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("keyspace", keyspace);
-    payload.put("sponsor_request", "");
-    payload.put("request_id", me.getU().toString());
-    payload.put("wanted_token", wantedToken);
-    payload.put("transport_host", transportHost);
-    m.setPayload(payload);
-    
+    SponsorMessage s = new SponsorMessage();
+    s.setKeyspace(keyspace);
+    s.setRequestId(me.getU().toString());
+    s.setWantedToken(wantedToken);
+    s.setTransportHost(transportHost);
     try {
-      Response response = client.post(m);
+      Response response = client.post(s);
     } catch (IOException | RuntimeException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

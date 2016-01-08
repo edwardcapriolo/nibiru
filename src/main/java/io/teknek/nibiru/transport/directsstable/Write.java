@@ -1,7 +1,7 @@
 package io.teknek.nibiru.transport.directsstable;
 
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.client.InternodeClient.AtomPair;
+import io.teknek.nibiru.engine.atom.AtomPair;
 
 import java.util.List;
 

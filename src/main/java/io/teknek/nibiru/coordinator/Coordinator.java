@@ -16,12 +16,6 @@
 package io.teknek.nibiru.coordinator;
 
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
-
 import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.Store;
@@ -29,11 +23,6 @@ import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.client.InternodeClient.AtomPair;
-import io.teknek.nibiru.engine.DirectSsTableWriter;
-import io.teknek.nibiru.engine.atom.AtomKey;
-import io.teknek.nibiru.engine.atom.AtomValue;
-import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.BaseMessage;
@@ -44,9 +33,9 @@ import io.teknek.nibiru.transport.columnfamily.ColumnFamilyMessage;
 import io.teknek.nibiru.transport.keyvalue.KeyValueMessage;
 import io.teknek.nibiru.transport.metadata.MetaDataMessage;
 import io.teknek.nibiru.transport.rpc.RpcMessage;
+import io.teknek.nibiru.transport.sponsor.SponsorMessage;
 import io.teknek.nibiru.trigger.TriggerManager;
 import io.teknek.nibiru.transport.columnfamily.*;
-import io.teknek.nibiru.transport.directsstable.*;
 import io.teknek.nibiru.transport.columnfamilyadmin.ColumnFamilyAdminMessage;
 import io.teknek.nibiru.transport.directsstable.DirectSsTableMessage;
 public class Coordinator {
@@ -59,6 +48,7 @@ public class Coordinator {
   private final SponsorCoordinator sponsorCoordinator;
   private final RpcCoordinator rpcCoordinator;
   private final ColumnFamilyAdminCoordinator columnFamilyAdminCoordinator;
+  private final DirectSsTableCoordinator directSsTableCoordinator;
   private final Locator locator;
   private final TriggerManager triggerManager;
   private Hinter hinter;
@@ -74,6 +64,7 @@ public class Coordinator {
     rpcCoordinator = new RpcCoordinator(server.getConfiguration());
     triggerManager = new TriggerManager(server);
     columnFamilyAdminCoordinator = new ColumnFamilyAdminCoordinator(server);
+    directSsTableCoordinator = new DirectSsTableCoordinator(server);
   }
   
   public void init(){
@@ -104,28 +95,6 @@ public class Coordinator {
     rpcCoordinator.shutdown();
   }
 
-  public Response handleStreamRequest(DirectSsTableMessage m){
-    Store store = server.getKeyspaces().get(m.getKeyspace())
-            .getStores().get(m.getStore());
-    DirectSsTableWriter w = (DirectSsTableWriter) store;
-    if (m instanceof Open){
-      w.open(m.getId());
-      return new Response();
-    } else if (m instanceof Close){
-      w.close(m.getId());
-    } else if (m instanceof Write){
-      Write write = (Write) m;
-      SortedMap<AtomKey, AtomValue> mp = new TreeMap<>();
-      for (AtomPair aPair: write.getColumns()){
-        mp.put(aPair.getKey(), aPair.getValue());
-      }
-      w.write(write.getToken(), mp, write.getId());
-    } else {
-      throw new RuntimeException("hit rock bottom");
-    }
-    return null;
-  }
-  
   public List<Destination> destinationsForToken(Token token, Keyspace keyspace){
     return keyspace.getKeyspaceMetaData().getRouter()
             .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);
@@ -136,18 +105,20 @@ public class Coordinator {
       return rpcCoordinator.processMessage((RpcMessage) baseMessage);
     }
     if (baseMessage instanceof ColumnFamilyAdminMessage){
-      return this.columnFamilyAdminCoordinator.handleMessage((ColumnFamilyAdminMessage) baseMessage);
+      return columnFamilyAdminCoordinator.handleMessage((ColumnFamilyAdminMessage) baseMessage);
     }
     if (baseMessage instanceof DirectSsTableMessage){
-      return this.handleStreamRequest((DirectSsTableMessage) baseMessage);
+      return directSsTableCoordinator.handleStreamRequest((DirectSsTableMessage) baseMessage);
+    }
+    if (baseMessage instanceof SponsorMessage){
+      return sponsorCoordinator.handleSponsorRequest((SponsorMessage) baseMessage);
+      
     }
     Message m = null;
     if (baseMessage instanceof Message){
       m = (Message) baseMessage;
       
-      if (m.getPayload().containsKey("sponsor_request")){
-        return sponsorCoordinator.handleSponsorRequest(m);
-      }
+
       if (baseMessage instanceof MetaDataMessage ) {
         return metaDataCoordinator.handleSystemMessage(m);
       }
@@ -165,7 +136,6 @@ public class Coordinator {
         Routable r = (Routable) baseMessage;
         token = keyspace.getKeyspaceMetaData().getPartitioner().partition(r.determineRoutingInformation());
       } else {
-        //TODO remove after conversion
         token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) m.getPayload().get("rowkey"));
       }
       List<Destination> destinations = destinationsForToken(token, keyspace);

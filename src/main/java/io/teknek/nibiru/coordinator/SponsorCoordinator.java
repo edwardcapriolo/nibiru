@@ -30,6 +30,7 @@ import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.router.TokenRouter;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.sponsor.SponsorMessage;
 
 public class SponsorCoordinator {
 
@@ -49,15 +50,16 @@ public class SponsorCoordinator {
     this.protogeToken = new AtomicReference<>();
     this.server = server;
   }
-  
 
-  public Response handleSponsorRequest(final Message message){
+  public Response handleSponsorRequest(final SponsorMessage message){
+    /*
     final String requestId = (String) message.getPayload().get("request_id");
     final String joinKeyspace = (String) message.getPayload().get("keyspace");
     final String wantedToken = (String) message.getPayload().get("wanted_token");
     final String protogeHost = (String) message.getPayload().get("transport_host");
+    */
     final Destination protegeDestination = new Destination();
-    protegeDestination.setDestinationId(requestId);
+    protegeDestination.setDestinationId(message.getRequestId());
     final MetaDataClient metaDataClient = getMetaClientForProtege(protegeDestination);
     replicateMetaData(metaDataClient);
     boolean res = protege.compareAndSet(null, protegeDestination);
@@ -65,14 +67,14 @@ public class SponsorCoordinator {
       return new Response().withProperty("status", "fail")
             .withProperty("reason", "already sponsoring") ;
     }
-    protogeToken.set(wantedToken);
+    protogeToken.set(message.getWantedToken());
     
     Thread t = new Thread(){
       public void run(){
-        InternodeClient protegeClient = new InternodeClient(protogeHost, server.getConfiguration().getTransportPort());
-        Keyspace ks = server.getKeyspaces().get(joinKeyspace);
+        InternodeClient protegeClient = new InternodeClient(message.getTransportHost(), server.getConfiguration().getTransportPort());
+        Keyspace ks = server.getKeyspaces().get(message.getKeyspace());
         replicateData(protegeClient, ks);
-        updateTokenMap(ks, metaDataClient, wantedToken, requestId );
+        updateTokenMap(ks, metaDataClient, message.getWantedToken(), message.getRequestId() );
         try {
           Thread.sleep(10000); //wait here for propagations
         } catch (InterruptedException e) { }
