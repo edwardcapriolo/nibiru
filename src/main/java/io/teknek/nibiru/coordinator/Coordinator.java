@@ -123,27 +123,7 @@ public class Coordinator {
     } else {
       throw new RuntimeException("hit rock bottom");
     }
-    /*
-    if (DirectSsTableWriter.OPEN.equals(m.getPayload().get("type"))){
-      w.open((String) m.getPayload().get("id"));
-      return new Response();
-    } else if (DirectSsTableWriter.CLOSE.equals(m.getPayload().get("type"))){
-      w.close((String) m.getPayload().get("id"));
-      return new Response();
-    } else if (DirectSsTableWriter.WRITE.equals(m.getPayload().get("type"))){
-      TypeReference<List<AtomPair>> t = new TypeReference<List<AtomPair>>() { };
-      List<AtomPair> pair = om.convertValue( m.getPayload().get("columns"), t);
-      SortedMap<AtomKey, AtomValue> mp = new TreeMap<>();
-      for (AtomPair aPair: pair){
-        mp.put(aPair.getKey(), aPair.getValue());
-      }
-      w.write(om.convertValue( m.getPayload().get("token"), Token.class), mp,
-              (String)m.getPayload().get("id"));
-      return new Response();
-    }
-    */
     return null;
-   
   }
   
   public List<Destination> destinationsForToken(Token token, Keyspace keyspace){

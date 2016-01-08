@@ -14,7 +14,9 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -27,9 +29,21 @@ public class BasicTransportTest {
   @Rule
   public TemporaryFolder testFolder2 = new TemporaryFolder();
 
+  Server s;
+  
+  @Before
+  public void before(){
+    s = TestUtil.aBasicServer(testFolder);
+  }
+  
+  @After
+  public void after(){
+    s.shutdown();
+  }
+  
   @Test
   public void doIt() throws IllegalStateException, UnsupportedEncodingException, IOException, RuntimeException, ClientException {
-    Server s = TestUtil.aBasicServer(testFolder);
+    
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
     AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
@@ -61,7 +75,6 @@ public class BasicTransportTest {
       Response r = cl.post(new Message());
       Assert.assertTrue(r.containsKey("exception"));
     }
-    s.shutdown();
   }
   
   @Test
