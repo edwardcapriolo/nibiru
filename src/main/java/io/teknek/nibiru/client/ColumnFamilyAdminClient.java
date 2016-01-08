@@ -3,6 +3,7 @@ package io.teknek.nibiru.client;
 import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.columnfamilyadmin.CleanupMessage;
 
 import java.io.IOException;
 import java.util.Map;
@@ -22,13 +23,9 @@ public class ColumnFamilyAdminClient {
   }
   
   public void cleanup(String keyspace, String columnFamily) throws ClientException {
-    Message m = new Message();
+    CleanupMessage m = new CleanupMessage();
     m.setKeyspace(keyspace);
-    m.setStore(columnFamily);
-    m.setPersonality(ColumnFamilyAdminPersonality.PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", ColumnFamilyAdminPersonality.CLEANUP).build();
-    m.setPayload(payload);
+    m.setColumnFamily(columnFamily);
     try {
       Response response = client.post(m);
     } catch (IOException | RuntimeException e) {

@@ -36,13 +36,19 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.personality.LocatorPersonality;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.Routable;
+import io.teknek.nibiru.transport.columnfamily.ColumnFamilyMessage;
 import io.teknek.nibiru.transport.keyvalue.KeyValueMessage;
 import io.teknek.nibiru.transport.metadata.MetaDataMessage;
 import io.teknek.nibiru.transport.rpc.RpcMessage;
 import io.teknek.nibiru.trigger.TriggerManager;
-
+import io.teknek.nibiru.transport.columnfamily.*;
+import io.teknek.nibiru.transport.directsstable.*;
+import io.teknek.nibiru.transport.columnfamilyadmin.ColumnFamilyAdminMessage;
+import io.teknek.nibiru.transport.directsstable.DirectSsTableMessage;
 public class Coordinator {
 
   private final Server server;
@@ -52,6 +58,7 @@ public class Coordinator {
   private final EventualCoordinator eventualCoordinator;
   private final SponsorCoordinator sponsorCoordinator;
   private final RpcCoordinator rpcCoordinator;
+  private final ColumnFamilyAdminCoordinator columnFamilyAdminCoordinator;
   private final Locator locator;
   private final TriggerManager triggerManager;
   private Hinter hinter;
@@ -66,6 +73,7 @@ public class Coordinator {
     locator = new Locator(server.getConfiguration(), server.getClusterMembership());
     rpcCoordinator = new RpcCoordinator(server.getConfiguration());
     triggerManager = new TriggerManager(server);
+    columnFamilyAdminCoordinator = new ColumnFamilyAdminCoordinator(server);
   }
   
   public void init(){
@@ -96,14 +104,26 @@ public class Coordinator {
     rpcCoordinator.shutdown();
   }
 
-  public Response handleStreamRequest(Message m){
-    
-    ObjectMapper om = new ObjectMapper();
-
-    
-    Store store = this.server.getKeyspaces().get(m.getPayload().get("keyspace"))
-            .getStores().get(m.getPayload().get("store"));
+  public Response handleStreamRequest(DirectSsTableMessage m){
+    Store store = server.getKeyspaces().get(m.getKeyspace())
+            .getStores().get(m.getStore());
     DirectSsTableWriter w = (DirectSsTableWriter) store;
+    if (m instanceof Open){
+      w.open(m.getId());
+      return new Response();
+    } else if (m instanceof Close){
+      w.close(m.getId());
+    } else if (m instanceof Write){
+      Write write = (Write) m;
+      SortedMap<AtomKey, AtomValue> mp = new TreeMap<>();
+      for (AtomPair aPair: write.getColumns()){
+        mp.put(aPair.getKey(), aPair.getValue());
+      }
+      w.write(write.getToken(), mp, write.getId());
+    } else {
+      throw new RuntimeException("hit rock bottom");
+    }
+    /*
     if (DirectSsTableWriter.OPEN.equals(m.getPayload().get("type"))){
       w.open((String) m.getPayload().get("id"));
       return new Response();
@@ -121,6 +141,7 @@ public class Coordinator {
               (String)m.getPayload().get("id"));
       return new Response();
     }
+    */
     return null;
    
   }
@@ -130,88 +151,106 @@ public class Coordinator {
             .routesTo(server.getServerId(), keyspace, server.getClusterMembership(), token);
   }
   
-  //ah switchboad logic
-  public BaseResponse handle(Message message) {
-    if (message instanceof RpcMessage){
-      return rpcCoordinator.processMessage((RpcMessage) message);
+  public BaseResponse handle(BaseMessage baseMessage) {
+    if (baseMessage instanceof RpcMessage){
+      return rpcCoordinator.processMessage((RpcMessage) baseMessage);
     }
-    if (ColumnFamilyAdminPersonality.PERSONALITY.equals(message.getPersonality())){
-      ColumnFamilyAdminCoordinator d = new ColumnFamilyAdminCoordinator(this.server);
-      return d.handleMessage(message);
+    if (baseMessage instanceof ColumnFamilyAdminMessage){
+      return this.columnFamilyAdminCoordinator.handleMessage((ColumnFamilyAdminMessage) baseMessage);
     }
-    if (DirectSsTableWriter.PERSONALITY.equals(message.getPersonality())){
-      return handleStreamRequest(message);
+    if (baseMessage instanceof DirectSsTableMessage){
+      return this.handleStreamRequest((DirectSsTableMessage) baseMessage);
     }
-    if (message.getPayload().containsKey("sponsor_request")){
-      return sponsorCoordinator.handleSponsorRequest(message);
-    }
-    if (message instanceof MetaDataMessage ) {
-      return metaDataCoordinator.handleSystemMessage(message);
-    }
-    Keyspace keyspace = server.getKeyspaces().get(message.getKeyspace());
-    if (keyspace == null){
-      throw new RuntimeException(message.getKeyspace() + " is not found");
-    }
-    Store columnFamily = keyspace.getStores().get(message.getStore());
-    if (columnFamily == null){
-      throw new RuntimeException(message.getStore() + " is not found");
-    }
-    Token token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) message.getPayload().get("rowkey"));
-    List<Destination> destinations = destinationsForToken(token, keyspace);
-    if (LocatorPersonality.PERSONALITY.equals(message.getPersonality())){
-      return locator.locate(destinations);
-    }
-    
-    
-    if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
-      //TODO they only need some of the messages by range
-      String type = (String) message.getPayload().get("type");
-      if (type.equals("put") || type.equals("delete") ){ 
-        destinations.add(sponsorCoordinator.getProtege());
+    Message m = null;
+    if (baseMessage instanceof Message){
+      m = (Message) baseMessage;
+      
+      if (m.getPayload().containsKey("sponsor_request")){
+        return sponsorCoordinator.handleSponsorRequest(m);
+      }
+      if (baseMessage instanceof MetaDataMessage ) {
+        return metaDataCoordinator.handleSystemMessage(m);
+      }
+      Keyspace keyspace = server.getKeyspaces().get(m.getKeyspace());
+      if (keyspace == null){
+        throw new RuntimeException(m.getKeyspace() + " is not found");
+      }
+      Store columnFamily = keyspace.getStores().get(m.getStore());
+      if (columnFamily == null){
+        throw new RuntimeException(m.getStore() + " is not found");
+      }
+      
+      Token token = null;
+      if (baseMessage instanceof Routable){
+        Routable r = (Routable) baseMessage;
+        token = keyspace.getKeyspaceMetaData().getPartitioner().partition(r.determineRoutingInformation());
+      } else {
+        //TODO remove after conversion
+        token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) m.getPayload().get("rowkey"));
+      }
+      List<Destination> destinations = destinationsForToken(token, keyspace);
+      if (LocatorPersonality.PERSONALITY.equals(m.getPersonality())){
+        return locator.locate(destinations);
+      }
+      
+      
+      if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
+        //TODO they only need some of the messages by range
+        String type = (String) m.getPayload().get("type");
+        if (type.equals("put") || type.equals("delete") ){ 
+          destinations.add(sponsorCoordinator.getProtege());
+        }
+      }
+      long timeoutInMs = determineTimeout(columnFamily, m);
+      long requestStart = System.currentTimeMillis();
+  
+      if (ColumnFamilyPersonality.PERSONALITY.equals(m.getPersonality()) || baseMessage instanceof ColumnFamilyMessage) {
+        LocalAction action = new LocalColumnFamilyAction(m, keyspace, columnFamily);
+        ResultMerger merger = new HighestTimestampResultMerger();
+        Response response = eventualCoordinator.handleMessage(token, m, destinations, 
+                timeoutInMs, destinationLocal, action, merger, getHinterForMessage(baseMessage, columnFamily));
+        if (!response.containsKey("exception")){
+          response = triggerManager.executeTriggers(m, response, keyspace, columnFamily, timeoutInMs, requestStart);
+        }
+        return response;
+      } else if ( baseMessage instanceof KeyValueMessage) {
+        LocalAction action = new LocalKeyValueAction(m, keyspace, columnFamily);
+        ResultMerger merger = new MajorityValueResultMerger();
+        Response response = eventualCoordinator.handleMessage(token, m, destinations, 
+                timeoutInMs, destinationLocal, action, merger, null);
+        triggerManager.executeTriggers(m, response, keyspace, columnFamily, timeoutInMs, requestStart);
+        if (!response.containsKey("exception")){
+          response = triggerManager.executeTriggers(m, response, keyspace, columnFamily, timeoutInMs, requestStart);
+        }
+        return response;
+      } else {
+        throw new UnsupportedOperationException(m.getPersonality());
       }
     }
-    long timeoutInMs = determineTimeout(columnFamily, message);
-    long requestStart = System.currentTimeMillis();
-
-    if (ColumnFamilyPersonality.PERSONALITY.equals(message.getPersonality())) {
-      LocalAction action = new LocalColumnFamilyAction(message, keyspace, columnFamily);
-      ResultMerger merger = new HighestTimestampResultMerger();
-      Response response = eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal, action, merger, getHinterForMessage(message, columnFamily));
-      if (!response.containsKey("exception")){
-        response = triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
-      }
-      return response;
-    } else if ( message instanceof KeyValueMessage) {
-      LocalAction action = new LocalKeyValueAction(message, keyspace, columnFamily);
-      ResultMerger merger = new MajorityValueResultMerger();
-      Response response = eventualCoordinator.handleMessage(token, message, destinations, 
-              timeoutInMs, destinationLocal, action, merger, null);
-      triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
-      if (!response.containsKey("exception")){
-        response = triggerManager.executeTriggers(message, response, keyspace, columnFamily, timeoutInMs, requestStart);
-      }
-      return response;
-    } else {
-      throw new UnsupportedOperationException(message.getPersonality());
-    }
-
+    return null;
   }
   
   public Tracer getTracer(){
     return this.tracer;
   }
   
-  private Hinter getHinterForMessage(Message message, Store columnFamily){
-    String type = (String) message.getPayload().get("type");
+  private Hinter getHinterForMessage(BaseMessage message, Store columnFamily){
     if (!columnFamily.getStoreMetadata().isEnableHints()){
       return null;
     }
-    if (type.equals("put") || type.equals("delete") ){
-      return hinter;
-    } else {
+    if (message instanceof GetMessage){
       return null;
     }
+    if (message instanceof Message){
+      Message m = (Message) message;
+      String type = (String) m.getPayload().get("type");
+      if (type.equals("put") || type.equals("delete") ){
+        return hinter;
+      } else {
+        return null;
+      }
+    }
+    return null;
   }
   
   public Hinter getHinter() {

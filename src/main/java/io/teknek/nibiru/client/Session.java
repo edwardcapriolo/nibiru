@@ -3,10 +3,10 @@ package io.teknek.nibiru.client;
 import io.teknek.nibiru.Consistency;
 import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.Val;
-import io.teknek.nibiru.coordinator.Tracer;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.columnfamily.GetMessage;
 
 import java.io.IOException;
 import java.util.Map;
@@ -36,6 +36,15 @@ public class Session {
   }
   
   public Val get(String rowkey, String column) throws ClientException {
+    GetMessage m = new GetMessage();
+    m.setColumn(column);
+    m.setRow(rowkey);
+    m.setConsistency(readConsistency);
+    m.setKeyspace(keyspace);
+    m.setStore(store);
+    m.setTimeout((long)client.getSocketTimeoutMillis());
+    m.setTraceTo(traceTo);
+    /*
     Message m = new Message();
     m.setKeyspace(keyspace);
     m.setStore(store);
@@ -50,6 +59,7 @@ public class Session {
       payload.withProperty(Tracer.TRACE_PROP, this.traceTo);
     }
     m.setPayload(payload);
+    */
     try {
       Response response = client.post(m);
       if (response == null){

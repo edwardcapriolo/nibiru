@@ -87,6 +87,7 @@ public class EventualCoordinator {
 
   public Response handleMessage(Token token, final Message message, List<Destination> destinations,
           long timeoutInMs, Destination destinationLocal, final LocalAction action, ResultMerger merger, Hinter hinter) {
+    System.err.println(message);
     if (destinations.size() == 0){
       throw new RuntimeException("No place to route message");
     }
@@ -106,6 +107,7 @@ public class EventualCoordinator {
     } else {
       c = OM.convertValue( message.getPayload().get("consistency"), Consistency.class);
     }
+    System.err.println(c);
     
     ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
     List<RemoteMessageCallable> remote = new ArrayList<>();

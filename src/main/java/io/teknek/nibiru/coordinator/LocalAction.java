@@ -17,17 +17,16 @@ package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.Keyspace;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 
-//potential callable
 public abstract class LocalAction {
 
-  protected Message message;
+  protected BaseMessage message;
   protected Keyspace keyspace; 
   protected Store columnFamily;
   
-  public LocalAction(Message message, Keyspace ks, Store cf){
+  public LocalAction(BaseMessage message, Keyspace ks, Store cf){
     this.message = message;
     this.keyspace = ks;
     this.columnFamily = cf;

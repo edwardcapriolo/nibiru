@@ -15,6 +15,7 @@
  */
 package io.teknek.nibiru.client;
 
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.BaseResponse;
 import io.teknek.nibiru.transport.Message;
 
@@ -74,7 +75,7 @@ public class Client {
             mgr.getSchemeRegistry()), params);
   }
     
-  public Response post(Message request)
+  public Response post(BaseMessage request)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
@@ -90,7 +91,7 @@ public class Client {
     return r;
   }
   
-  public BaseResponse post(Message request,  TypeReference tr)
+  public BaseResponse post(BaseMessage request,  TypeReference tr)
           throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
