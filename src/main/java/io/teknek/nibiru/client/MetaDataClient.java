@@ -27,6 +27,7 @@ import io.teknek.nibiru.transport.metadata.GetKeyspaceMetaData;
 import io.teknek.nibiru.transport.metadata.GetStoreMetaData;
 import io.teknek.nibiru.transport.metadata.ListKeyspaces;
 import io.teknek.nibiru.transport.metadata.ListStores;
+import io.teknek.nibiru.transport.metadata.LocatorMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -140,14 +141,9 @@ public class MetaDataClient extends Client {
   }
   
   public List<ContactInformation> getLocationForRowKey(String keyspace, String store, String rowkey) throws ClientException{
-    Message m = new Message();
+    LocatorMessage m = new LocatorMessage();
     m.setKeyspace(keyspace);
-    m.setStore(store);
-    m.setPersonality(LocatorPersonality.PERSONALITY);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("type", LocatorPersonality.LOCATE_ROW_KEY);
-    payload.put("rowkey", rowkey);
-    m.setPayload(payload);
+    m.setRow(rowkey);
     TypeReference<List<ContactInformation>> tf = new TypeReference<List<ContactInformation>>() {};
     try {
       Response response = post(m);

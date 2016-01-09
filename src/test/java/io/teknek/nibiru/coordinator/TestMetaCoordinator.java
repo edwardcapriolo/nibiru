@@ -1,7 +1,6 @@
 package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.ContactInformation;
-import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;

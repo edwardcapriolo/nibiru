@@ -125,11 +125,12 @@ public class Coordinator {
       keyspace = server.getKeyspaces().get(m.getKeyspace());
       store = keyspace.getStores().get(m.getStore());
     }
+    if (baseMessage instanceof LocatorMessage){
+      LocatorMessage m = (LocatorMessage) baseMessage;
+      keyspace = server.getKeyspaces().get(m.getKeyspace());
+    }
     if (keyspace == null){
       throw new RuntimeException("keyspace is not found" + baseMessage);
-    }
-    if (store == null){
-      throw new RuntimeException("store is not found" + baseMessage);
     }
     Token token = null;
     if (baseMessage instanceof Routable){
@@ -139,6 +140,9 @@ public class Coordinator {
     List<Destination> destinations = destinationsForToken(token, keyspace);
     if (baseMessage instanceof LocatorMessage){
       return locator.locate(destinations);
+    }
+    if (store == null){
+      throw new RuntimeException("store is not found" + baseMessage);
     }
     
     /*
