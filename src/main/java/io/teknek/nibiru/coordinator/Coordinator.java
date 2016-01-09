@@ -31,6 +31,7 @@ import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.Routable;
 import io.teknek.nibiru.transport.columnfamily.ColumnFamilyMessage;
 import io.teknek.nibiru.transport.keyvalue.KeyValueMessage;
+import io.teknek.nibiru.transport.metadata.LocatorMessage;
 import io.teknek.nibiru.transport.metadata.MetaDataMessage;
 import io.teknek.nibiru.transport.rpc.RpcMessage;
 import io.teknek.nibiru.transport.sponsor.SponsorMessage;
@@ -38,12 +39,12 @@ import io.teknek.nibiru.trigger.TriggerManager;
 import io.teknek.nibiru.transport.columnfamily.*;
 import io.teknek.nibiru.transport.columnfamilyadmin.ColumnFamilyAdminMessage;
 import io.teknek.nibiru.transport.directsstable.DirectSsTableMessage;
+
 public class Coordinator {
 
   private final Server server;
   private Destination destinationLocal;
   private final MetaDataCoordinator metaDataCoordinator;
-  //TODO. this needs to be a per column family value
   private final EventualCoordinator eventualCoordinator;
   private final SponsorCoordinator sponsorCoordinator;
   private final RpcCoordinator rpcCoordinator;
@@ -103,81 +104,82 @@ public class Coordinator {
   public BaseResponse handle(BaseMessage baseMessage) {
     if (baseMessage instanceof RpcMessage){
       return rpcCoordinator.processMessage((RpcMessage) baseMessage);
-    }
-    if (baseMessage instanceof ColumnFamilyAdminMessage){
+    } else if (baseMessage instanceof ColumnFamilyAdminMessage){
       return columnFamilyAdminCoordinator.handleMessage((ColumnFamilyAdminMessage) baseMessage);
-    }
-    if (baseMessage instanceof DirectSsTableMessage){
+    } else if (baseMessage instanceof DirectSsTableMessage){
       return directSsTableCoordinator.handleStreamRequest((DirectSsTableMessage) baseMessage);
-    }
-    if (baseMessage instanceof SponsorMessage){
+    } else if (baseMessage instanceof SponsorMessage){
       return sponsorCoordinator.handleSponsorRequest((SponsorMessage) baseMessage);
-      
+    } else if (baseMessage instanceof MetaDataMessage ) {
+      return metaDataCoordinator.handleSystemMessage((Message) baseMessage);
     }
-    Message m = null;
-    if (baseMessage instanceof Message){
-      m = (Message) baseMessage;
-      
+    Keyspace keyspace = null;
+    Store store = null;
+    if (baseMessage instanceof ColumnFamilyMessage){
+      ColumnFamilyMessage m = (ColumnFamilyMessage) baseMessage;
+      keyspace = server.getKeyspaces().get(m.getKeyspace());
+      store = keyspace.getStores().get(m.getStore());
+    }
+    if (baseMessage instanceof KeyValueMessage){
+      KeyValueMessage m = (KeyValueMessage) baseMessage;
+      keyspace = server.getKeyspaces().get(m.getKeyspace());
+      store = keyspace.getStores().get(m.getStore());
+    }
+    if (keyspace == null){
+      throw new RuntimeException("keyspace is not found" + baseMessage);
+    }
+    if (store == null){
+      throw new RuntimeException("store is not found" + baseMessage);
+    }
+    Token token = null;
+    if (baseMessage instanceof Routable){
+      Routable r = (Routable) baseMessage;
+      token = keyspace.getKeyspaceMetaData().getPartitioner().partition(r.determineRoutingInformation());
+    } 
+    List<Destination> destinations = destinationsForToken(token, keyspace);
+    if (baseMessage instanceof LocatorMessage){
+      return locator.locate(destinations);
+    }
+    
+    /*
+    if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
+      //TODO they only need some of the messages by range
+      String type = (String) m.getPayload().get("type");
+      if (type.equals("put") || type.equals("delete") ){ 
+        destinations.add(sponsorCoordinator.getProtege());
+      }
+    }
+    
+    long timeoutInMs = determineTimeout(store, m);
+    long requestStart = System.currentTimeMillis();
+    */
+    long timeoutInMs = 10000;
+    long requestStart = System.currentTimeMillis();
 
-      if (baseMessage instanceof MetaDataMessage ) {
-        return metaDataCoordinator.handleSystemMessage(m);
+    if (baseMessage instanceof ColumnFamilyMessage) {
+      ColumnFamilyMessage m = (ColumnFamilyMessage) baseMessage;
+      LocalAction action = new LocalColumnFamilyAction(m, keyspace, store);
+      ResultMerger merger = new HighestTimestampResultMerger();
+      Response response = eventualCoordinator.handleMessage(token, m, destinations, 
+              timeoutInMs, destinationLocal, action, merger, getHinterForMessage(baseMessage, store));
+      if (!response.containsKey("exception")){
+        response = triggerManager.executeTriggers(m, response, keyspace, store, timeoutInMs, requestStart);
       }
-      Keyspace keyspace = server.getKeyspaces().get(m.getKeyspace());
-      if (keyspace == null){
-        throw new RuntimeException(m.getKeyspace() + " is not found");
+      return response;
+    } else if ( baseMessage instanceof KeyValueMessage) {
+      LocalAction action = new LocalKeyValueAction(baseMessage, keyspace, store);
+      ResultMerger merger = new MajorityValueResultMerger();
+      Response response = eventualCoordinator.handleMessage(token, baseMessage, destinations, 
+              timeoutInMs, destinationLocal, action, merger, null);
+      triggerManager.executeTriggers(baseMessage, response, keyspace, store, timeoutInMs, requestStart);
+      if (!response.containsKey("exception")){
+        response = triggerManager.executeTriggers(baseMessage, response, keyspace, store, timeoutInMs, requestStart);
       }
-      Store columnFamily = keyspace.getStores().get(m.getStore());
-      if (columnFamily == null){
-        throw new RuntimeException(m.getStore() + " is not found");
-      }
-      
-      Token token = null;
-      if (baseMessage instanceof Routable){
-        Routable r = (Routable) baseMessage;
-        token = keyspace.getKeyspaceMetaData().getPartitioner().partition(r.determineRoutingInformation());
-      } else {
-        token = keyspace.getKeyspaceMetaData().getPartitioner().partition((String) m.getPayload().get("rowkey"));
-      }
-      List<Destination> destinations = destinationsForToken(token, keyspace);
-      if (LocatorPersonality.PERSONALITY.equals(m.getPersonality())){
-        return locator.locate(destinations);
-      }
-      
-      
-      if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
-        //TODO they only need some of the messages by range
-        String type = (String) m.getPayload().get("type");
-        if (type.equals("put") || type.equals("delete") ){ 
-          destinations.add(sponsorCoordinator.getProtege());
-        }
-      }
-      long timeoutInMs = determineTimeout(columnFamily, m);
-      long requestStart = System.currentTimeMillis();
-  
-      if (ColumnFamilyPersonality.PERSONALITY.equals(m.getPersonality()) || baseMessage instanceof ColumnFamilyMessage) {
-        LocalAction action = new LocalColumnFamilyAction(m, keyspace, columnFamily);
-        ResultMerger merger = new HighestTimestampResultMerger();
-        Response response = eventualCoordinator.handleMessage(token, m, destinations, 
-                timeoutInMs, destinationLocal, action, merger, getHinterForMessage(baseMessage, columnFamily));
-        if (!response.containsKey("exception")){
-          response = triggerManager.executeTriggers(m, response, keyspace, columnFamily, timeoutInMs, requestStart);
-        }
-        return response;
-      } else if ( baseMessage instanceof KeyValueMessage) {
-        LocalAction action = new LocalKeyValueAction(m, keyspace, columnFamily);
-        ResultMerger merger = new MajorityValueResultMerger();
-        Response response = eventualCoordinator.handleMessage(token, m, destinations, 
-                timeoutInMs, destinationLocal, action, merger, null);
-        triggerManager.executeTriggers(m, response, keyspace, columnFamily, timeoutInMs, requestStart);
-        if (!response.containsKey("exception")){
-          response = triggerManager.executeTriggers(m, response, keyspace, columnFamily, timeoutInMs, requestStart);
-        }
-        return response;
-      } else {
-        throw new UnsupportedOperationException(m.getPersonality());
-      }
+      return response;
+    } else {
+      throw new UnsupportedOperationException(baseMessage.toString());
     }
-    return null;
+
   }
   
   public Tracer getTracer(){

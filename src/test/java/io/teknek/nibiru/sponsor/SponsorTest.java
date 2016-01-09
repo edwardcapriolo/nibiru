@@ -114,6 +114,4 @@ public class SponsorTest {
     Assert.assertEquals("after", ((ColumnValue) servers[1].get("abc", "def", "1" , "1")).getValue());
   }
   
-
-  
 }

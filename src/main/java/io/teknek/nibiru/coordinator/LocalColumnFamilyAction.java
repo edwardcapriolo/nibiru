@@ -26,9 +26,11 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.BaseMessage;
-import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.columnfamily.DeleteMessage;
 import io.teknek.nibiru.transport.columnfamily.GetMessage;
+import io.teknek.nibiru.transport.columnfamily.PutMessage;
+import io.teknek.nibiru.transport.columnfamily.SliceMessage;
 
 public class LocalColumnFamilyAction extends LocalAction {
   
@@ -47,43 +49,29 @@ public class LocalColumnFamilyAction extends LocalAction {
       GetMessage g = (GetMessage) message;
       AtomValue v = personality.get(g.getRow(), g.getColumn());
       return new Response().withProperty("payload", v);
-    }
-    Message m = (Message) this.message;
-    if (m.getPayload().get("type").equals("slice")){
-      SortedMap<AtomKey,AtomValue> res = personality.slice(
-              (String) m.getPayload().get("rowkey"),
-              (String) m.getPayload().get("start"),
-              (String) m.getPayload().get("end") 
-              );
+    } else if (message instanceof PutMessage){
+      PutMessage m = (PutMessage) message;
+      Number l = m.getTtl();
+      if (l == null){
+        personality.put(m.getRow(), m.getColumn(), m.getValue(), m.getVersion());
+        return new Response();
+      } else {
+        personality.put(m.getRow(), m.getColumn(), m.getValue(), m.getVersion(), l.longValue());
+        return new Response();
+      }
+    } else if (message instanceof DeleteMessage){
+      DeleteMessage d = (DeleteMessage) message;
+      personality.delete(d.getRow(), d.getColumn(), d.getVersion());
+      return new Response();
+    } else if (message instanceof SliceMessage) {
+      SliceMessage m = (SliceMessage ) message;
+      SortedMap<AtomKey,AtomValue> res = personality.slice(m.getRow(), m.getStart(), m.getEnd() );
       SortedMap<String,AtomValue> res2 = new TreeMap<>();
       //TODO bug here
       for (Map.Entry<AtomKey, AtomValue> column: res.entrySet() ){
         res2.put(((ColumnKey) column.getKey()).getColumn(), column.getValue());
       }
       return new Response().withProperty("payload", res2);
-    } else if (m.getPayload().get("type").equals("put")) {
-      Long l = ((Long) m.getPayload().get("ttl"));
-      if (l == null){
-        personality.put(
-              (String) m.getPayload().get("rowkey"),
-              (String) m.getPayload().get("column"),
-              (String) m.getPayload().get("value"),
-              ((Number) m.getPayload().get("time")).longValue());
-        return new Response();
-      } else {
-        personality.put(
-                (String) m.getPayload().get("rowkey"),
-                (String) m.getPayload().get("column"),
-                (String) m.getPayload().get("value"),
-                ((Number) m.getPayload().get("time")).longValue(), l);
-        return new Response();
-      }
-    } else if (m.getPayload().get("type").equals("delete")) { 
-      personality.delete(
-              (String) m.getPayload().get("rowkey"),
-              (String) m.getPayload().get("column"),
-              ((Number) m.getPayload().get("time")).longValue());
-      return new Response();
     } else {
       throw new RuntimeException("Does not support this type of message");
     }    

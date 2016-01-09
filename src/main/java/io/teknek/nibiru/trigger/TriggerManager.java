@@ -13,7 +13,7 @@ import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Store;
 import io.teknek.nibiru.TriggerDefinition;
 import io.teknek.nibiru.TriggerLevel;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 
 public class TriggerManager {
@@ -34,7 +34,7 @@ public class TriggerManager {
     }
   }
   
-  public Response executeTriggers(final Message message, final Response response, Keyspace keyspace, 
+  public Response executeTriggers(final BaseMessage message, final Response response, Keyspace keyspace, 
           Store store, long timeoutInMs, long requestStart){
     long now = System.currentTimeMillis();
     for (TriggerDefinition d : store.getStoreMetadata().getCoordinatorTriggers()){

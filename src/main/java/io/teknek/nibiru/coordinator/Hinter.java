@@ -8,7 +8,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 
 public class Hinter {
 
@@ -20,7 +20,7 @@ public class Hinter {
     this.hintsColumnFamily = person;
   }
   
-  public void hint(Message m, Destination destination) {
+  public void hint(BaseMessage m, Destination destination) {
     try {
       hintsColumnFamily.put(destination.getDestinationId(), UUID.randomUUID().toString(),
               OM.writeValueAsString(m), System.currentTimeMillis() * 1000L);

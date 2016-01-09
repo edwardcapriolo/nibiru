@@ -1,10 +1,12 @@
 package io.teknek.nibiru.transport.columnfamily;
 
 import io.teknek.nibiru.transport.BaseMessage;
+import io.teknek.nibiru.transport.Routable;
 
-public class ColumnFamilyMessage extends BaseMessage {
+public abstract class ColumnFamilyMessage extends BaseMessage implements Routable {
   private String keyspace;
   private String store;
+  private boolean reRoute;
   
   public ColumnFamilyMessage(){}
 
@@ -22,5 +24,18 @@ public class ColumnFamilyMessage extends BaseMessage {
 
   public void setStore(String store) {
     this.store = store;
+  }
+
+  @Override
+  public abstract String determineRoutingInformation();
+
+  @Override
+  public boolean getReRoute() {
+    return reRoute;
+  }
+
+  @Override
+  public void setReRoute(boolean reRoute) {
+    this.reRoute = reRoute;
   }
 }

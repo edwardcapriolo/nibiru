@@ -1,6 +1,8 @@
 package io.teknek.nibiru.transport.keyvalue;
 
-public class Set extends KeyValueMessage {
+import io.teknek.nibiru.transport.Routable;
+
+public class Set extends KeyValueMessage implements Routable {
 
   public String key;
   public String value;
@@ -19,6 +21,11 @@ public class Set extends KeyValueMessage {
   
   public void setValue(String value) {
     this.value = value;
+  }
+
+  @Override
+  public String determineRoutingInformation() {
+    return key;
   }
   
 }

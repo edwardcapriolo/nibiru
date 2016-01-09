@@ -28,7 +28,6 @@ import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.metadata.KeyspaceMetaData;
 import io.teknek.nibiru.router.TokenRouter;
-import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.sponsor.SponsorMessage;
 
@@ -52,12 +51,6 @@ public class SponsorCoordinator {
   }
 
   public Response handleSponsorRequest(final SponsorMessage message){
-    /*
-    final String requestId = (String) message.getPayload().get("request_id");
-    final String joinKeyspace = (String) message.getPayload().get("keyspace");
-    final String wantedToken = (String) message.getPayload().get("wanted_token");
-    final String protogeHost = (String) message.getPayload().get("transport_host");
-    */
     final Destination protegeDestination = new Destination();
     protegeDestination.setDestinationId(message.getRequestId());
     final MetaDataClient metaDataClient = getMetaClientForProtege(protegeDestination);
@@ -156,9 +149,9 @@ public class SponsorCoordinator {
       }
     }
   }
+  
   public Destination getProtege(){
     return protege.get();
   }
-  
   
 }

@@ -1,8 +1,11 @@
 package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.Val;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.columnfamily.DeleteMessage;
+import io.teknek.nibiru.transport.columnfamily.GetMessage;
+import io.teknek.nibiru.transport.columnfamily.PutMessage;
 
 import java.util.List;
 
@@ -13,11 +16,10 @@ public class HighestTimestampResultMerger implements ResultMerger {
   private static ObjectMapper OM = new ObjectMapper();
   
   @Override
-  public Response merge(List<Response> responses, Message message) {
-    if ("put".equals(message.getPayload().get("type"))
-            || "delete".equals(message.getPayload().get("type"))) {
+  public Response merge(List<Response> responses, BaseMessage message) {
+    if (message instanceof PutMessage ||  message instanceof DeleteMessage) {
       return new Response();
-    } else if ("get".equals(message.getPayload().get("type"))) {
+    } else if (message instanceof GetMessage) {
       return highestTimestampResponse(responses);
     } else {
       return new Response().withProperty("exception", "unsupported operation " + message);

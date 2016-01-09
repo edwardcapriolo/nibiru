@@ -1,5 +1,6 @@
 package io.teknek.nibiru.coordinator;
 
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 
@@ -11,7 +12,7 @@ import java.util.TreeMap;
 public class MajorityValueResultMerger implements ResultMerger {
 
   @Override
-  public Response merge(List<Response> responses, Message message) {
+  public Response merge(List<Response> responses, BaseMessage message) {
     SortedMap<String,Integer> count = new TreeMap<String,Integer>();
     for (Response r : responses){
       String result = (String) r.get("payload");
