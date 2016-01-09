@@ -1,13 +1,10 @@
 package io.teknek.nibiru.transport.columnfamily;
 
-import io.teknek.nibiru.Consistency;
 import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.transport.Routable;
-import io.teknek.nibiru.transport.keyvalue.KeyValueMessage;
 
 public class DeleteMessage extends ColumnFamilyMessage implements Routable {
 
-  private Consistency consistency;
   private String row;
   private String column;
   private TraceTo traceTo;
@@ -30,14 +27,6 @@ public class DeleteMessage extends ColumnFamilyMessage implements Routable {
 
   public void setVersion(Long version) {
     this.version = version;
-  }
-
-  public Consistency getConsistency() {
-    return consistency;
-  }
-
-  public void setConsistency(Consistency consistency) {
-    this.consistency = consistency;
   }
 
   public String getRow() {

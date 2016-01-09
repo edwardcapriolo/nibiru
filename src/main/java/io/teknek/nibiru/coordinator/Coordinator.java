@@ -197,14 +197,8 @@ public class Coordinator {
     if (message instanceof GetMessage){
       return null;
     }
-    if (message instanceof Message){
-      Message m = (Message) message;
-      String type = (String) m.getPayload().get("type");
-      if (type.equals("put") || type.equals("delete") ){
-        return hinter;
-      } else {
-        return null;
-      }
+    if (message instanceof PutMessage || message instanceof DeleteMessage){
+      return hinter;
     }
     return null;
   }

@@ -5,7 +5,6 @@ import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.transport.Routable;
 
 public class GetMessage extends ColumnFamilyMessage implements Routable {
-  private Consistency consistency;
   private String row;
   private String column;
   private TraceTo traceTo;
@@ -13,14 +12,6 @@ public class GetMessage extends ColumnFamilyMessage implements Routable {
   
   public GetMessage(){
     
-  }
-
-  public Consistency getConsistency() {
-    return consistency;
-  }
-
-  public void setConsistency(Consistency consistency) {
-    this.consistency = consistency;
   }
 
   public String getRow() {

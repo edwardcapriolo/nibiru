@@ -24,7 +24,7 @@ import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
 import io.teknek.nibiru.transport.BaseMessage;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.ConsistencySupport;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.Routable;
 
@@ -40,7 +40,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.codehaus.jackson.map.ObjectMapper;
 
 public class EventualCoordinator {
 
@@ -48,9 +47,7 @@ public class EventualCoordinator {
   private final Configuration configuration;
   private ConcurrentMap<Destination,Client> mapping;
   private final ClusterMembership clusterMembership;
-  private static final ObjectMapper OM = new ObjectMapper();
   private ExecutorService lastChance;
-  
   
   public EventualCoordinator(ClusterMembership clusterMembership, Configuration configuration){
     this.clusterMembership = clusterMembership;
@@ -101,18 +98,12 @@ public class EventualCoordinator {
     if (!((Routable) message).getReRoute()){
       ((Routable) message).setReRoute(true);
     }
-    /*
     Consistency c = null;
-    if (message.getPayload().get("consistency") == null) {
-      message.getPayload().put("consistency",
-              new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1));
+    if (message instanceof ConsistencySupport){
+      c = ((ConsistencySupport) message).getConsistency();
     } else {
-      c = OM.convertValue( message.getPayload().get("consistency"), Consistency.class);
+      c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
     }
-    */
-    Consistency c = new Consistency();
-    c.setLevel(ConsistencyLevel.N);
-    c.withParameter("n", 1);
     
     ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
     List<RemoteMessageCallable> remote = new ArrayList<>();
