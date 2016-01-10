@@ -5,7 +5,6 @@ import io.teknek.nibiru.Store;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.personality.ColumnFamilyAdminPersonality;
 import io.teknek.nibiru.plugins.CompactionManager;
-import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.columnfamilyadmin.*;
 

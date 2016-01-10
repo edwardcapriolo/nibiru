@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class CreateOrUpdateKeyspace extends MetaDataMessage {
 
-  private String targetKeyspace;
+  private String keyspace;  
   private Map<String,Object> properties;
   private boolean shouldReRoute;
 
@@ -12,12 +12,7 @@ public class CreateOrUpdateKeyspace extends MetaDataMessage {
   public CreateOrUpdateKeyspace(){
     
   }
-  public String getTargetKeyspace() {
-    return targetKeyspace;
-  }
-  public void setTargetKeyspace(String targetKeyspace) {
-    this.targetKeyspace = targetKeyspace;
-  }
+
   public Map<String, Object> getProperties() {
     return properties;
   }
@@ -30,8 +25,14 @@ public class CreateOrUpdateKeyspace extends MetaDataMessage {
 
   public void setShouldReRoute(boolean shouldReRoute2) {
    this.shouldReRoute = shouldReRoute2;
-    
   }
 
+  public String getKeyspace() {
+    return keyspace;
+  }
+
+  public void setKeyspace(String keyspace) {
+    this.keyspace = keyspace;
+  }
   
 }

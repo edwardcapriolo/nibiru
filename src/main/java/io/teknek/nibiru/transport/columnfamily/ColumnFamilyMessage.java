@@ -10,6 +10,7 @@ public abstract class ColumnFamilyMessage extends BaseMessage implements Routabl
   private String store;
   private boolean reRoute;
   private Consistency consistency;
+  private Long timeout;
   
   public ColumnFamilyMessage(){}
 
@@ -48,6 +49,14 @@ public abstract class ColumnFamilyMessage extends BaseMessage implements Routabl
 
   public void setConsistency(Consistency consistency) {
     this.consistency = consistency;
+  }
+  
+  public Long getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Long timeout) {
+    this.timeout = timeout;
   }
   
 }

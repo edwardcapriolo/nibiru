@@ -24,9 +24,8 @@ import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.BaseMessage;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.ConsistencySupport;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.Routable;
 import io.teknek.nibiru.transport.columnfamily.ColumnFamilyMessage;
@@ -111,7 +110,7 @@ public class Coordinator {
     } else if (baseMessage instanceof SponsorMessage){
       return sponsorCoordinator.handleSponsorRequest((SponsorMessage) baseMessage);
     } else if (baseMessage instanceof MetaDataMessage ) {
-      return metaDataCoordinator.handleSystemMessage((Message) baseMessage);
+      return metaDataCoordinator.handleSystemMessage((MetaDataMessage) baseMessage);
     }
     Keyspace keyspace = null;
     Store store = null;
@@ -144,22 +143,13 @@ public class Coordinator {
     if (store == null){
       throw new RuntimeException("store is not found" + baseMessage);
     }
-    
-    /*
     if (sponsorCoordinator.getProtege() != null && destinations.contains(destinationLocal)){
-      //TODO they only need some of the messages by range
-      String type = (String) m.getPayload().get("type");
-      if (type.equals("put") || type.equals("delete") ){ 
+      if (baseMessage instanceof PutMessage || baseMessage instanceof DeleteMessage){
         destinations.add(sponsorCoordinator.getProtege());
       }
     }
-    
-    long timeoutInMs = determineTimeout(store, m);
+    long timeoutInMs = determineTimeout(baseMessage);
     long requestStart = System.currentTimeMillis();
-    */
-    long timeoutInMs = 10000;
-    long requestStart = System.currentTimeMillis();
-
     if (baseMessage instanceof ColumnFamilyMessage) {
       ColumnFamilyMessage m = (ColumnFamilyMessage) baseMessage;
       LocalAction action = new LocalColumnFamilyAction(m, keyspace, store);
@@ -207,12 +197,16 @@ public class Coordinator {
     return hinter;
   }
 
-  private static long determineTimeout(Store columnFamily, Message message){
-    if (message.getPayload().containsKey("timeout")){
-      return ((Number) message.getPayload().get("timeout")).longValue();
-    } else {
-      return columnFamily.getStoreMetadata().getOperationTimeoutInMs();
+  private static long determineTimeout(BaseMessage message){
+    if (message instanceof ConsistencySupport){
+      Long timeout = ((ConsistencySupport) message).getTimeout();
+      if (timeout == null){
+        return 10000;
+      } else {
+        return timeout;
+      }
     }
+    return 10000;
   }
 
   public SponsorCoordinator getSponsorCoordinator() {

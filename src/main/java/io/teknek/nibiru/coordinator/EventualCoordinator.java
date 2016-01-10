@@ -104,7 +104,9 @@ public class EventualCoordinator {
     } else {
       c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
     }
-    
+    if (c == null){
+      c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
+    } 
     ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
     List<RemoteMessageCallable> remote = new ArrayList<>();
     List<Future<Response>> remoteFutures = new ArrayList<>();

@@ -1,7 +1,7 @@
 package io.teknek.nibiru.transport.metadata;
 
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 
-public class MetaDataMessage extends Message {
+public class MetaDataMessage extends BaseMessage {
   
 }

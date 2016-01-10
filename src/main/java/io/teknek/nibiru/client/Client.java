@@ -17,7 +17,6 @@ package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.BaseResponse;
-import io.teknek.nibiru.transport.Message;
 
 import io.teknek.nibiru.transport.Response;
 
@@ -42,7 +41,6 @@ public class Client {
   {
     MAPPER.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
-  
   
   private DefaultHttpClient client = new DefaultHttpClient();
   private ClientConnectionManager mgr;

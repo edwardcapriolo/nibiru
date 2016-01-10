@@ -11,12 +11,10 @@ import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -60,7 +58,7 @@ public class BasicTransportTest {
     
     {
       Client cl = new Client("127.0.0.1", s.getConfiguration().getTransportPort());
-      Response r = cl.post(new Message());
+      Response r = cl.post(new BaseMessage());
       Assert.assertTrue(r.containsKey("exception"));
     }
     s.shutdown();

@@ -41,5 +41,4 @@ public class SliceMessage extends ColumnFamilyMessage implements Routable {
     this.end = end;
   }
   
-
 }

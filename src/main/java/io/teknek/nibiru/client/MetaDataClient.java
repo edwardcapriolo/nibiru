@@ -19,7 +19,7 @@ import io.teknek.nibiru.ContactInformation;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.personality.LocatorPersonality;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateStore;
@@ -51,7 +51,7 @@ public class MetaDataClient extends Client {
   }
 
   public List<ClusterMember> getLiveMembers() throws ClientException {
-    Message m = new io.teknek.nibiru.transport.metadata.ListLiveMembers();
+    BaseMessage m = new io.teknek.nibiru.transport.metadata.ListLiveMembers();
     try {
       Response response = post(m); 
       List<Map> payloadAsMap = (List<Map>) response.get("payload");
@@ -67,8 +67,7 @@ public class MetaDataClient extends Client {
   
   public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties, boolean isClient) throws ClientException {
     CreateOrUpdateKeyspace k = new CreateOrUpdateKeyspace();
-    k.setKeyspace(MetaDataManager.SYSTEM_KEYSPACE);
-    k.setTargetKeyspace(keyspace);
+    k.setKeyspace(keyspace);
     if(isClient){
       k.setShouldReRoute(true);
     }

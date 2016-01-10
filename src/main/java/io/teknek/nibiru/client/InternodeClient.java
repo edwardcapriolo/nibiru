@@ -1,13 +1,10 @@
 package io.teknek.nibiru.client;
 
-import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.Token;
-import io.teknek.nibiru.engine.DirectSsTableWriter;
 import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomPair;
 import io.teknek.nibiru.engine.atom.AtomValue;
-import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.directsstable.Close;
 import io.teknek.nibiru.transport.directsstable.Open;
@@ -16,9 +13,7 @@ import io.teknek.nibiru.transport.sponsor.SponsorMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 

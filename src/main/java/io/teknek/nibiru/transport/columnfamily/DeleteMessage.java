@@ -8,7 +8,6 @@ public class DeleteMessage extends ColumnFamilyMessage implements Routable {
   private String row;
   private String column;
   private TraceTo traceTo;
-  private Long timeout;
   private Long version;
   
   public DeleteMessage(){
@@ -53,13 +52,4 @@ public class DeleteMessage extends ColumnFamilyMessage implements Routable {
     this.traceTo = traceTo;
   }
 
-  public Long getTimeout() {
-    return timeout;
-  }
-
-  public void setTimeout(Long timeout) {
-    this.timeout = timeout;
-  }
-
- 
 }

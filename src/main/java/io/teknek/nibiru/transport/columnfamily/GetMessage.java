@@ -8,7 +8,6 @@ public class GetMessage extends ColumnFamilyMessage implements Routable {
   private String row;
   private String column;
   private TraceTo traceTo;
-  private Long timeout;
   
   public GetMessage(){
     
@@ -36,14 +35,6 @@ public class GetMessage extends ColumnFamilyMessage implements Routable {
 
   public void setTraceTo(TraceTo traceTo) {
     this.traceTo = traceTo;
-  }
-
-  public Long getTimeout() {
-    return timeout;
-  }
-
-  public void setTimeout(Long timeout) {
-    this.timeout = timeout;
   }
 
   @Override

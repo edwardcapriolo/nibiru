@@ -21,7 +21,6 @@ import io.teknek.nibiru.ServerId;
 import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.*;
 
@@ -79,7 +78,7 @@ public class MetaDataCoordinator {
     return c;
   }
     
-  public Response handleSystemMessage(final Message message){
+  public Response handleSystemMessage(final MetaDataMessage message){
     if (message instanceof ListLiveMembers){
       return handleListLiveMembersMessage((ListLiveMembers) message);
     } else if (message instanceof CreateOrUpdateKeyspace) { 
@@ -150,7 +149,7 @@ public class MetaDataCoordinator {
   private Response handleCreateOrUpdateKeyspace(final CreateOrUpdateKeyspace message){
     
     metaDataManager.createOrUpdateKeyspace(
-            (String) message.getTargetKeyspace(), 
+            (String) message.getKeyspace(), 
             (Map<String,Object>) message.getProperties());
     //TODO this is hokey
     if (message.isShouldReRoute()){
@@ -162,7 +161,7 @@ public class MetaDataCoordinator {
           public Void call() throws Exception {
             try {
               c.createOrUpdateKeyspace(
-                    (String) message.getTargetKeyspace(), 
+                    (String) message.getKeyspace(), 
                     (Map<String,Object>) message.getProperties(), false
                     );
             } catch (RuntimeException ex){
