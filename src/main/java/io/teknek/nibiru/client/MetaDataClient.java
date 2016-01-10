@@ -19,7 +19,7 @@ import io.teknek.nibiru.ContactInformation;
 import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.personality.LocatorPersonality;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateStore;
@@ -27,6 +27,7 @@ import io.teknek.nibiru.transport.metadata.GetKeyspaceMetaData;
 import io.teknek.nibiru.transport.metadata.GetStoreMetaData;
 import io.teknek.nibiru.transport.metadata.ListKeyspaces;
 import io.teknek.nibiru.transport.metadata.ListStores;
+import io.teknek.nibiru.transport.metadata.LocatorMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class MetaDataClient extends Client {
   }
 
   public List<ClusterMember> getLiveMembers() throws ClientException {
-    Message m = new io.teknek.nibiru.transport.metadata.ListLiveMembers();
+    BaseMessage m = new io.teknek.nibiru.transport.metadata.ListLiveMembers();
     try {
       Response response = post(m); 
       List<Map> payloadAsMap = (List<Map>) response.get("payload");
@@ -66,8 +67,7 @@ public class MetaDataClient extends Client {
   
   public void createOrUpdateKeyspace(String keyspace, Map<String,Object> properties, boolean isClient) throws ClientException {
     CreateOrUpdateKeyspace k = new CreateOrUpdateKeyspace();
-    k.setKeyspace(MetaDataManager.SYSTEM_KEYSPACE);
-    k.setTargetKeyspace(keyspace);
+    k.setKeyspace(keyspace);
     if(isClient){
       k.setShouldReRoute(true);
     }
@@ -140,14 +140,9 @@ public class MetaDataClient extends Client {
   }
   
   public List<ContactInformation> getLocationForRowKey(String keyspace, String store, String rowkey) throws ClientException{
-    Message m = new Message();
+    LocatorMessage m = new LocatorMessage();
     m.setKeyspace(keyspace);
-    m.setStore(store);
-    m.setPersonality(LocatorPersonality.PERSONALITY);
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("type", LocatorPersonality.LOCATE_ROW_KEY);
-    payload.put("rowkey", rowkey);
-    m.setPayload(payload);
+    m.setRow(rowkey);
     TypeReference<List<ContactInformation>> tf = new TypeReference<List<ContactInformation>>() {};
     try {
       Response response = post(m);

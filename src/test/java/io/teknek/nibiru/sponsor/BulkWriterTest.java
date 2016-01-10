@@ -3,7 +3,6 @@ package io.teknek.nibiru.sponsor;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import junit.framework.Assert;
 import io.teknek.nibiru.AbstractTestServer;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.Token;
@@ -14,6 +13,7 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class BulkWriterTest extends AbstractTestServer {

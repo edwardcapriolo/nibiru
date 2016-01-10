@@ -2,7 +2,7 @@ package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.client.Client;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 
 import java.util.concurrent.Callable;
@@ -11,9 +11,9 @@ public class RemoteMessageCallable extends CompletableCallable implements Callab
 
   private final Client client;
   private final Destination destination;
-  private final Message message;
+  private final BaseMessage message;
   
-  public RemoteMessageCallable(Client client, Message message, Destination destination){
+  public RemoteMessageCallable(Client client, BaseMessage message, Destination destination){
     this.client = client;
     this.message = message;
     this.destination = destination;
@@ -36,7 +36,7 @@ public class RemoteMessageCallable extends CompletableCallable implements Callab
     return destination;
   }
 
-  public Message getMessage() {
+  public BaseMessage getMessage() {
     return message;
   }
 

@@ -25,65 +25,53 @@ import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.columnfamily.DeleteMessage;
+import io.teknek.nibiru.transport.columnfamily.GetMessage;
+import io.teknek.nibiru.transport.columnfamily.PutMessage;
+import io.teknek.nibiru.transport.columnfamily.SliceMessage;
 
 public class LocalColumnFamilyAction extends LocalAction {
   
-
-  public LocalColumnFamilyAction(Message message, Keyspace ks, Store cf){
+  public LocalColumnFamilyAction(BaseMessage message, Keyspace ks, Store cf){
     super(message,ks,cf);
   }
   
   @Override
   public Response handleReqest() {
     if (! (this.columnFamily instanceof ColumnFamilyPersonality)){
-      throw new RuntimeException("Column Family "+columnFamily.getStoreMetadata().getName() 
+      throw new RuntimeException("Column Family " + columnFamily.getStoreMetadata().getName() 
               + "does not support " + ColumnFamilyPersonality.PERSONALITY );
     }
     ColumnFamilyPersonality personality = (ColumnFamilyPersonality) this.columnFamily;
-    if (message.getPayload().get("type").equals("get")){
-      AtomValue v = personality.get(
-              (String) message.getPayload().get("rowkey"),
-              (String) message.getPayload().get("column"));
-      Response r = new Response();
-      r.put("payload", v);
-      return r;
-    } else if (message.getPayload().get("type").equals("slice")){
-      SortedMap<AtomKey,AtomValue> res = personality.slice(
-              (String) message.getPayload().get("rowkey"),
-              (String) message.getPayload().get("start"),
-              (String) message.getPayload().get("end") 
-              );
+    if (message instanceof GetMessage){
+      GetMessage g = (GetMessage) message;
+      AtomValue v = personality.get(g.getRow(), g.getColumn());
+      return new Response().withProperty("payload", v);
+    } else if (message instanceof PutMessage){
+      PutMessage m = (PutMessage) message;
+      Number l = m.getTtl();
+      if (l == null){
+        personality.put(m.getRow(), m.getColumn(), m.getValue(), m.getVersion());
+        return new Response();
+      } else {
+        personality.put(m.getRow(), m.getColumn(), m.getValue(), m.getVersion(), l.longValue());
+        return new Response();
+      }
+    } else if (message instanceof DeleteMessage){
+      DeleteMessage d = (DeleteMessage) message;
+      personality.delete(d.getRow(), d.getColumn(), d.getVersion());
+      return new Response();
+    } else if (message instanceof SliceMessage) {
+      SliceMessage m = (SliceMessage ) message;
+      SortedMap<AtomKey,AtomValue> res = personality.slice(m.getRow(), m.getStart(), m.getEnd() );
       SortedMap<String,AtomValue> res2 = new TreeMap<>();
       //TODO bug here
       for (Map.Entry<AtomKey, AtomValue> column: res.entrySet() ){
         res2.put(((ColumnKey) column.getKey()).getColumn(), column.getValue());
       }
       return new Response().withProperty("payload", res2);
-    } else if (message.getPayload().get("type").equals("put")) {
-      Long l = ((Long) message.getPayload().get("ttl"));
-      if (l == null){
-        personality.put(
-              (String) message.getPayload().get("rowkey"),
-              (String) message.getPayload().get("column"),
-              (String) message.getPayload().get("value"),
-              ((Number) message.getPayload().get("time")).longValue());
-        return new Response();
-      } else {
-        personality.put(
-                (String) message.getPayload().get("rowkey"),
-                (String) message.getPayload().get("column"),
-                (String) message.getPayload().get("value"),
-                ((Number) message.getPayload().get("time")).longValue(), l);
-        return new Response();
-      }
-    } else if (message.getPayload().get("type").equals("delete")) { 
-      personality.delete(
-              (String) message.getPayload().get("rowkey"),
-              (String) message.getPayload().get("column"),
-              ((Number) message.getPayload().get("time")).longValue());
-      return new Response();
     } else {
       throw new RuntimeException("Does not support this type of message");
     }    

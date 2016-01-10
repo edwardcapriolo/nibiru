@@ -20,7 +20,7 @@ import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnKey;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 
 public class HintReplayer extends AbstractPlugin implements Runnable {
   
@@ -110,7 +110,7 @@ public class HintReplayer extends AbstractPlugin implements Runnable {
     d.setDestinationId(m.getId());
     Client client = this.clientForDestination(d);
     try {
-      client.post( om.readValue(v.getValue(), Message.class));
+      client.post( om.readValue(v.getValue(), BaseMessage.class));
       hintCf.delete(m.getId(), c.getColumn(), System.currentTimeMillis() * 1000);
       hintsDelivered.getAndIncrement();
     } catch ( IOException | RuntimeException e) {

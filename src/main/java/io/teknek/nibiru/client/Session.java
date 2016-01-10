@@ -3,19 +3,17 @@ package io.teknek.nibiru.client;
 import io.teknek.nibiru.Consistency;
 import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.Val;
-import io.teknek.nibiru.coordinator.Tracer;
-import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.transport.Message;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.columnfamily.DeleteMessage;
+import io.teknek.nibiru.transport.columnfamily.GetMessage;
+import io.teknek.nibiru.transport.columnfamily.PutMessage;
+import io.teknek.nibiru.transport.columnfamily.SliceMessage;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.SortedMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-
-import com.google.common.collect.ImmutableMap;
 
 public class Session {
   private final Client client;
@@ -36,20 +34,14 @@ public class Session {
   }
   
   public Val get(String rowkey, String column) throws ClientException {
-    Message m = new Message();
+    GetMessage m = new GetMessage();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
-    Response payload = new Response()
-            .withProperty("type", "get")
-            .withProperty("rowkey", rowkey)
-            .withProperty("column", column)
-            .withProperty("timeout", client.getSocketTimeoutMillis())
-            .withProperty("consistency", readConsistency);
-    if (traceTo != null){
-      payload.withProperty(Tracer.TRACE_PROP, this.traceTo);
-    }
-    m.setPayload(payload);
+    m.setColumn(column);
+    m.setRow(rowkey); 
+    m.setConsistency(readConsistency);
+    m.setTimeout((long)client.getSocketTimeoutMillis());
+    m.setTraceTo(traceTo);
     try {
       Response response = client.post(m);
       if (response == null){
@@ -65,19 +57,12 @@ public class Session {
   }
   
   public SortedMap<String,Val> slice(String rowkey, String start, String end) throws ClientException {
-    Message m = new Message();
+    SliceMessage m = new SliceMessage();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", "slice")
-            .put("rowkey", rowkey)
-            .put("start", start)
-            .put("end", end)
-            .put("timeout", client.getSocketTimeoutMillis())
-            .put("consistency", readConsistency)
-            .build();
-    m.setPayload(payload);
+    m.setRow(rowkey);
+    m.setStart(start);
+    m.setEnd(end);
     try {
       Response response = client.post(m);
       if (response == null){
@@ -95,18 +80,14 @@ public class Session {
   
  
   public Response delete(String rowkey, String column, long time) throws ClientException {
-    Message m = new Message();
+    DeleteMessage m = new DeleteMessage();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", "delete")
-            .put("rowkey", rowkey)
-            .put("column", column)
-            .put("timeout", client.getSocketTimeoutMillis())
-            .put("consistency", writeConsistency)
-            .put("time", time).build();
-    m.setPayload(payload);
+    m.setRow(rowkey);
+    m.setColumn(column);
+    m.setConsistency(this.writeConsistency);
+    m.setVersion(time);
+    m.setTimeout((long) client.getSocketTimeoutMillis());
     try {
       Response response = client.post(m);
       if (response == null){
@@ -123,20 +104,16 @@ public class Session {
   }
 
   public Response put(String rowkey, String column, String value, long time, long ttl) throws ClientException{
-    Message m = new Message();
+    PutMessage m = new PutMessage();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", "put")
-            .put("rowkey", rowkey)
-            .put("column", column)
-            .put("value", value)
-            .put("time", time)
-            .put("timeout", client.getConnectionTimeoutMillis())
-            .put("consistency", writeConsistency)
-            .put("ttl", ttl).build();
-    m.setPayload(payload);
+    m.setRow(rowkey);
+    m.setColumn(column);
+    m.setValue(value);
+    m.setTimeout((long) client.getSocketTimeoutMillis());
+    m.setConsistency(writeConsistency);
+    m.setTtl(ttl);
+    m.setVersion(time);
     try {
       Response response = client.post(m);
       if (response == null){
@@ -153,19 +130,15 @@ public class Session {
   }
 
   public Response put(String rowkey, String column, String value, long time) throws ClientException{
-    Message m = new Message();
+    PutMessage m = new PutMessage();
     m.setKeyspace(keyspace);
     m.setStore(store);
-    m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
-    Map<String,Object> payload = new ImmutableMap.Builder<String, Object>()
-            .put("type", "put")
-            .put("rowkey", rowkey)
-            .put("column", column)
-            .put("value", value)
-            .put("timeout", client.getSocketTimeoutMillis())
-            .put("consistency", writeConsistency)
-            .put("time", time).build();
-    m.setPayload(payload);
+    m.setRow(rowkey);
+    m.setColumn(column);
+    m.setValue(value);
+    m.setTimeout((long) client.getSocketTimeoutMillis());
+    m.setConsistency(this.writeConsistency);
+    m.setVersion(time);
     try {
       Response response = client.post(m);
       if (response == null){

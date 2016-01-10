@@ -11,7 +11,7 @@ import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.Val;
 import io.teknek.nibiru.engine.atom.AtomValue;
 import io.teknek.nibiru.engine.atom.ColumnValue;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 
 import org.junit.Assert;
@@ -29,7 +29,7 @@ public class BasicTransportTest {
 
   @Test
   public void doIt() throws IllegalStateException, UnsupportedEncodingException, IOException, RuntimeException, ClientException {
-    Server s = TestUtil.aBasicServer(testFolder);
+    Server s =TestUtil.aBasicServer(testFolder);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
     AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
@@ -58,7 +58,7 @@ public class BasicTransportTest {
     
     {
       Client cl = new Client("127.0.0.1", s.getConfiguration().getTransportPort());
-      Response r = cl.post(new Message());
+      Response r = cl.post(new BaseMessage());
       Assert.assertTrue(r.containsKey("exception"));
     }
     s.shutdown();

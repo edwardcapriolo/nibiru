@@ -90,7 +90,8 @@ public class HttpJsonTransport {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=utf-8");
         try {
-          Message message = MAPPER.readValue(request.getInputStream(), Message.class);
+          BaseMessage message = MAPPER.readValue(request.getInputStream(), BaseMessage.class);
+          /*
           if (message.getPayload() != null && message.getPayload().get(Tracer.TRACE_PROP) != null){
             message.getPayload().put(Tracer.TRACE_PROP, 
                     MAPPER.convertValue(message.getPayload().get(Tracer.TRACE_PROP), TraceTo.class)
@@ -98,7 +99,7 @@ public class HttpJsonTransport {
           }
           if (coordinator.getTracer().shouldTrace(message)) { 
             coordinator.getTracer().trace(message, "message resived by %s" , "http transport"); 
-          }
+          }*/
           MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
         } catch (Exception ex){
           ex.printStackTrace();

@@ -1,15 +1,13 @@
 package io.teknek.nibiru.rpc;
 import java.util.concurrent.TimeUnit;
 
+import io.teknek.nibiru.BasicAbstractServerTest;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.RpcClient;
 import io.teknek.nibiru.coordinator.RpcCoordinator;
-import io.teknek.nibiru.engine.atom.ColumnKey;
-import io.teknek.nibiru.transport.BaseResponse;
-import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.rpc.BlockingRpc;
 import io.teknek.nibiru.transport.rpc.BlockingRpcResponse;
 import io.teknek.nit.NitDesc;
@@ -18,14 +16,9 @@ import io.teknek.nit.NitDesc.NitSpec;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-public class TestRpcCoordinator {
-
-  @Rule
-  public TemporaryFolder testFolder = new TemporaryFolder();
+public class TestRpcCoordinator extends BasicAbstractServerTest {
   
   public static final String SIMPLE_CALLABLE =  "import java.util.concurrent.Callable\n" +
           "public class A implements Callable {\n" +
@@ -73,25 +66,21 @@ public class TestRpcCoordinator {
   
   @Test
   public void endToEndTest() throws ClientException{
-    Server s = TestUtil.aBasicServer(testFolder);
-    RpcClient rpcClient = new RpcClient("127.0.0.1", s.getConfiguration().getTransportPort(), 10000, 10000);
+    RpcClient rpcClient = new RpcClient("127.0.0.1", server.getConfiguration().getTransportPort(), 10000, 10000);
     TypeReference<BlockingRpcResponse<Integer>> t = new TypeReference<BlockingRpcResponse<Integer>> (){};
     BlockingRpcResponse<Integer> resp = rpcClient.blockingRpc(simpleCallable(), 10000, TimeUnit.MILLISECONDS, t);
     Assert.assertEquals(new Integer(5), resp.getRpcResult());
-    s.shutdown();
   }
   
   @Test
   public void complexInReturn() throws ClientException{
-    Server s = TestUtil.aBasicServer(testFolder);
-    RpcClient rpcClient = new RpcClient("127.0.0.1", s.getConfiguration().getTransportPort(), 10000, 10000);
+    RpcClient rpcClient = new RpcClient("127.0.0.1", server.getConfiguration().getTransportPort(), 10000, 10000);
     TypeReference<BlockingRpcResponse<SomeWhackyType>> t = new TypeReference<BlockingRpcResponse<SomeWhackyType>> (){};
     //TypeReference<SomeWhackyType> t = new TypeReference<SomeWhackyType> (){};
     BlockingRpcResponse<SomeWhackyType> resp = rpcClient.blockingRpc(complexReturnCallable(), 10000, TimeUnit.MILLISECONDS, t);
     ObjectMapper om = new ObjectMapper();
     Assert.assertEquals( om.convertValue( resp.getRpcResult(), SomeWhackyType.class).getY(), "yo");
     Assert.assertEquals( resp.getRpcResult().getY(), "yo");
-    s.shutdown();
   }
   
 }

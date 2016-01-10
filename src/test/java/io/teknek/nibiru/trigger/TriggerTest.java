@@ -3,7 +3,6 @@ package io.teknek.nibiru.trigger;
 import java.util.List;
 import java.util.SortedMap;
 
-import junit.framework.Assert;
 
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
@@ -18,10 +17,12 @@ import io.teknek.nibiru.client.Session;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.StoreMetaData;
 import io.teknek.nibiru.personality.ColumnFamilyPersonality;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.columnfamily.PutMessage;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -95,21 +96,31 @@ public class TriggerTest {
   
   public static class PetAgeReverseTrigger implements CoordinatorTrigger {
     @Override
-    public void exec(Message message, Response response, Server server) {
-      String column = (String) message.getPayload().get("column");
-      String value = (String) message.getPayload().get("value");
-      String rowkey = (String) message.getPayload().get("rowkey");
-      if ("age".equalsIgnoreCase(column)){
+    public void exec(BaseMessage message, Response response, Server server) {
+      if (!(message instanceof PutMessage))
+        return;
+      PutMessage p = (PutMessage) message;
+      if ("age".equalsIgnoreCase(p.getColumn())){
+        /*
         Message m = new Message();
         m.setKeyspace("data");
         m.setStore(PET_AGE_CF);
         m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
         m.setPayload( new Response().withProperty("type", "put")
-                .withProperty("rowkey", value)
-                .withProperty("column", rowkey)
+                .withProperty("rowkey", p.getValue())
+                .withProperty("column", p.getRow())
                 .withProperty("value", "")
                 .withProperty("time", System.currentTimeMillis())
-                );
+                );*/
+        PutMessage m = new PutMessage();
+        m.setKeyspace("data");
+        m.setStore(PET_AGE_CF);
+        m.setRow(p.getValue());
+        m.setColumn(p.getRow());
+        m.setValue("");
+        m.setVersion(System.currentTimeMillis());
+        
+        
         server.getCoordinator().handle(m);
       }
     }    

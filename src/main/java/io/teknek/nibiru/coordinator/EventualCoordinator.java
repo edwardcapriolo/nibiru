@@ -23,8 +23,10 @@ import io.teknek.nibiru.Token;
 import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.cluster.ClusterMember;
 import io.teknek.nibiru.cluster.ClusterMembership;
-import io.teknek.nibiru.transport.Message;
+import io.teknek.nibiru.transport.BaseMessage;
+import io.teknek.nibiru.transport.ConsistencySupport;
 import io.teknek.nibiru.transport.Response;
+import io.teknek.nibiru.transport.Routable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +40,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.codehaus.jackson.map.ObjectMapper;
 
 public class EventualCoordinator {
 
@@ -46,9 +47,7 @@ public class EventualCoordinator {
   private final Configuration configuration;
   private ConcurrentMap<Destination,Client> mapping;
   private final ClusterMembership clusterMembership;
-  private static final ObjectMapper OM = new ObjectMapper();
   private ExecutorService lastChance;
-  
   
   public EventualCoordinator(ClusterMembership clusterMembership, Configuration configuration){
     this.clusterMembership = clusterMembership;
@@ -85,7 +84,7 @@ public class EventualCoordinator {
             clusterMembership.getLiveMembers(), clusterMembership.getDeadMembers()));
   }
 
-  public Response handleMessage(Token token, final Message message, List<Destination> destinations,
+  public Response handleMessage(Token token, final BaseMessage message, List<Destination> destinations,
           long timeoutInMs, Destination destinationLocal, final LocalAction action, ResultMerger merger, Hinter hinter) {
     if (destinations.size() == 0){
       throw new RuntimeException("No place to route message");
@@ -93,20 +92,21 @@ public class EventualCoordinator {
     if (destinations.size() == 1 && destinations.contains(destinationLocal)) {
       return action.handleReqest();
     }
-    if (message.getPayload().containsKey("reroute")){
+    if (((Routable) message).getReRoute()){
       return action.handleReqest();
     } 
-    if (!message.getPayload().containsKey("reroute")){
-      message.getPayload().put("reroute", "");
+    if (!((Routable) message).getReRoute()){
+      ((Routable) message).setReRoute(true);
     }
     Consistency c = null;
-    if (message.getPayload().get("consistency") == null) {
-      message.getPayload().put("consistency",
-              new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1));
+    if (message instanceof ConsistencySupport){
+      c = ((ConsistencySupport) message).getConsistency();
     } else {
-      c = OM.convertValue( message.getPayload().get("consistency"), Consistency.class);
+      c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
     }
-    
+    if (c == null){
+      c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
+    } 
     ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
     List<RemoteMessageCallable> remote = new ArrayList<>();
     List<Future<Response>> remoteFutures = new ArrayList<>();
@@ -168,7 +168,7 @@ public class EventualCoordinator {
   
   private Response handleN(long start, long deadline,
           ExecutorCompletionService<Response> completionService, List<Destination> destinations,
-          ResultMerger merger, Message message, Consistency c) {
+          ResultMerger merger, BaseMessage message, Consistency c) {
     List<Response> responses = new ArrayList<>();
     int wantedResults = (Integer) c.getParameters().get("n");
     int sucessfulSoFar = 0;
@@ -194,7 +194,7 @@ public class EventualCoordinator {
 
   private Response handleAll(long start, long deadline,
           ExecutorCompletionService<Response> completionService, List<Destination> destinations,
-          ResultMerger merger, Message message) {
+          ResultMerger merger, BaseMessage message) {
     List<Response> responses = new ArrayList<>();
     while (start <= deadline) {
       Response r = null;
