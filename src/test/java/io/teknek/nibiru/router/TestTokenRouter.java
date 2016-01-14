@@ -13,14 +13,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
-import junit.framework.Assert;
-
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class TestTokenRouter {
 
+  private TokenRouter token;
+  private Partitioner partitioner;
+  private Keyspace keyspace;
+  
   public static TreeMap<String,String> threeNodeRing(){
     TreeMap<String,String> tokenMap = new TreeMap<>();
     tokenMap.put("c", "id1");
@@ -29,7 +33,7 @@ public class TestTokenRouter {
     return tokenMap;
   }
   
-  private ClusterMembership threeLiveNodes(){
+  private static ClusterMembership threeLiveNodes(){
     ClusterMembership mock = new ClusterMembership(null, null) {
       public void init() {}
       public void shutdown() {}
@@ -43,45 +47,51 @@ public class TestTokenRouter {
     };
     return mock;
   }
-  
-  @Test
-  public void test(){
-    TokenRouter token = new TokenRouter();
-    Keyspace keyspace = new Keyspace(new Configuration());
+    
+  public void prepareRouter(int replicationFactor, 
+          SortedMap<String,String> tokenMap){
+    token = new TokenRouter();
+    keyspace = new Keyspace(new Configuration());
     KeyspaceMetaData meta = new KeyspaceMetaData();
     Map<String,Object> props = new HashMap<>();
-    props.put(TokenRouter.TOKEN_MAP_KEY, threeNodeRing());
+    props.put(TokenRouter.TOKEN_MAP_KEY, tokenMap);
+    props.put(TokenRouter.REPLICATION_FACTOR, replicationFactor);
     meta.setProperties(props);
     keyspace.setKeyspaceMetadata(meta);
-    Partitioner p = new NaturalPartitioner();
-    Assert.assertEquals("id1", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("a")).get(0).getDestinationId());
-    Assert.assertEquals("id1", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("aa")).get(0).getDestinationId());
-    Assert.assertEquals("id2", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("h")).get(0).getDestinationId());
-    Assert.assertEquals("id3", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("i")).get(0).getDestinationId());
-    Assert.assertEquals("id1", token.routesTo(null, keyspace, threeLiveNodes(), p.partition("z")).get(0).getDestinationId());
+    partitioner = new NaturalPartitioner();
+  }
+  
+  private List<Destination> locate(String row){
+    return token.routesTo(null, keyspace, threeLiveNodes(), 
+            partitioner.partition(row));
+  }
+  
+  private List<Destination> list(String ... destinations){
+    List<Destination> results = new java.util.ArrayList<>();
+    for (String dest: destinations){
+      results.add(new Destination(dest));
+    }
+    return results;
+  }
+  
+  @Test
+  public void testReplication1(){
+    prepareRouter(1, threeNodeRing());
+    assertEquals(list("id1"), locate("a"));
+    assertEquals(list("id1"), locate("aa"));
+    assertEquals(list("id2"), locate("h"));
+    assertEquals(list("id3"), locate("i"));
+    assertEquals(list("id1"), locate("z"));
   }
     
   @Test
-  public void testWithReplicationFactor(){
-    TokenRouter token = new TokenRouter();
-    Keyspace keyspace = new Keyspace(new Configuration());
-    KeyspaceMetaData meta = new KeyspaceMetaData();
-    Map<String,Object> props = new HashMap<>();
-    props.put(TokenRouter.TOKEN_MAP_KEY, threeNodeRing());
-    props.put(TokenRouter.REPLICATION_FACTOR, 2);
-    meta.setProperties(props);
-    keyspace.setKeyspaceMetadata(meta);
-    Partitioner p = new NaturalPartitioner();
-    Assert.assertEquals(Arrays.asList(new Destination("id1"), new Destination("id2")),
-            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("a")));
-    Assert.assertEquals(Arrays.asList(new Destination("id1"), new Destination("id2")),
-            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("aa")));
-    Assert.assertEquals(Arrays.asList(new Destination("id2"), new Destination("id3")),
-            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("h")));
-    Assert.assertEquals(Arrays.asList(new Destination("id3"), new Destination("id1")),
-            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("i")));
-    Assert.assertEquals(Arrays.asList(new Destination("id1"), new Destination("id2")),
-            token.routesTo(null, keyspace, threeLiveNodes(), p.partition("z")));
+  public void testReplication2(){
+    prepareRouter(2, threeNodeRing());
+    assertEquals(list("id1", "id2"), locate("a"));
+    assertEquals(list("id1", "id2"), locate("aa"));
+    assertEquals(list("id2", "id3"), locate("h"));
+    assertEquals(list("id3", "id1"), locate("i"));
+    assertEquals(list("id1", "id2"), locate("z"));
   }
   
 }

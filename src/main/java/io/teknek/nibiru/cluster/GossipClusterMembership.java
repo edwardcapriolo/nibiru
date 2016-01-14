@@ -37,6 +37,7 @@ public class GossipClusterMembership extends ClusterMembership{
   static final Logger LOGGER = Logger.getLogger(GossipClusterMembership.class);
   public static final String HOSTS = "gossip_hosts_list";
   public static final String PORT = "gossip_port";
+  public static final int GOSSIP_PORT = 2000;
   
   private GossipService gossipService;
   
@@ -44,30 +45,25 @@ public class GossipClusterMembership extends ClusterMembership{
     super(configuration, serverId);
   }
 
+  class LogGossipListener implements GossipListener {
+    @Override
+    public void gossipEvent(GossipMember member, GossipState state) {
+      LOGGER.debug(serverId.getU() + " " + member + state);     
+    }
+  }
+  
   @SuppressWarnings("unchecked")
   @Override
   public void init() {
     ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
-    GossipSettings settings = new GossipSettings();
-    List<String> hosts = null;
-    if (configuration.getClusterMembershipProperties() != null){
+    List<String> hosts = new ArrayList<String>();
+    if (configuration.getClusterMembershipProperties() != null)
       hosts = (List<String>) configuration.getClusterMembershipProperties().get(HOSTS);
-    } else {
-      hosts = new ArrayList<String>();
-    }
-    int port = 2000;
-    for (String host: hosts){
-      GossipMember g = new RemoteGossipMember(host, port, "");
-      startupMembers.add(g);
-    }
-    try { 
-      gossipService = new GossipService(configuration.getTransportHost(), port, serverId.getU()
-              .toString(), startupMembers, settings, new GossipListener() {
-        @Override
-        public void gossipEvent(GossipMember member, GossipState state) {
-          LOGGER.info(serverId.getU() + " " + member + state); 
-        }
-      });
+    for (String host : hosts)
+      startupMembers.add(new RemoteGossipMember(host, GOSSIP_PORT, ""));
+    try {
+      gossipService = new GossipService(configuration.getTransportHost(), GOSSIP_PORT, serverId
+              .getU().toString(), startupMembers, new GossipSettings(), new LogGossipListener());
     } catch (UnknownHostException | InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -77,8 +73,7 @@ public class GossipClusterMembership extends ClusterMembership{
   @Override
   public void shutdown() {
     try {
-      gossipService.shutdown();
-      
+      gossipService.shutdown(); 
     } catch (RuntimeException ex) {
       System.err.println(ex);
     }
