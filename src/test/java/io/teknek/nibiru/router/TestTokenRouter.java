@@ -47,7 +47,7 @@ public class TestTokenRouter {
     };
     return mock;
   }
-    
+  
   public void prepareRouter(int replicationFactor, 
           SortedMap<String,String> tokenMap){
     token = new TokenRouter();
@@ -61,17 +61,17 @@ public class TestTokenRouter {
     partitioner = new NaturalPartitioner();
   }
   
-  private List<Destination> locate(String row){
-    return token.routesTo(null, keyspace, threeLiveNodes(), 
-            partitioner.partition(row));
-  }
-  
   private List<Destination> list(String ... destinations){
     List<Destination> results = new java.util.ArrayList<>();
     for (String dest: destinations){
       results.add(new Destination(dest));
     }
     return results;
+  }
+ 
+  private List<Destination> locate(String row){
+    return token.routesTo(null, keyspace, threeLiveNodes(), 
+            partitioner.partition(row));
   }
   
   @Test
