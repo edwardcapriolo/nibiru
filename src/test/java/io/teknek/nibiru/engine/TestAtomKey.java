@@ -8,9 +8,9 @@ import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import java.util.Arrays;
 import java.util.TreeSet;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import junit.framework.Assert;
 
 public class TestAtomKey {
 
@@ -21,6 +21,6 @@ public class TestAtomKey {
             new RangeTombstoneKey("d", "f")));
     Assert.assertEquals(RowTombstoneKey.class, list.first().getClass());
     Assert.assertEquals(RangeTombstoneKey.class, list.higher(list.first()).getClass());
-    Assert.assertEquals(new ColumnKey("ac").getColumn() , ((ColumnKey)list.last() ).getColumn());
+    Assert.assertEquals(new ColumnKey("ac").getColumn(), ((ColumnKey)list.last()).getColumn());
   }
 }

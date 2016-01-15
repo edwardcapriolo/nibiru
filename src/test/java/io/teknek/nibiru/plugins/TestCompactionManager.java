@@ -4,6 +4,7 @@ import io.teknek.nibiru.Destination;
 import io.teknek.nibiru.Keyspace;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.ServerId;
+import io.teknek.nibiru.ServerShutdown;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.Token;
 import io.teknek.nibiru.client.ClientException;
@@ -22,14 +23,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class TestCompactionManager {
+public class TestCompactionManager extends ServerShutdown {
 
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
@@ -38,14 +38,9 @@ public class TestCompactionManager {
   
   @Before
   public void buildServer(){
-    server = TestUtil.aBasicServer(testFolder);
+    server = registerServer(TestUtil.aBasicServer(testFolder));
   }
-  
-  @After
-  public void closeServer(){
-    server.shutdown();
-  }
-  
+    
   @Test
   public void compactionTest() throws IOException, InterruptedException{
     server.getMetaDataManager().createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, new HashMap<String,Object>());
@@ -101,7 +96,7 @@ public class TestCompactionManager {
   
   private void changeTheRouter(Server s) throws ClientException{
     MetaDataClient metaDataClient = new MetaDataClient(s.getConfiguration().getTransportHost(), s
-            .getConfiguration().getTransportPort());
+            .getConfiguration().getTransportPort(), 10000, 10000);
     metaDataClient.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, 
             new Response().withProperty(KeyspaceMetaData.ROUTER_CLASS, OnlyTheBestRouter.class.getName()), true);
     metaDataClient.shutdown();

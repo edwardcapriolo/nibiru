@@ -3,10 +3,10 @@ package io.teknek.nibiru.keyvalue;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import junit.framework.Assert;
 import io.teknek.nibiru.coordinator.MajorityValueResultMerger;
 import io.teknek.nibiru.transport.Response;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestMajorityMerger {

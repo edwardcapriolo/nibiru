@@ -25,7 +25,7 @@ public class AbstractTestServer {
     client = new ColumnFamilyClient( new Client(server.getConfiguration().getTransportHost(), 
             server.getConfiguration().getTransportPort(), 10000, 10000));
     meta = new MetaDataClient(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort());
+            server.getConfiguration().getTransportPort(), 10000, 10000);
   }
   
   @After

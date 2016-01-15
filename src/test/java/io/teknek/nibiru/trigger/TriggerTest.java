@@ -5,6 +5,7 @@ import java.util.SortedMap;
 
 
 import io.teknek.nibiru.Server;
+import io.teknek.nibiru.ServerShutdown;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.TriggerDefinition;
 import io.teknek.nibiru.TriggerLevel;
@@ -27,7 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class TriggerTest {
+public class TriggerTest extends ServerShutdown {
 
   private static final String PET_AGE_CF = "petage";
   
@@ -40,16 +41,15 @@ public class TriggerTest {
   
   @Before
   public void buildServer(){
-    server = TestUtil.aBasicServer(node1Folder);
+    server = registerServer(TestUtil.aBasicServer(node1Folder));
     client = new ColumnFamilyClient( new Client(server.getConfiguration().getTransportHost(), 
             server.getConfiguration().getTransportPort(), 10000, 10000));
     meta = new MetaDataClient(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort());
+            server.getConfiguration().getTransportPort(), 10000, 10000);
   }
   
   @After
   public void closeServer(){
-    server.shutdown();
     client.shutdown();
     meta.shutdown();
   }

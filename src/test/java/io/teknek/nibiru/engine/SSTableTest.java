@@ -21,8 +21,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.collect.ImmutableMap;
-
 public class SSTableTest {
 
   @Rule
@@ -32,7 +30,6 @@ public class SSTableTest {
   @Test
   public void aTest() throws IOException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    //ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     ks1.createStore("abc", new Response().withProperty( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
     AbstractMemtable m = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     m.put(ks1.getKeyspaceMetaData().getPartitioner().partition("row1"), "column2", "c", 1, 0L);

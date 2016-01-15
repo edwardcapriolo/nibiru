@@ -1,6 +1,5 @@
 package io.teknek.nibiru.transport.columnfamily;
 
-import io.teknek.nibiru.Consistency;
 import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.transport.Routable;
 

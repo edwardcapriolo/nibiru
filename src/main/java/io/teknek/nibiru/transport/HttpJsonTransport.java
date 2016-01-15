@@ -23,9 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import io.teknek.nibiru.Configuration;
-import io.teknek.nibiru.TraceTo;
 import io.teknek.nibiru.coordinator.Coordinator;
-import io.teknek.nibiru.coordinator.Tracer;
 import org.codehaus.jackson.map.DeserializationConfig;
 
 import org.apache.log4j.Logger;
@@ -91,15 +89,6 @@ public class HttpJsonTransport {
         response.setContentType("application/json;charset=utf-8");
         try {
           BaseMessage message = MAPPER.readValue(request.getInputStream(), BaseMessage.class);
-          /*
-          if (message.getPayload() != null && message.getPayload().get(Tracer.TRACE_PROP) != null){
-            message.getPayload().put(Tracer.TRACE_PROP, 
-                    MAPPER.convertValue(message.getPayload().get(Tracer.TRACE_PROP), TraceTo.class)
-                    );
-          }
-          if (coordinator.getTracer().shouldTrace(message)) { 
-            coordinator.getTracer().trace(message, "message resived by %s" , "http transport"); 
-          }*/
           MAPPER.writeValue(response.getOutputStream(), coordinator.handle(message));
         } catch (Exception ex){
           ex.printStackTrace();

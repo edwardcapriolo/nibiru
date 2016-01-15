@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.SortedMap;
 
+import io.teknek.nibiru.ServerShutdown;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
@@ -19,7 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class BasicTransportTest {
+public class BasicTransportTest extends ServerShutdown {
 
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
@@ -29,7 +30,7 @@ public class BasicTransportTest {
 
   @Test
   public void doIt() throws IllegalStateException, UnsupportedEncodingException, IOException, RuntimeException, ClientException {
-    Server s =TestUtil.aBasicServer(testFolder);
+    Server s = registerServer(TestUtil.aBasicServer(testFolder));
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
     AtomValue x = s.get(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age");
@@ -51,30 +52,25 @@ public class BasicTransportTest {
     session.put("jack", "height", "7in", 10L);
     Assert.assertEquals("7in", session.get("jack", "height").getValue());
     SortedMap<String,Val> slice = session.slice("jack", "a", "z");
-    System.out.println(slice);
     Assert.assertEquals("6", slice.get(slice.firstKey()).getValue());
     Assert.assertEquals("7in", slice.get("height").getValue());
     Assert.assertEquals("6lbds", slice.get("weight").getValue());
-    
     {
-      Client cl = new Client("127.0.0.1", s.getConfiguration().getTransportPort());
+      Client cl = new Client("127.0.0.1", s.getConfiguration().getTransportPort(), 10000, 10000);
       Response r = cl.post(new BaseMessage());
       Assert.assertTrue(r.containsKey("exception"));
     }
-    s.shutdown();
   }
   
   @Test
   public void testBindHost(){
     Configuration configuration = TestUtil.aBasicConfiguration(testFolder);
     configuration.setTransportHost("127.0.0.1");
-    Server s = new Server(configuration);
+    Server s = registerServer(new Server(configuration));
     s.init();
     Configuration configuration2 = TestUtil.aBasicConfiguration(testFolder2);
     configuration2.setTransportHost("127.0.0.2");
-    Server s2 = new Server(configuration2);
+    Server s2 = registerServer(new Server(configuration2));
     s2.init();
-    s.shutdown();
-    s2.shutdown();
   }
 }

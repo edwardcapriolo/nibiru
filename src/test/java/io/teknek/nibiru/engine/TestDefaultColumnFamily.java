@@ -1,9 +1,9 @@
 package io.teknek.nibiru.engine;
 
-import junit.framework.Assert;
 import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestDefaultColumnFamily {
@@ -31,7 +31,4 @@ public class TestDefaultColumnFamily {
     Assert.assertEquals(cvNewer, DefaultColumnFamily.applyRules(cvNewer, cvOld));
   }
  
-  
-  
-
 }

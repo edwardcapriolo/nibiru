@@ -2,6 +2,7 @@ package io.teknek.nibiru.coordinator;
 
 import io.teknek.nibiru.ContactInformation;
 import io.teknek.nibiru.Server;
+import io.teknek.nibiru.ServerShutdown;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.MetaDataClient;
@@ -14,30 +15,27 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class TestMetaCoordinator {
+public class TestMetaCoordinator extends ServerShutdown {
 
   @Rule
   public TemporaryFolder testFolder3 = new TemporaryFolder();
   
   @Test
   public void listStores() throws ClientException {
-    Server s = TestUtil.aBasicServer(testFolder3, 7073);
+    Server s = registerServer(TestUtil.aBasicServer(testFolder3));
     MetaDataClient c = new MetaDataClient(s.getConfiguration().getTransportHost(), 
-            s.getConfiguration().getTransportPort());
+            s.getConfiguration().getTransportPort(), 10000, 10000);
     Assert.assertEquals(Arrays.asList(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), 
             c.listStores(TestUtil.DATA_KEYSPACE)); 
-    Assert.assertEquals(new HashMap(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
-    
+    Assert.assertEquals(new HashMap<Object, Object>(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
-            DefaultColumnFamily.class.getName()).withProperty(StoreMetaData.COORDINATOR_TRIGGERS, new ArrayList()), 
+            DefaultColumnFamily.class.getName()).withProperty(StoreMetaData.COORDINATOR_TRIGGERS, new ArrayList<Object>()), 
             c.getStoreMetadata(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY));
-    
     Response expected = new Response().withProperty("a", "b");
     c.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, expected, true);
     Assert.assertEquals(expected, c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
@@ -45,7 +43,6 @@ public class TestMetaCoordinator {
     changeAndAssert(c, s);
     assertContactInformation(c, s);
     c.shutdown();
-    s.shutdown();
   }
   
   private void changeAndAssert(MetaDataClient c, Server s) throws ClientException{

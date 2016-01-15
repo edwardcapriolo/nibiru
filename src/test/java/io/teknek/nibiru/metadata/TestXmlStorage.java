@@ -1,13 +1,12 @@
 package io.teknek.nibiru.metadata;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
 
 import io.teknek.nibiru.Configuration;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -34,8 +33,6 @@ public class TestXmlStorage {
     x.persist(conf, m);
     Map<String,KeyspaceAndStoreMetaData> result = x.read(conf);
     Assert.assertEquals("abc", result.get("abc").getKeyspaceMetaData().getName());
-    //Assert.assertEquals(1, result.get("abc").getColumnFamilyMetaData().size());
-    //Assert.assertEquals("def", result.get("abc").getColumnFamilyMetaData().get("def").getName());
   }
   
 }
