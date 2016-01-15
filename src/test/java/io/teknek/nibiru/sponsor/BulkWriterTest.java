@@ -21,7 +21,7 @@ public class BulkWriterTest extends AbstractTestServer {
   @Test
   public void aTest(){
     InternodeClient i = new InternodeClient(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort());
+            server.getConfiguration().getTransportPort(), 10000, 10000);
     i.createSsTable(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, 1+"");
     DefaultColumnFamily store = (DefaultColumnFamily) server.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY);
     Assert.assertEquals(1, store.getStreamSessions().size());

@@ -72,7 +72,7 @@ public class MetaDataCoordinator {
     MetaDataClient c = clients.get(clusterMember);
     if (c == null) {
       c = new MetaDataClient(clusterMember.getHost(), configuration
-              .getTransportPort());
+              .getTransportPort(), 10000, 10000);
       clients.putIfAbsent(clusterMember, c);
     }
     return c;

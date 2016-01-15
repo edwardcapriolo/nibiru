@@ -64,7 +64,7 @@ public class SponsorCoordinator {
     
     Thread t = new Thread(){
       public void run(){
-        InternodeClient protegeClient = new InternodeClient(message.getTransportHost(), server.getConfiguration().getTransportPort());
+        InternodeClient protegeClient = new InternodeClient(message.getTransportHost(), server.getConfiguration().getTransportPort(), 10000, 10000);
         Keyspace ks = server.getKeyspaces().get(message.getKeyspace());
         replicateData(protegeClient, ks);
         updateTokenMap(ks, metaDataClient, message.getWantedToken(), message.getRequestId() );

@@ -84,7 +84,7 @@ public class TestCompactionManager extends ServerShutdown {
                       .get(TestUtil.PETS_COLUMN_FAMILY));
     } else {
       ColumnFamilyAdminClient c = new ColumnFamilyAdminClient(s.getConfiguration()
-              .getTransportHost(), s.getConfiguration().getTransportPort());
+              .getTransportHost(), s.getConfiguration().getTransportPort(), 10000, 10000);
       c.cleanup(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY);
       try {
         Thread.sleep(2000);
