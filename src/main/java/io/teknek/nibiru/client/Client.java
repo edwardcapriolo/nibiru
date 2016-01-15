@@ -52,11 +52,7 @@ public class Client {
   private final int port;
   private final int connectionTimeoutMillis;
   private final int socketTimeoutMillis;
-  
-  @Deprecated
-  public Client(String host, int port){
-    this(host, port, connectionTimeoutInMillis, socketTimeoutInMillis);
-  }
+    
   
   @SuppressWarnings("deprecation")
   public Client(String host, int port, int connectionTimeoutMillis, int socketTimeoutMillis){

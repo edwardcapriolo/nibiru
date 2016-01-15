@@ -144,7 +144,7 @@ public class Server {
   
   @VisibleForTesting
   public void join(String keyspace, String sponsorHost, String wantedToken){
-    InternodeClient internodeClient = new InternodeClient(sponsorHost, configuration.getTransportPort());
+    InternodeClient internodeClient = new InternodeClient(sponsorHost, configuration.getTransportPort(), 10000, 10000);
     internodeClient.join(keyspace, sponsorHost, serverId, wantedToken, configuration.getTransportHost());
   }
   

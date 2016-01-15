@@ -14,21 +14,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
 
+import org.junit.Assert;
 import org.junit.rules.TemporaryFolder;
 
 public class TestUtil {
   
-  public static   Map<String, Object> STANDARD_COLUMN_FAMILY(){ return  new Response()
-  .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());}
-  /*
-  public static final Map<String, Object> STANDARD_COLUMN_FAMILY = new Response()
-  .withProperty(StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName());
-  */
+  public static Map<String, Object> STANDARD_COLUMN_FAMILY() {
+    return new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS,
+            DefaultColumnFamily.class.getName());
+  }
 
-  public static final Map<String, Object> STANDARD_KEY_VLUE = new Response()
-  .withProperty(StoreMetaData.IMPLEMENTING_CLASS,InMemoryKeyValue.class.getName());
+  public static final Map<String, Object> STANDARD_KEY_VLUE = new Response().withProperty(
+          StoreMetaData.IMPLEMENTING_CLASS, InMemoryKeyValue.class.getName());
   
   public static final String PETS_COLUMN_FAMILY = "pets";
   public static final String DATA_KEYSPACE = "data";
@@ -92,7 +90,6 @@ public class TestUtil {
     ColumnValue v3 = (ColumnValue) v1;
     ColumnValue v4 = (ColumnValue) v2;
     Assert.assertEquals(v3.getTime(), v4.getTime());
-    //Assert.assertEquals(v3.getCreateTime(), v4.getCreateTime());
     Assert.assertEquals(v3.getTtl(), v4.getTtl());
     Assert.assertEquals(v3.getValue(), v4.getValue());
   }

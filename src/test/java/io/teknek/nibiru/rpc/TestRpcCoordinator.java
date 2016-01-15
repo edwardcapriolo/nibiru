@@ -3,8 +3,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.teknek.nibiru.BasicAbstractServerTest;
 import io.teknek.nibiru.Configuration;
-import io.teknek.nibiru.Server;
-import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.ClientException;
 import io.teknek.nibiru.client.RpcClient;
 import io.teknek.nibiru.coordinator.RpcCoordinator;
@@ -59,8 +57,9 @@ public class TestRpcCoordinator extends BasicAbstractServerTest {
     BlockingRpc rpc = new BlockingRpc();
     rpc.setTimeoutInMillis(10000);
     rpc.setNitDesc(simpleCallable());
-    BlockingRpcResponse r = (BlockingRpcResponse) coordinator.processMessage(rpc);
-    Assert.assertEquals(5, r.getRpcResult());
+    @SuppressWarnings("unchecked")
+    BlockingRpcResponse<Integer> r = (BlockingRpcResponse<Integer>) coordinator.processMessage(rpc);
+    Assert.assertEquals(new Integer(5), r.getRpcResult());
     coordinator.shutdown();
   }
   
@@ -76,7 +75,6 @@ public class TestRpcCoordinator extends BasicAbstractServerTest {
   public void complexInReturn() throws ClientException{
     RpcClient rpcClient = new RpcClient("127.0.0.1", server.getConfiguration().getTransportPort(), 10000, 10000);
     TypeReference<BlockingRpcResponse<SomeWhackyType>> t = new TypeReference<BlockingRpcResponse<SomeWhackyType>> (){};
-    //TypeReference<SomeWhackyType> t = new TypeReference<SomeWhackyType> (){};
     BlockingRpcResponse<SomeWhackyType> resp = rpcClient.blockingRpc(complexReturnCallable(), 10000, TimeUnit.MILLISECONDS, t);
     ObjectMapper om = new ObjectMapper();
     Assert.assertEquals( om.convertValue( resp.getRpcResult(), SomeWhackyType.class).getY(), "yo");

@@ -27,7 +27,7 @@ public class Cli {
     while ((line = br.readLine()) != null){
       String [] parts = line.split("\\s+");
       if  ("connect".equalsIgnoreCase(parts[0])){
-        meta = new MetaDataClient(parts[1],Integer.parseInt(parts[2]));
+        meta = new MetaDataClient(parts[1], Integer.parseInt(parts[2]), 10000, 10000);
         client = new ColumnFamilyClient(new Client(parts[1], Integer.parseInt(parts[2]), 10000,
                 10000));
       } else if  ("showcluster".equalsIgnoreCase(parts[0])){
@@ -64,7 +64,7 @@ public class Cli {
       
       else if ("createcolumnfamily".equalsIgnoreCase(parts[0])) {
         try {
-          Map m = new HashMap<String,Object>();
+          Map<String,Object> m = new HashMap<>();
           m.put("implementing_class", DefaultColumnFamily.class.getName());
           meta.createOrUpdateStore(parts[1], parts[2], m, true);
         } catch (ClientException e) {

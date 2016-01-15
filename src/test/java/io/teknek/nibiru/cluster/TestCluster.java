@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 
+import io.teknek.nibiru.ServerShutdown;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.Server;
 import io.teknek.nibiru.TestUtil;
@@ -25,7 +26,7 @@ import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.Sets;
 
-public class TestCluster {
+public class TestCluster extends ServerShutdown {
 
   @Rule
   public TemporaryFolder node1Folder = new TemporaryFolder();
@@ -46,7 +47,7 @@ public class TestCluster {
       conf.setClusterMembershipProperties(clusterProperties);
       conf.setTransportHost("127.0.0.1");
       clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
-      s[0] = new Server(conf);
+      s[0] = registerServer(new Server(conf));
     }
     {
       Configuration conf = TestUtil.aBasicConfiguration(node2Folder);
@@ -54,7 +55,7 @@ public class TestCluster {
       conf.setClusterMembershipProperties(clusterProperties);
       clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
       conf.setTransportHost("127.0.0.2");
-      s[1] = new Server(conf);
+      s[1] = registerServer(new Server(conf));
     }
     {
       Configuration conf = TestUtil.aBasicConfiguration(node3Folder);
@@ -62,7 +63,7 @@ public class TestCluster {
       conf.setClusterMembershipProperties(clusterProperties);
       clusterProperties.put(GossipClusterMembership.HOSTS, Arrays.asList("127.0.0.1"));
       conf.setTransportHost("127.0.0.3");
-      s[2] = new Server(conf);
+      s[2] = registerServer(new Server(conf));
     }
     for (Server server : s){
       server.init();
@@ -93,10 +94,6 @@ public class TestCluster {
         livingHosts.add(cm.getHost());
       }
       Assert.assertEquals(Sets.newHashSet("127.0.0.1", "127.0.0.2", "127.0.0.3"), livingHosts);
-    }
-    
-    for (Server server : s){
-     server.shutdown();
     }
   }
 }

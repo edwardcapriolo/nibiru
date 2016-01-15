@@ -51,7 +51,7 @@ public class TestCoordinator {
   
   private void createMetaData(Server [] s) throws ClientException, InterruptedException {
     MetaDataClient c = new MetaDataClient(s[0].getConfiguration().getTransportHost(), s[0]
-            .getConfiguration().getTransportPort());
+            .getConfiguration().getTransportPort(), 10000, 10000);
     Map<String,Object> props = new HashMap<>();
     TreeMap<String,String> tokenMap = new TreeMap<>();
     tokenMap.put("c", s[0].getServerId().getU().toString());

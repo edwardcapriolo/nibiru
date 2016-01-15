@@ -16,9 +16,7 @@
 package io.teknek.nibiru.client;
 
 import io.teknek.nibiru.ContactInformation;
-import io.teknek.nibiru.MetaDataManager;
 import io.teknek.nibiru.cluster.ClusterMember;
-import io.teknek.nibiru.personality.LocatorPersonality;
 import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.metadata.CreateOrUpdateKeyspace;
@@ -32,7 +30,6 @@ import io.teknek.nibiru.transport.metadata.LocatorMessage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,11 +37,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
 public class MetaDataClient extends Client {
-
-  @Deprecated
-  public MetaDataClient(String host, int port) {
-    super(host, port);
-  }
   
   public MetaDataClient(String host, int port, int c, int s) {
     super(host, port, c, s);

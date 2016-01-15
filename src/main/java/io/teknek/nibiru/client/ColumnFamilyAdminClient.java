@@ -10,8 +10,8 @@ public class ColumnFamilyAdminClient {
 
   private final Client client;
   
-  public ColumnFamilyAdminClient(String host, int port){
-    client = new Client(host, port);
+  public ColumnFamilyAdminClient(String host, int port, int con, int s){
+    client = new Client(host, port, con, s);
   }
   
   public ColumnFamilyAdminClient(Client client){

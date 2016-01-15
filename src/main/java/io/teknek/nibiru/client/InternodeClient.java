@@ -21,8 +21,8 @@ public class InternodeClient {
 
   private Client client;
   
-  public InternodeClient(String host, int port){
-    client = new Client(host, port);
+  public InternodeClient(String host, int port, int connectionTimeout, int socketTimeout ){
+    client = new Client(host, port,connectionTimeout, socketTimeout);
   }
   
   /**

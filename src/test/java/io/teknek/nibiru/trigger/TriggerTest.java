@@ -5,6 +5,7 @@ import java.util.SortedMap;
 
 
 import io.teknek.nibiru.Server;
+import io.teknek.nibiru.ServerShutdown;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.TriggerDefinition;
 import io.teknek.nibiru.TriggerLevel;
@@ -16,7 +17,6 @@ import io.teknek.nibiru.client.MetaDataClient;
 import io.teknek.nibiru.client.Session;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 import io.teknek.nibiru.metadata.StoreMetaData;
-import io.teknek.nibiru.personality.ColumnFamilyPersonality;
 import io.teknek.nibiru.transport.BaseMessage;
 import io.teknek.nibiru.transport.Response;
 import io.teknek.nibiru.transport.columnfamily.PutMessage;
@@ -28,7 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class TriggerTest {
+public class TriggerTest extends ServerShutdown {
 
   private static final String PET_AGE_CF = "petage";
   
@@ -41,16 +41,15 @@ public class TriggerTest {
   
   @Before
   public void buildServer(){
-    server = TestUtil.aBasicServer(node1Folder);
+    server = registerServer(TestUtil.aBasicServer(node1Folder));
     client = new ColumnFamilyClient( new Client(server.getConfiguration().getTransportHost(), 
             server.getConfiguration().getTransportPort(), 10000, 10000));
     meta = new MetaDataClient(server.getConfiguration().getTransportHost(), 
-            server.getConfiguration().getTransportPort());
+            server.getConfiguration().getTransportPort(), 10000, 10000);
   }
   
   @After
   public void closeServer(){
-    server.shutdown();
     client.shutdown();
     meta.shutdown();
   }
@@ -101,17 +100,6 @@ public class TriggerTest {
         return;
       PutMessage p = (PutMessage) message;
       if ("age".equalsIgnoreCase(p.getColumn())){
-        /*
-        Message m = new Message();
-        m.setKeyspace("data");
-        m.setStore(PET_AGE_CF);
-        m.setPersonality(ColumnFamilyPersonality.PERSONALITY);
-        m.setPayload( new Response().withProperty("type", "put")
-                .withProperty("rowkey", p.getValue())
-                .withProperty("column", p.getRow())
-                .withProperty("value", "")
-                .withProperty("time", System.currentTimeMillis())
-                );*/
         PutMessage m = new PutMessage();
         m.setKeyspace("data");
         m.setStore(PET_AGE_CF);
@@ -119,8 +107,6 @@ public class TriggerTest {
         m.setColumn(p.getRow());
         m.setValue("");
         m.setVersion(System.currentTimeMillis());
-        
-        
         server.getCoordinator().handle(m);
       }
     }    

@@ -41,6 +41,8 @@ import io.teknek.nibiru.transport.directsstable.DirectSsTableMessage;
 
 public class Coordinator {
 
+  private static final ResultMerger HIGHEST_TIMESTAMP_MERGER = new HighestTimestampResultMerger();
+  private static final ResultMerger MAJORITY_VALUE_MERGER = new MajorityValueResultMerger();
   private final Server server;
   private Destination destinationLocal;
   private final MetaDataCoordinator metaDataCoordinator;
@@ -153,18 +155,16 @@ public class Coordinator {
     if (baseMessage instanceof ColumnFamilyMessage) {
       ColumnFamilyMessage m = (ColumnFamilyMessage) baseMessage;
       LocalAction action = new LocalColumnFamilyAction(m, keyspace, store);
-      ResultMerger merger = new HighestTimestampResultMerger();
       Response response = eventualCoordinator.handleMessage(token, m, destinations, 
-              timeoutInMs, destinationLocal, action, merger, getHinterForMessage(baseMessage, store));
+              timeoutInMs, destinationLocal, action, HIGHEST_TIMESTAMP_MERGER, getHinterForMessage(baseMessage, store));
       if (!response.containsKey("exception")){
         response = triggerManager.executeTriggers(m, response, keyspace, store, timeoutInMs, requestStart);
       }
       return response;
     } else if ( baseMessage instanceof KeyValueMessage) {
       LocalAction action = new LocalKeyValueAction(baseMessage, keyspace, store);
-      ResultMerger merger = new MajorityValueResultMerger();
       Response response = eventualCoordinator.handleMessage(token, baseMessage, destinations, 
-              timeoutInMs, destinationLocal, action, merger, null);
+              timeoutInMs, destinationLocal, action, MAJORITY_VALUE_MERGER, null);
       triggerManager.executeTriggers(baseMessage, response, keyspace, store, timeoutInMs, requestStart);
       if (!response.containsKey("exception")){
         response = triggerManager.executeTriggers(baseMessage, response, keyspace, store, timeoutInMs, requestStart);

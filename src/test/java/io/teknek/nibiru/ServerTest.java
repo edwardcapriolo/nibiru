@@ -17,14 +17,15 @@ import com.google.common.collect.Sets;
 import io.teknek.nibiru.engine.atom.*;
 
 
-public class ServerTest {
+public class ServerTest extends ServerShutdown{
 
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
   
   @Test
   public void aTest() throws IOException, InterruptedException{
-    Server s = TestUtil.aBasicServer(testFolder, 9004);
+    Server s = TestUtil.aBasicServer(testFolder);
+    registerServer(s);
     s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "name", "bunnyjack", 1);
     s.put(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY, "jack", "age", "6", 1);
@@ -40,7 +41,6 @@ public class ServerTest {
     Assert.assertEquals("6", ((ColumnValue) x).getValue());
     Assert.assertEquals(Sets.newHashSet(MetaDataManager.SYSTEM_KEYSPACE, TestUtil.DATA_KEYSPACE), s.getMetaDataManager().listKeyspaces());
     Assert.assertEquals(Sets.newHashSet(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), s.getMetaDataManager().listStores(TestUtil.DATA_KEYSPACE));
-    s.shutdown();
   }
   
   

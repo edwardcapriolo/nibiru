@@ -25,6 +25,7 @@ public class Val {
   private long ttl;
   
   //serialization
+  @SuppressWarnings("unused")
   private Val(){}
   
   public Val(String value, long time, long createTime, long ttl){

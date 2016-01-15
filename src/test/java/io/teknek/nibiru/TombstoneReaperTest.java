@@ -1,16 +1,12 @@
 package io.teknek.nibiru;
 
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import io.teknek.nibiru.engine.DefaultColumnFamily;
 
-import junit.framework.Assert;
-
 import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class TombstoneReaperTest {
@@ -18,6 +14,7 @@ public class TombstoneReaperTest {
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
   
+  @SuppressWarnings("deprecation")
   @Ignore
   public void testTombstoneGrace(){
     String ks = "testks";

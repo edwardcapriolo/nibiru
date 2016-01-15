@@ -3,6 +3,7 @@ package io.teknek.nibiru.sponsor;
 import io.teknek.nibiru.Configuration;
 import io.teknek.nibiru.ConsistencyLevel;
 import io.teknek.nibiru.Server;
+import io.teknek.nibiru.ServerShutdown;
 import io.teknek.nibiru.TestUtil;
 import io.teknek.nibiru.client.Client;
 import io.teknek.nibiru.client.ClientException;
@@ -29,7 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class SponsorTest {
+public class SponsorTest extends ServerShutdown {
 
   @Rule
   public TemporaryFolder node1Folder = new TemporaryFolder();
@@ -37,7 +38,6 @@ public class SponsorTest {
   @Rule
   public TemporaryFolder node2Folder = new TemporaryFolder();
   
-
   @Test
   public void test() throws ClientException, InterruptedException{
     final Server[] servers = new Server[2];
@@ -47,27 +47,27 @@ public class SponsorTest {
       cs[i] = TestUtil.aBasicConfiguration(tempFolders[i]);
       cs[i].setTransportHost("127.0.0." + (i + 1));
       cs[i].setClusterMembershipProperties(TestUtil.gossipPropertiesFor127Seed());
-      servers[i] = new Server(cs[i]);
+      servers[i] = registerServer(new Server(cs[i]));
     }
     servers[0].init();
         
     final MetaDataClient metaClient = new MetaDataClient(servers[0].getConfiguration().getTransportHost(), servers[0]
-            .getConfiguration().getTransportPort());
+            .getConfiguration().getTransportPort(), 10000, 10000);
     createKeyspaceInformation(metaClient, servers);    
     Assert.assertEquals(servers[0].getClusterMembership().getLiveMembers().size(), 0);//We do not count ourselves
     
     ColumnFamilyClient c = new ColumnFamilyClient(new Client(servers[0].getConfiguration().getTransportHost(), servers[0]
             .getConfiguration().getTransportPort(),10000,10000));
     Session session = c.createBuilder().withKeyspace("abc")
-            .withWriteConsistency(ConsistencyLevel.ALL, new HashMap())
-            .withReadConsistency(ConsistencyLevel.ALL, new HashMap())
+            .withWriteConsistency(ConsistencyLevel.ALL, new HashMap<String, Object>())
+            .withReadConsistency(ConsistencyLevel.ALL, new HashMap<String, Object>())
             .withStore("def").build();
     for (int k = 0; k < 10; k++) {
       session.put(k+"", k+"", k+"", 1);
     }
     servers[1].init(); 
-    TUnit.assertThat( new Callable(){
-      public Object call() throws Exception {
+    TUnit.assertThat( new Callable<Integer>(){
+      public Integer call() throws Exception {
         return servers[0].getClusterMembership().getLiveMembers().size();
       }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(1);
     
@@ -77,15 +77,12 @@ public class SponsorTest {
             servers[0].getCoordinator().getSponsorCoordinator().getProtege().getDestinationId());
     insertDataOverClient(session);
     assertDataIsDistributed(servers);
-    TUnit.assertThat( new Callable(){
-      public Object call() throws Exception {
+    TUnit.assertThat( new Callable<Integer>(){
+      @SuppressWarnings("unchecked")
+      public Integer call() throws Exception {
         Map<String,String> keyspaceMembers = (Map<String, String>) metaClient.getKeyspaceMetadata("abc").get(TokenRouter.TOKEN_MAP_KEY);
         return keyspaceMembers.size();
       }}).afterWaitingAtMost(5, TimeUnit.SECONDS).isEqualTo(2);
-    
-    for (int i = 0; i < cs.length; i++) {
-      servers[i].shutdown();
-    }
     metaClient.shutdown();
   }
 
