@@ -22,7 +22,7 @@ import io.teknek.nibiru.engine.atom.ColumnValue;
 import io.teknek.nibiru.engine.atom.RowTombstoneKey;
 import io.teknek.nibiru.engine.atom.TombstoneValue;
 
-public class VersionedMemtable extends AbstractMemtable{
+public class VersionedMemtable extends AbstractMemtable {
 
   private ConcurrentSkipListMap<Token, ConcurrentSkipListMap<AtomKey,ConcurrentLinkedQueue<AtomValue>>> data;
   

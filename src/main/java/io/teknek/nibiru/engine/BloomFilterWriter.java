@@ -52,12 +52,12 @@ public class BloomFilterWriter {
   }
     
   public static File getFileForId(String id, Configuration configuration){
-    return new File(
-            configuration.getDataDirectory(), id + ".bf");
+    return new File(configuration.getDataDirectory(), id + ".bf");
   }
   
   public void writeAndClose() throws IOException {
-    BufferedOutputStream bo = new BufferedOutputStream(new FileOutputStream(getFileForId(id,configuration)));
+    BufferedOutputStream bo = new BufferedOutputStream(new 
+            FileOutputStream(getFileForId(id,configuration)));
     bloomFilter.writeTo(bo);
     bo.close();
   }

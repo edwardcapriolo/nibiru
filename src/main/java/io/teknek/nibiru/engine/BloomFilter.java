@@ -33,7 +33,8 @@ public class BloomFilter {
   public void open(String id, Configuration configuration) throws IOException {
     BufferedInputStream bi = new BufferedInputStream(new FileInputStream(
             BloomFilterWriter.getFileForId(id, configuration)));
-    bloomFilter = com.google.common.hash.BloomFilter.readFrom(bi, BloomFilterWriter.TokenFunnel.INSTANCE);
+    bloomFilter = com.google.common.hash.BloomFilter.readFrom(bi, 
+            BloomFilterWriter.TokenFunnel.INSTANCE);
     bi.close();
   }
   
