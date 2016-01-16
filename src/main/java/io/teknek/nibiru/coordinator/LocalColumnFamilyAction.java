@@ -42,7 +42,7 @@ public class LocalColumnFamilyAction extends LocalAction {
   public Response handleReqest() {
     if (! (this.columnFamily instanceof ColumnFamilyPersonality)){
       throw new RuntimeException("Column Family " + columnFamily.getStoreMetadata().getName() 
-              + "does not support " + ColumnFamilyPersonality.PERSONALITY );
+              + "does not support Column Family operations"   );
     }
     ColumnFamilyPersonality personality = (ColumnFamilyPersonality) this.columnFamily;
     if (message instanceof GetMessage){

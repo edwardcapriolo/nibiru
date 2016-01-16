@@ -27,9 +27,11 @@ public abstract class AbstractMemtable implements Comparable<AbstractMemtable>{
   }
   
   public abstract int size();
-  public abstract void put(Token rowkey, String column, String value, long stamp, long ttl) ;
+  public abstract void put
+    (Token rowkey, String column, String value, long stamp, long ttl) ;
   public abstract AtomValue get(Token row, String column);
-  public abstract SortedMap<AtomKey,AtomValue> slice(Token rowkey, String start, String end);
+  public abstract SortedMap<AtomKey,AtomValue> slice
+    (Token rowkey, String start, String end);
   public abstract void delete(Token row, long time);
   public abstract void delete(Token rowkey, String column, long time);
     

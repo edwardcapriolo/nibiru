@@ -21,16 +21,14 @@ import io.teknek.nibiru.engine.atom.AtomKey;
 import io.teknek.nibiru.engine.atom.AtomValue;
 
 public interface ColumnFamilyPersonality {
-
-  public static final String PERSONALITY = "COLUMN_FAMILY_PERSONALITY";
           
   public abstract AtomValue get(String rowkey, String column);
-
   public abstract void delete(String rowkey, String column, long time);
-
-  public abstract void put(String rowkey, String column, String value, long time, long ttl);
-
-  public abstract void put(String rowkey, String column, String value, long time);
+  public abstract void put
+    (String rowkey, String column, String value, long time, long ttl);
+  public abstract void put
+    (String rowkey, String column, String value, long time);
+  public abstract SortedMap<AtomKey, AtomValue> slice
+    (String rowkey, String start, String end);
   
-  public abstract SortedMap<AtomKey, AtomValue> slice(String rowkey, String start, String end);
 }

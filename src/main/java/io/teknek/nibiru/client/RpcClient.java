@@ -1,7 +1,5 @@
 package io.teknek.nibiru.client;
 
-import io.teknek.nibiru.transport.Response;
-import io.teknek.nibiru.transport.keyvalue.Set;
 import io.teknek.nibiru.transport.rpc.BlockingRpc;
 import io.teknek.nibiru.transport.rpc.BlockingRpcResponse;
 import io.teknek.nit.NitDesc;
