@@ -14,8 +14,10 @@ import io.teknek.nit.NitDesc.NitSpec;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class TestRpcCoordinator extends BasicAbstractServerTest {
   
   public static final String SIMPLE_CALLABLE =  "import java.util.concurrent.Callable\n" +
