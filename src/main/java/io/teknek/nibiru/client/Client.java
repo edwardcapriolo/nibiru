@@ -25,6 +25,7 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -65,12 +66,13 @@ public class Client {
     HttpParams params = client.getParams();
     HttpConnectionParams.setConnectionTimeout(params, connectionTimeoutMillis);
     HttpConnectionParams.setSoTimeout(params, socketTimeoutMillis);
+
     client = new DefaultHttpClient(new ThreadSafeClientConnManager(params,
             mgr.getSchemeRegistry()), params);
   }
     
   public Response post(BaseMessage request)
-          throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
+          throws IOException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
     input.setContentType("application/json");
@@ -86,7 +88,7 @@ public class Client {
   }
   
   public BaseResponse post(BaseMessage request,  TypeReference tr)
-          throws IOException, IllegalStateException, UnsupportedEncodingException, RuntimeException {
+          throws IOException, RuntimeException {
     HttpPost postRequest = new HttpPost("http://" + host + ":" + port);
     ByteArrayEntity input = new ByteArrayEntity(MAPPER.writeValueAsBytes(request));
     input.setContentType("application/json");
