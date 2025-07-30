@@ -23,7 +23,7 @@ public class ServerTest extends ServerShutdown{
   public TemporaryFolder testFolder = new TemporaryFolder();
   
   @Test
-  public void aTest() throws IOException, InterruptedException{
+  public void aTest() throws InterruptedException{
     Server s = TestUtil.aBasicServer(testFolder);
     registerServer(s);
     s.getKeyspaces().get(TestUtil.DATA_KEYSPACE).getStores().get(TestUtil.PETS_COLUMN_FAMILY).getStoreMetadata().setFlushNumberOfRowKeys(2);

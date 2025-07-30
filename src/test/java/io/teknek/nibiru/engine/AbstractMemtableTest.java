@@ -21,7 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-@Ignore
+
 public abstract class AbstractMemtableTest {
 
   @Rule
@@ -61,17 +61,15 @@ public abstract class AbstractMemtableTest {
       for (int i = 0 ; i < 1000000; i++){
         m.put(ks1.getKeyspaceMetaData().getPartitioner().partition(String.valueOf(i)), "column2", "c", 1, 0L);
       }
-      System.out.println("10000 inserts" + (System.currentTimeMillis() - start));
+      System.out.println("10000 inserts " + (System.currentTimeMillis() - start));
     }
     {
       long start = System.currentTimeMillis();
       for (int i = 0 ; i < 1000000; i++){
-        //m.put(ks1.getKeyspaceMetaData().getPartitioner().partition(String.valueOf(i)), "column2", "c", 1, 0L);
         AtomValue o = m.get(ks1.getKeyspaceMetaData().getPartitioner().partition(String.valueOf(i)), "column2");
         Assert.assertNotNull(o);
-        
       }
-      System.out.println("10000 gets" + (System.currentTimeMillis() - start));
+      System.out.println("10000 gets " + (System.currentTimeMillis() - start));
     }
   }
   

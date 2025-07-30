@@ -32,9 +32,9 @@ public class TestMetaCoordinator extends ServerShutdown {
             s.getConfiguration().getTransportPort(), 10000, 10000);
     Assert.assertEquals(Arrays.asList(TestUtil.PETS_COLUMN_FAMILY, TestUtil.BOOKS_KEY_VALUE), 
             c.listStores(TestUtil.DATA_KEYSPACE)); 
-    Assert.assertEquals(new HashMap<Object, Object>(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
+    Assert.assertEquals(new HashMap<>(), c.getKeyspaceMetadata(TestUtil.DATA_KEYSPACE));
     Assert.assertEquals(new Response().withProperty(StoreMetaData.IMPLEMENTING_CLASS, 
-            DefaultColumnFamily.class.getName()).withProperty(StoreMetaData.COORDINATOR_TRIGGERS, new ArrayList<Object>()), 
+            DefaultColumnFamily.class.getName()).withProperty(StoreMetaData.COORDINATOR_TRIGGERS, new ArrayList<>()),
             c.getStoreMetadata(TestUtil.DATA_KEYSPACE, TestUtil.PETS_COLUMN_FAMILY));
     Response expected = new Response().withProperty("a", "b");
     c.createOrUpdateKeyspace(TestUtil.DATA_KEYSPACE, expected, true);
