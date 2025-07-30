@@ -31,33 +31,21 @@ import io.teknek.nibiru.transport.Routable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class EventualCoordinator {
 
-  private ExecutorService executor;
   private final Configuration configuration;
   private ConcurrentMap<Destination,Client> mapping;
   private final ClusterMembership clusterMembership;
-  private ExecutorService lastChance;
-  
+
   public EventualCoordinator(ClusterMembership clusterMembership, Configuration configuration){
     this.clusterMembership = clusterMembership;
     this.configuration = configuration;
   }
   
   public void init(){
-    executor = Executors.newFixedThreadPool(1024);
     mapping = new ConcurrentHashMap<>();
-    lastChance = Executors.newFixedThreadPool(1024);
   }
   
   private Client clientForDestination(Destination destination){
@@ -106,36 +94,44 @@ public class EventualCoordinator {
     }
     if (c == null){
       c = new Consistency().withLevel(ConsistencyLevel.N).withParameter("n", 1);
-    } 
-    ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(executor);
-    List<RemoteMessageCallable> remote = new ArrayList<>();
-    List<Future<Response>> remoteFutures = new ArrayList<>();
-    for (final Destination destination : destinations) {
-      if (destination.equals(destinationLocal)) {
-        completionService.submit(new LocalActionCallable(action));
+    }
+
+    try (ExecutorService service = Executors.newVirtualThreadPerTaskExecutor() ) {
+
+
+      ExecutorCompletionService<Response> completionService = new ExecutorCompletionService<>(service);
+      List<RemoteMessageCallable> remote = new ArrayList<>();
+      List<Future<Response>> remoteFutures = new ArrayList<>();
+      for (final Destination destination : destinations) {
+        if (destination.equals(destinationLocal)) {
+          completionService.submit(new LocalActionCallable(action));
+        } else {
+          RemoteMessageCallable r = new RemoteMessageCallable(clientForDestination(destination), message, destination);
+          remote.add(r);
+          remoteFutures.add(completionService.submit(r));
+        }
+      }
+      long start = System.currentTimeMillis();
+      long deadline = start + timeoutInMs;
+      if (c.getLevel() == ConsistencyLevel.ALL) {
+        Response response = handleAll(start, deadline, completionService, destinations, merger, message);
+        if (hinter != null) {
+          maybeSendHints(remote, remoteFutures, start, deadline, hinter);
+        }
+        return response;
+      } else if (c.getLevel() == ConsistencyLevel.N) {
+        Response response = handleN(start, deadline, completionService, destinations, merger, message, c);
+        if (hinter != null) {
+          maybeSendHints(remote, remoteFutures, start, deadline, hinter);
+        }
+        return response;
       } else {
-        RemoteMessageCallable r = new RemoteMessageCallable(clientForDestination(destination), message, destination);
-        remote.add(r);
-        remoteFutures.add(completionService.submit(r));
+        return new Response().withProperty("exception", "unsupported consistency level");
       }
+
     }
-    long start = System.currentTimeMillis();
-    long deadline = start + timeoutInMs;
-    if (c.getLevel() == ConsistencyLevel.ALL) {
-      Response response = handleAll(start, deadline, completionService, destinations, merger, message);
-      if (hinter != null) {
-        maybeSendHints(remote, remoteFutures, start, deadline, hinter);
-      }
-      return response;
-    } else if (c.getLevel() == ConsistencyLevel.N) {
-      Response response = handleN(start, deadline, completionService, destinations, merger, message, c);
-      if (hinter != null) {
-        maybeSendHints(remote, remoteFutures, start, deadline, hinter);
-      }
-      return response;
-    } else {
-      return new Response().withProperty("exception", "unsupported consistency level");
-    }
+
+
   }
   
   private void maybeSendHints(List<RemoteMessageCallable> remotes,
@@ -151,16 +147,15 @@ public class EventualCoordinator {
         if (remaining <= 0){
           hinter.hint(remote.getMessage(), remote.getDestination());
         } else {
-          lastChance.submit(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
+          try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            executor.submit((Callable<Void>) () -> {
               future.get(remaining, TimeUnit.MILLISECONDS);
-              if (!remote.isComplete()){
+              if (!remote.isComplete()) {
                 hinter.hint(remote.getMessage(), remote.getDestination());
               }
               return null;
-            }
-          });
+            });
+          }
         }
       }
     }
@@ -226,8 +221,6 @@ public class EventualCoordinator {
   }
   
   public void shutdown(){
-    executor.shutdown();
-    lastChance.shutdown();
     for (Entry<Destination, Client> i : mapping.entrySet()){
       i.getValue().shutdown();
     }
