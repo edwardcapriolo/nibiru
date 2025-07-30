@@ -118,19 +118,17 @@ public class SSTableTest {
     {
       long x = System.currentTimeMillis();
       for (int i = 0 ; i < 50000 ; i++) {
-        Assert.assertEquals(null, s.get(ks1.getKeyspaceMetaData().getPartitioner().partition("wontfindthis"), "column2"));
+          Assert.assertNull(s.get(ks1.getKeyspaceMetaData().getPartitioner().partition("wontfindthis"), "column2"));
       }
       System.out.println("non existing key " +(System.currentTimeMillis() - x));
     }
-    
-    
+
   }
     
   
   @Test
   public void optimizeWideColumnsTest() throws IOException{
     Keyspace ks1 = MemtableTest.keyspaceWithNaturalPartitioner(testFolder);
-    //ks1.createStore("abc", new ImmutableMap.Builder<String,Object>().put( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()).build());
     ks1.createStore("abc", new Response().withProperty( StoreMetaData.IMPLEMENTING_CLASS, DefaultColumnFamily.class.getName()));
     AbstractMemtable m = new VersionedMemtable(ks1.getStores().get("abc"), new CommitLog(ks1.getStores().get("abc")));
     for (int i = 0; i < 100; i++) {

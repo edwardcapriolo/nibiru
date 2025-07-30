@@ -46,7 +46,7 @@ public class BasicTransportTest extends ServerShutdown {
     Assert.assertEquals("6", sessionTrace.get("jack", "age").getValue());
     Assert.assertEquals("bunnyjack", session.get("jack", "name").getValue());
     session.delete("jack", "name", 2L);
-    Assert.assertEquals(null, session.get("jack", "name").getValue());
+      Assert.assertNull(session.get("jack", "name").getValue());
     session.put("jack", "weight", "6lbds", 2L);
     Assert.assertEquals("6lbds", session.get("jack", "weight").getValue());
     session.put("jack", "height", "7in", 10L);

@@ -21,7 +21,6 @@ import io.teknek.tunit.TUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 
@@ -54,7 +53,7 @@ public class SponsorTest extends ServerShutdown {
     final MetaDataClient metaClient = new MetaDataClient(servers[0].getConfiguration().getTransportHost(), servers[0]
             .getConfiguration().getTransportPort(), 10000, 10000);
     createKeyspaceInformation(metaClient, servers);    
-    Assert.assertEquals(servers[0].getClusterMembership().getLiveMembers().size(), 0);//We do not count ourselves
+    Assert.assertEquals(0, servers[0].getClusterMembership().getLiveMembers().size());//We do not count ourselves
     
     ColumnFamilyClient c = new ColumnFamilyClient(new Client(servers[0].getConfiguration().getTransportHost(), servers[0]
             .getConfiguration().getTransportPort(),10000,10000));
@@ -66,10 +65,7 @@ public class SponsorTest extends ServerShutdown {
       session.put(k+"", k+"", k+"", 1);
     }
     servers[1].init(); 
-    TUnit.assertThat( new Callable<Integer>(){
-      public Integer call() throws Exception {
-        return servers[0].getClusterMembership().getLiveMembers().size();
-      }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(1);
+    TUnit.assertThat(() -> servers[0].getClusterMembership().getLiveMembers().size()).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(1);
     
     servers[1].join("abc", "127.0.0.1", "5");
     Thread.sleep(1000);
@@ -77,12 +73,10 @@ public class SponsorTest extends ServerShutdown {
             servers[0].getCoordinator().getSponsorCoordinator().getProtege().getDestinationId());
     insertDataOverClient(session);
     assertDataIsDistributed(servers);
-    TUnit.assertThat( new Callable<Integer>(){
-      @SuppressWarnings("unchecked")
-      public Integer call() throws Exception {
-        Map<String,String> keyspaceMembers = (Map<String, String>) metaClient.getKeyspaceMetadata("abc").get(TokenRouter.TOKEN_MAP_KEY);
-        return keyspaceMembers.size();
-      }}).afterWaitingAtMost(5, TimeUnit.SECONDS).isEqualTo(2);
+    TUnit.assertThat(() -> {
+      Map<String,String> keyspaceMembers = (Map<String, String>) metaClient.getKeyspaceMetadata("abc").get(TokenRouter.TOKEN_MAP_KEY);
+      return keyspaceMembers.size();
+    }).afterWaitingAtMost(5, TimeUnit.SECONDS).isEqualTo(2);
     metaClient.shutdown();
   }
 
